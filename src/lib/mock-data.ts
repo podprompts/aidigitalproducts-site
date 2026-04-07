@@ -8,6 +8,8 @@ export interface Product {
   description: string;
   /** Stripe Price ID — present means the product is purchasable */
   priceId?: string;
+  /** Thumbnail image URL — Supabase Storage or any allowed remote */
+  thumbnailUrl?: string;
   /** Feature bullet list shown in the "What's included" section */
   features?: string[];
 }

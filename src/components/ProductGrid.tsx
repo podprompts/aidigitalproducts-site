@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { mockProducts } from "@/lib/mock-data";
+import ProductThumbnail from "@/components/ProductThumbnail";
 
 const featured = mockProducts.slice(0, 6);
 // Triple for infinite loop
@@ -99,7 +100,7 @@ export default function ProductGrid() {
             >
               <div className="carousel-cell">
                 {/* Thumbnail */}
-                <div className="card-thumbnail" />
+                <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
 
                 {/* Meta */}
                 <div

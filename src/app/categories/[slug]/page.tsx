@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { mockCategories, mockProducts } from "@/lib/mock-data";
+import ProductThumbnail from "@/components/ProductThumbnail";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -97,7 +98,7 @@ export default async function CategoryPage({ params }: Props) {
                       }}
                     >
                       {/* Thumbnail */}
-                      <div className="card-thumbnail" />
+                      <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
 
                       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                         <div>

@@ -8,6 +8,7 @@ import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import { mockProducts } from "@/lib/mock-data";
+import ProductThumbnail from "@/components/ProductThumbnail";
 
 const recentProducts = mockProducts.slice(0, 3);
 
@@ -108,7 +109,7 @@ export default function Home() {
                   }}
                 >
                   {/* Thumbnail */}
-                  <div className="card-thumbnail" />
+                  <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
 
                   <div>
                     <div

@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import StickyBuyBar from "@/components/StickyBuyBar";
 import BuyButton from "@/components/BuyButton";
+import ProductThumbnail from "@/components/ProductThumbnail";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -82,29 +83,12 @@ export default async function ProductDetailPage({ params }: Props) {
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div className="detail-grid">
-              {/* Left — preview placeholder */}
-              <div
-                style={{
-                  background: "var(--bg-alt)",
-                  aspectRatio: "4/3",
-                  border: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    color: "var(--ink-mute)",
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Preview
-                </span>
-              </div>
+              {/* Left — preview */}
+              <ProductThumbnail
+                url={product.thumbnailUrl}
+                alt={product.title}
+                variant="detail"
+              />
 
               {/* Right — info */}
               <div
@@ -404,7 +388,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     }}
                   >
                     {/* Thumbnail */}
-                    <div className="card-thumbnail" />
+                    <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
 
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>

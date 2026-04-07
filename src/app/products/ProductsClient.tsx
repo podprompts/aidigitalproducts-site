@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
+import ProductThumbnail from "@/components/ProductThumbnail";
 
 const ALL = "All";
 const categories = [ALL, ...mockCategories.map((c) => c.name)];
@@ -93,7 +94,7 @@ export default function ProductsClient() {
                 }}
               >
                 {/* Thumbnail */}
-                <div className="card-thumbnail" />
+                <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
 
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
