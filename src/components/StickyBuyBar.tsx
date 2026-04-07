@@ -1,8 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import BuyButton from "@/components/BuyButton";
 
-export default function StickyBuyBar({ price }: { price: number }) {
+interface StickyBuyBarProps {
+  price: number;
+  priceId?: string;
+  productId?: string;
+  productName?: string;
+}
+
+export default function StickyBuyBar({ price, priceId, productId, productName }: StickyBuyBarProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,9 +31,24 @@ export default function StickyBuyBar({ price }: { price: number }) {
       >
         ${price}
       </span>
-      <a href="#" className="btn btn-primary" style={{ padding: "10px 20px", fontSize: "13px" }}>
-        Buy Now
-      </a>
+
+      {priceId ? (
+        <BuyButton
+          priceId={priceId}
+          productId={productId}
+          productName={productName}
+          productPrice={price}
+          label="Buy Now"
+          className="btn btn-primary"
+        />
+      ) : (
+        <span
+          className="btn btn-primary"
+          style={{ padding: "10px 20px", fontSize: "13px", opacity: 0.45, cursor: "not-allowed" }}
+        >
+          Coming Soon
+        </span>
+      )}
     </div>
   );
 }

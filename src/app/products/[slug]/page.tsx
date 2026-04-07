@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import StickyBuyBar from "@/components/StickyBuyBar";
+import BuyButton from "@/components/BuyButton";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -32,12 +33,14 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const related = mockProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
 
-  const included = [
+  const included = product.features ?? [
     "Full product files and documentation",
     "Setup walkthrough and configuration guide",
     "Email support from the seller",
     "Instant download after purchase",
   ];
+
+  const isComingSoon = !product.priceId;
 
   return (
     <>
@@ -167,10 +170,25 @@ export default async function ProductDetailPage({ params }: Props) {
                     display: "flex",
                     gap: "12px",
                     flexWrap: "wrap",
+                    alignItems: "center",
                   }}
                 >
-                  <a href="#" className="btn btn-primary">Buy Now</a>
-                  <a href="#" className="btn btn-ghost">Add to Cart</a>
+                  {isComingSoon ? (
+                    <span
+                      className="btn btn-primary"
+                      style={{ opacity: 0.45, cursor: "not-allowed" }}
+                    >
+                      Coming Soon
+                    </span>
+                  ) : (
+                    <BuyButton
+                      priceId={product.priceId}
+                      productId={product.id}
+                      productName={product.title}
+                      productPrice={product.price}
+                      label={`Buy Now — $${product.price}`}
+                    />
+                  )}
                 </div>
 
                 <div
@@ -422,6 +440,20 @@ export default async function ProductDetailPage({ params }: Props) {
                           }}
                         >
                           ${p.price}
+                          {!p.priceId && (
+                            <span
+                              style={{
+                                marginLeft: "8px",
+                                fontSize: "10px",
+                                fontWeight: 700,
+                                color: "var(--ink-faded)",
+                                letterSpacing: "0.12em",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              Coming Soon
+                            </span>
+                          )}
                         </div>
                       </div>
                       <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
@@ -436,7 +468,12 @@ export default async function ProductDetailPage({ params }: Props) {
       <Footer />
 
       {/* Mobile sticky buy bar */}
-      <StickyBuyBar price={product.price} />
+      <StickyBuyBar
+        price={product.price}
+        priceId={product.priceId}
+        productId={product.id}
+        productName={product.title}
+      />
     </>
   );
 }
