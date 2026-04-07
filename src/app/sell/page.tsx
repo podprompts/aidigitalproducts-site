@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 
@@ -201,13 +202,13 @@ export default function SellPage() {
           >
             List today. Earn from the first sale.
           </p>
-          <a
-            href="#"
+          <Link
+            href="/sell/waitlist"
             className="btn btn-primary"
             style={{ marginTop: "44px", display: "inline-block" }}
           >
             Become a Seller
-          </a>
+          </Link>
         </section>
       </main>
       <Footer />
