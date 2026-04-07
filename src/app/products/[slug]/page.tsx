@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { mockProducts } from "@/lib/mock-data";
+import { mockProducts, mockCategories } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -25,6 +26,11 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = mockProducts.find((p) => p.slug === slug);
   if (!product) notFound();
 
+  const categoryObj = mockCategories.find((c) => c.name === product.category);
+  const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
+
+  const related = mockProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
+
   const included = [
     "Full product files and documentation",
     "Setup walkthrough and configuration guide",
@@ -35,12 +41,55 @@ export default async function ProductDetailPage({ params }: Props) {
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "64px" }}>
+      <main style={{ paddingTop: "100px" }}>
+        {/* Breadcrumb */}
+        <div
+          style={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            padding: "24px 24px 0",
+            display: "flex",
+            gap: "8px",
+            alignItems: "center",
+            fontSize: "11px",
+            fontWeight: 600,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            color: "var(--ink-faded)",
+          }}
+        >
+          <Link
+            href="/products"
+            style={{
+              color: "var(--ink-faded)",
+              textDecoration: "none",
+              transition: "color 0.2s",
+            }}
+            className="nav-link"
+          >
+            Products
+          </Link>
+          <span style={{ color: "var(--ink-mute)" }}>/</span>
+          <Link
+            href={`/categories/${categorySlug}`}
+            style={{
+              color: "var(--ink-faded)",
+              textDecoration: "none",
+              transition: "color 0.2s",
+            }}
+            className="nav-link"
+          >
+            {product.category}
+          </Link>
+          <span style={{ color: "var(--ink-mute)" }}>/</span>
+          <span style={{ color: "var(--ink)" }}>{product.title}</span>
+        </div>
+
         {/* Two-column detail */}
         <section
           style={{
             borderBottom: "1px solid var(--line-soft)",
-            padding: "clamp(48px, 8vw, 80px) 24px",
+            padding: "clamp(32px, 5vw, 56px) 24px clamp(48px, 8vw, 80px)",
           }}
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -76,7 +125,6 @@ export default async function ProductDetailPage({ params }: Props) {
                   background: "var(--bg)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "0",
                 }}
               >
                 <div
@@ -182,7 +230,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 marginBottom: "28px",
               }}
             >
-              What it does. <span style={{ color: "var(--ink-mute)" }}>How it works.</span>
+              What it does.{" "}
+              <span style={{ color: "var(--ink-mute)" }}>How it works.</span>
             </h2>
             <p
               style={{
@@ -234,7 +283,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 marginBottom: "36px",
               }}
             >
-              Everything you need. <span style={{ color: "var(--ink-mute)" }}>Nothing extra.</span>
+              Everything you need.{" "}
+              <span style={{ color: "var(--ink-mute)" }}>Nothing extra.</span>
             </h2>
             <ul style={{ listStyle: "none" }}>
               {included.map((item, i) => (
@@ -297,6 +347,100 @@ export default async function ProductDetailPage({ params }: Props) {
               An independent builder specialising in AI digital products. All products are tested,
               documented, and supported directly by the seller.
             </p>
+          </div>
+        </section>
+
+        {/* You might also like */}
+        <section
+          style={{
+            padding: "clamp(80px, 12vw, 160px) 24px",
+            borderTop: "1px solid var(--line-soft)",
+          }}
+        >
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--ink-faded)",
+                textTransform: "uppercase",
+                letterSpacing: "0.22em",
+                marginBottom: "24px",
+                textAlign: "center",
+              }}
+            >
+              — Related —
+            </div>
+            <h2
+              className="display"
+              style={{
+                fontSize: "clamp(32px, 4.5vw, 60px)",
+                lineHeight: 0.96,
+                color: "var(--ink)",
+                textAlign: "center",
+                marginBottom: "64px",
+              }}
+            >
+              You might also like.{" "}
+              <span style={{ color: "var(--ink-mute)" }}>More from the marketplace.</span>
+            </h2>
+            <div className="related-grid">
+              {related.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/products/${p.slug}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div
+                    className="card"
+                    style={{
+                      padding: "40px 28px",
+                      minHeight: "220px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          color: "var(--ink-faded)",
+                          letterSpacing: "0.18em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {p.category}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 800,
+                          letterSpacing: "-0.02em",
+                          color: "var(--ink)",
+                          marginTop: "8px",
+                          lineHeight: 1.25,
+                        }}
+                      >
+                        {p.title}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          color: "var(--ink)",
+                        }}
+                      >
+                        ${p.price}
+                      </div>
+                    </div>
+                    <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       </main>

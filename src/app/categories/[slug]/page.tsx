@@ -31,7 +31,7 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "64px" }}>
+      <main style={{ paddingTop: "100px" }}>
         {/* Hero */}
         <section className="page-hero">
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>

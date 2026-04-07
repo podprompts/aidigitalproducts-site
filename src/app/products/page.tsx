@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { mockProducts } from "@/lib/mock-data";
+import ProductsClient from "./ProductsClient";
 
 export const metadata: Metadata = {
   title: "Browse Products — AI Digital Products",
@@ -14,9 +13,9 @@ export default function ProductsPage() {
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "64px" }}>
+      <main style={{ paddingTop: "100px" }}>
         {/* Hero */}
-        <section className="page-hero">
+        <section className="page-hero" style={{ paddingTop: "96px" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div
               style={{
@@ -59,79 +58,9 @@ export default function ProductsPage() {
           </div>
         </section>
 
-        {/* Product grid */}
-        <section style={{ padding: "0 0 clamp(80px, 12vw, 160px)" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
-            <div className="catalog-grid" style={{ marginTop: "0" }}>
-              {mockProducts.map((product, i) => (
-                <Link
-                  key={product.id}
-                  href={`/products/${product.slug}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    className="card"
-                    style={{
-                      padding: "48px 36px",
-                      minHeight: "260px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          color: "var(--ink-mute)",
-                          letterSpacing: "0.15em",
-                        }}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: "var(--ink-faded)",
-                          letterSpacing: "0.18em",
-                          textTransform: "uppercase",
-                          marginTop: "12px",
-                        }}
-                      >
-                        {product.category}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: 800,
-                          letterSpacing: "-0.02em",
-                          color: "var(--ink)",
-                          marginTop: "8px",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {product.title}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: "12px",
-                          fontSize: "16px",
-                          fontWeight: 700,
-                          color: "var(--ink)",
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        ${product.price}
-                      </div>
-                    </div>
-                    <span className="card-arrow">→</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+        {/* Filterable grid */}
+        <section style={{ paddingBottom: "clamp(80px, 12vw, 160px)" }}>
+          <ProductsClient />
         </section>
       </main>
       <Footer />

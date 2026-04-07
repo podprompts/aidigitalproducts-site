@@ -10,7 +10,7 @@ export default function Hero() {
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
-        padding: "140px 24px 100px",
+        padding: "176px 24px 100px",
         position: "relative",
       }}
     >

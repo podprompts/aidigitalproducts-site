@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
 export default function Nav() {
+  const [search, setSearch] = useState("");
+
   return (
     <nav className="nav">
       {/* Logo */}
@@ -14,6 +17,7 @@ export default function Nav() {
           letterSpacing: "0.02em",
           color: "var(--ink)",
           textDecoration: "none",
+          flexShrink: 0,
         }}
       >
         AI
@@ -23,8 +27,20 @@ export default function Nav() {
         PRODUCTS
       </Link>
 
+      {/* Search */}
+      <div className="nav-search-wrapper">
+        <input
+          className="nav-search"
+          type="search"
+          placeholder="Search products, categories, sellers..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search"
+        />
+      </div>
+
       {/* Links */}
-      <ul className="flex items-center gap-9 list-none">
+      <ul className="flex items-center gap-9 list-none" style={{ flexShrink: 0 }}>
         <li className="nav-mobile-hide">
           <Link href="/products" className="nav-link">Products</Link>
         </li>

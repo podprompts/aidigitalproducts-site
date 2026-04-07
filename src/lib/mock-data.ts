@@ -14,6 +14,8 @@ export interface Category {
   name: string;
 }
 
+export type TrendingSearch = string;
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -210,4 +212,15 @@ export const mockBlogPosts: BlogPost[] = [
       "A walkthrough of turning a working AI tool into a polished marketplace listing. The steps, the decisions, and what to skip.",
     date: "2026-01-20",
   },
+];
+
+export const mockTrendingSearches: TrendingSearch[] = [
+  "voice agents",
+  "chatbot templates",
+  "content automation",
+  "lead gen scripts",
+  "AI receptionists",
+  "email workflows",
+  "custom GPTs",
+  "slack bots",
 ];

@@ -43,7 +43,7 @@ export default function AboutPage() {
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "64px" }}>
+      <main style={{ paddingTop: "100px" }}>
         {/* Hero */}
         <section className="page-hero">
           <div className="prose-inner">
