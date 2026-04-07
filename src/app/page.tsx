@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import Ticker from "@/components/Ticker";
 import Hero from "@/components/Hero";
+import StatsCarousel from "@/components/StatsCarousel";
 import ProductGrid from "@/components/ProductGrid";
 import Stats from "@/components/Stats";
 import SellerBlock from "@/components/SellerBlock";
@@ -15,52 +17,49 @@ const recentProducts = mockProducts.slice(0, 3);
 export default function Home() {
   return (
     <>
+      {/* Ticker — homepage only */}
+      <Ticker />
+
       <Nav />
       <Hero />
 
-      {/* Trust bar */}
-      <div
+      {/* YouTube video — below "The AI Marketplace" hero */}
+      <section
         style={{
-          height: "48px",
-          borderTop: "1px solid var(--line)",
-          borderBottom: "1px solid var(--line)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0",
-          overflow: "hidden",
+          padding: "clamp(48px, 7vw, 80px) 24px",
+          borderBottom: "1px solid var(--line-soft)",
         }}
       >
-        {["1,247 products", "6 categories", "Updated daily", "Trusted worldwide"].map(
-          (item, i, arr) => (
-            <span
-              key={item}
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+          <div
+            style={{
+              position: "relative",
+              paddingBottom: "56.25%", // 16:9
+              height: 0,
+              overflow: "hidden",
+              borderRadius: "6px",
+              background: "var(--bg-alt)",
+            }}
+          >
+            <iframe
+              src="https://www.youtube.com/embed/PWIoFOYw2gg"
+              title="AI Digital Products"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
               style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.18em",
-                color: "var(--ink-faded)",
-                display: "flex",
-                alignItems: "center",
-                gap: "0",
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                border: "none",
               }}
-            >
-              {item}
-              {i < arr.length - 1 && (
-                <span
-                  style={{
-                    margin: "0 20px",
-                    color: "var(--ink-soft)",
-                  }}
-                >
-                  —
-                </span>
-              )}
-            </span>
-          )
-        )}
-      </div>
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Stats bar — swipeable/draggable infinite carousel */}
+      <StatsCarousel />
 
       {/* Recently Added */}
       <section className="block" id="recently-added">
