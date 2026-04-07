@@ -28,7 +28,7 @@ export default function Nav() {
 
   return (
     <>
-      <nav className="nav">
+      <nav className="nav" style={{ top: pathname === "/" ? "36px" : 0 }}>
         {/* Logo */}
         <Link
           href="/"

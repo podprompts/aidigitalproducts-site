@@ -94,7 +94,7 @@ body {
 /* ── Nav ───────────────────────────────────────────────────────────────────── */
 .nav {
   position: fixed;
-  top: 36px; left: 0; right: 0;
+  top: 0; left: 0; right: 0;
   z-index: 100;
   display: flex;
   justify-content: space-between;
