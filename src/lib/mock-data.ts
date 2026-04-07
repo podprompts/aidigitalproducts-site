@@ -6,8 +6,12 @@ export interface Product {
   price: number;
   seller: string;
   description: string;
-  /** Stripe Price ID — present means the product is purchasable */
+  /** Stripe Price ID — present means the product is purchasable (sale price when on sale) */
   priceId?: string;
+  /** Regular (full) price in dollars — present means product is on sale */
+  regularPrice?: number;
+  /** Stripe Price ID used after the countdown timer expires */
+  regularPriceId?: string;
   /** Thumbnail image URL — Supabase Storage or any allowed remote */
   thumbnailUrl?: string;
   /** Feature bullet list shown in the "What's included" section */
@@ -44,6 +48,8 @@ export const mockProducts: Product[] = [
     description:
       "Get the complete collection: Outdoors & Adventure, Blue Collar Trades, and Pet & Animal Lovers — all 150 prompts in one bundle. The ultimate starter kit for print-on-demand sellers who want to dominate multiple niches.",
     priceId: "price_1TJYCnEU074NZnN8EbBXZw7s",
+    regularPrice: 34.95,
+    regularPriceId: "price_1TJaP8EU074NZnN8lQsQ2vVl",
     features: [
       "150 AI prompts (all 3 packs)",
       "3 profitable niches covered",
@@ -63,6 +69,8 @@ export const mockProducts: Product[] = [
     description:
       "Unlock 50 expertly crafted AI prompts designed specifically for the outdoor and adventure niche. Perfect for creating stunning print-on-demand designs for hikers, campers, mountain lovers, and nature enthusiasts. Just paste into your favourite AI image generator and start creating.",
     priceId: "price_1TJYBlEU074NZnN830sEZ3MJ",
+    regularPrice: 14.99,
+    regularPriceId: "price_1TJaKSEU074NZnN8L4Kok9K5",
     features: [
       "50 ready-to-use AI prompts",
       "Outdoor & adventure niche",
@@ -81,6 +89,8 @@ export const mockProducts: Product[] = [
     description:
       "Get 50 powerful AI prompts crafted for the blue collar market. Create designs that resonate with electricians, plumbers, welders, carpenters, mechanics, and hardworking tradespeople. High-demand niche with loyal customers.",
     priceId: "price_1TJYC7EU074NZnN8wDCCz4Cv",
+    regularPrice: 14.99,
+    regularPriceId: "price_1TJaLeEU074NZnN8jY2k2lky",
     features: [
       "50 ready-to-use AI prompts",
       "Blue collar & trades niche",
@@ -99,6 +109,8 @@ export const mockProducts: Product[] = [
     description:
       "Tap into the massive pet lover market with 50 AI prompts designed for dog moms, cat dads, and animal enthusiasts. Create heartwarming, funny, and emotional designs that pet owners can not resist buying.",
     priceId: "price_1TJYCQEU074NZnN8ZNCqEl5H",
+    regularPrice: 14.99,
+    regularPriceId: "price_1TJaNQEU074NZnN8nAyxenCv",
     features: [
       "50 ready-to-use AI prompts",
       "Pet & animal lover niche",

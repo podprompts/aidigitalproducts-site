@@ -1,0 +1,143 @@
+"use client";
+
+import { useState } from "react";
+import BuyButton from "@/components/BuyButton";
+import CountdownTimer from "@/components/CountdownTimer";
+
+interface Props {
+  productId: string;
+  productName: string;
+  /** The sale / current price in dollars */
+  salePrice: number;
+  /** Stripe Price ID for the sale price */
+  salePriceId?: string;
+  /** Regular price in dollars — if present, activates sale UI + timer */
+  regularPrice?: number;
+  /** Stripe Price ID used after the timer expires */
+  regularPriceId?: string;
+  description: string;
+}
+
+export default function PriceAndBuySection({
+  productId,
+  productName,
+  salePrice,
+  salePriceId,
+  regularPrice,
+  regularPriceId,
+  description,
+}: Props) {
+  const hasSale = !!(regularPrice && salePriceId && regularPriceId);
+  const [saleActive, setSaleActive] = useState(true);
+
+  // After timer expires: charge regular price
+  const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
+  const activePrice = hasSale && !saleActive ? regularPrice! : salePrice;
+
+  return (
+    <>
+      {/* ── Price block ── */}
+      <div style={{ marginTop: "24px" }}>
+        {hasSale ? (
+          <>
+            <p
+              style={{
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "var(--ink-faded)",
+                textDecoration: "line-through",
+                letterSpacing: "0.02em",
+                marginBottom: "4px",
+              }}
+            >
+              Was ${regularPrice!.toFixed(2)}
+            </p>
+            <div
+              style={{
+                fontSize: "48px",
+                fontWeight: 800,
+                letterSpacing: "-0.04em",
+                color: "var(--ink)",
+                lineHeight: 1,
+              }}
+            >
+              ${saleActive ? salePrice.toFixed(2) : regularPrice!.toFixed(2)}
+            </div>
+            {saleActive ? (
+              <CountdownTimer
+                productId={productId}
+                onExpire={() => setSaleActive(false)}
+              />
+            ) : (
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "var(--ink-faded)",
+                }}
+              >
+                Sale ended
+              </p>
+            )}
+          </>
+        ) : (
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: 800,
+              letterSpacing: "-0.04em",
+              color: "var(--ink)",
+              lineHeight: 1,
+            }}
+          >
+            ${salePrice.toFixed(2)}
+          </div>
+        )}
+      </div>
+
+      {/* ── Description ── */}
+      <p
+        style={{
+          marginTop: "20px",
+          fontSize: "15px",
+          fontWeight: 500,
+          color: "var(--ink-faded)",
+          lineHeight: 1.65,
+        }}
+      >
+        {description}
+      </p>
+
+      {/* ── Buy button ── */}
+      <div
+        style={{
+          marginTop: "36px",
+          display: "flex",
+          gap: "12px",
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        {activePriceId ? (
+          <BuyButton
+            priceId={activePriceId}
+            productId={productId}
+            productName={productName}
+            productPrice={activePrice}
+            label={`Buy Now — $${activePrice.toFixed(2)}`}
+          />
+        ) : (
+          <span
+            className="btn btn-primary"
+            style={{ opacity: 0.45, cursor: "not-allowed" }}
+          >
+            Coming Soon
+          </span>
+        )}
+      </div>
+    </>
+  );
+}

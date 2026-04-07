@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import StickyBuyBar from "@/components/StickyBuyBar";
-import BuyButton from "@/components/BuyButton";
 import ProductThumbnail from "@/components/ProductThumbnail";
+import PriceAndBuySection from "@/components/PriceAndBuySection";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -42,6 +42,7 @@ export default async function ProductDetailPage({ params }: Props) {
   ];
 
   const isComingSoon = !product.priceId;
+  const hasSale = !!(product.regularPrice && product.regularPriceId);
 
   return (
     <>
@@ -123,57 +124,51 @@ export default async function ProductDetailPage({ params }: Props) {
                   {product.title}
                 </h1>
 
-                <div
-                  style={{
-                    marginTop: "24px",
-                    fontSize: "48px",
-                    fontWeight: 800,
-                    letterSpacing: "-0.04em",
-                    color: "var(--ink)",
-                    lineHeight: 1,
-                  }}
-                >
-                  ${product.price}
-                </div>
-
-                <p
-                  style={{
-                    marginTop: "20px",
-                    fontSize: "15px",
-                    fontWeight: 500,
-                    color: "var(--ink-faded)",
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {product.description}
-                </p>
-
-                <div
-                  style={{
-                    marginTop: "36px",
-                    display: "flex",
-                    gap: "12px",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                  }}
-                >
-                  {isComingSoon ? (
-                    <span
-                      className="btn btn-primary"
-                      style={{ opacity: 0.45, cursor: "not-allowed" }}
+                {isComingSoon ? (
+                  <>
+                    <div
+                      style={{
+                        marginTop: "24px",
+                        fontSize: "48px",
+                        fontWeight: 800,
+                        letterSpacing: "-0.04em",
+                        color: "var(--ink)",
+                        lineHeight: 1,
+                      }}
                     >
-                      Coming Soon
-                    </span>
-                  ) : (
-                    <BuyButton
-                      priceId={product.priceId}
-                      productId={product.id}
-                      productName={product.title}
-                      productPrice={product.price}
-                      label={`Buy Now — $${product.price}`}
-                    />
-                  )}
-                </div>
+                      ${product.price.toFixed(2)}
+                    </div>
+                    <p
+                      style={{
+                        marginTop: "20px",
+                        fontSize: "15px",
+                        fontWeight: 500,
+                        color: "var(--ink-faded)",
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      {product.description}
+                    </p>
+                    <div style={{ marginTop: "36px" }}>
+                      <span
+                        className="btn btn-primary"
+                        style={{ opacity: 0.45, cursor: "not-allowed" }}
+                      >
+                        Coming Soon
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <PriceAndBuySection
+                    productId={product.id}
+                    productName={product.title}
+                    salePrice={product.price}
+                    salePriceId={product.priceId}
+                    regularPrice={hasSale ? product.regularPrice : undefined}
+                    regularPriceId={hasSale ? product.regularPriceId : undefined}
+                    description={product.description}
+                  />
+                )}
 
                 <div
                   style={{
