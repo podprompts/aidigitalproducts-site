@@ -1,15 +1,19 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Nav() {
   return (
     <nav className="nav">
       {/* Logo */}
-      <div
+      <Link
+        href="/"
         style={{
           fontSize: "14px",
           fontWeight: 800,
           letterSpacing: "0.02em",
           color: "var(--ink)",
+          textDecoration: "none",
         }}
       >
         AI
@@ -17,43 +21,30 @@ export default function Nav() {
         DIGITAL
         <Dot />
         PRODUCTS
-      </div>
+      </Link>
 
       {/* Links */}
       <ul className="flex items-center gap-9 list-none">
         <li className="nav-mobile-hide">
-          <NavLink href="#products">Products</NavLink>
+          <Link href="/products" className="nav-link">Products</Link>
         </li>
         <li className="nav-mobile-hide">
-          <NavLink href="#sell">Sell</NavLink>
+          <Link href="/sell" className="nav-link">Sell</Link>
         </li>
         <li className="nav-mobile-hide">
-          <NavLink href="#pricing">Pricing</NavLink>
+          <Link href="/pricing" className="nav-link">Pricing</Link>
+        </li>
+        <li className="nav-mobile-hide">
+          <Link href="/about" className="nav-link">About</Link>
+        </li>
+        <li className="nav-mobile-hide">
+          <Link href="/blog" className="nav-link">Blog</Link>
+        </li>
+        <li className="nav-mobile-hide">
+          <Link href="/contact" className="nav-link">Contact</Link>
         </li>
         <li>
-          <a
-            href="#"
-            style={{
-              color: "var(--ink)",
-              border: "1px solid var(--ink)",
-              padding: "8px 18px",
-              borderRadius: "980px",
-              fontSize: "12px",
-              fontWeight: 700,
-              textDecoration: "none",
-              transition: "all 0.25s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "var(--ink)";
-              (e.currentTarget as HTMLAnchorElement).style.color = "var(--bg)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-              (e.currentTarget as HTMLAnchorElement).style.color = "var(--ink)";
-            }}
-          >
-            Get Started
-          </a>
+          <Link href="/sell" className="nav-cta-link">Get Started</Link>
         </li>
       </ul>
     </nav>
@@ -73,28 +64,5 @@ function Dot() {
         verticalAlign: "middle",
       }}
     />
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <a
-      href={href}
-      style={{
-        color: "var(--ink-faded)",
-        textDecoration: "none",
-        fontSize: "13px",
-        fontWeight: 600,
-        transition: "color 0.25s",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "var(--ink)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.color = "var(--ink-faded)";
-      }}
-    >
-      {children}
-    </a>
   );
 }

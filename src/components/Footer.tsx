@@ -1,63 +1,95 @@
-"use client";
+import Link from "next/link";
 
-import { footerLinks } from "@/lib/content";
+const footerGroups = [
+  {
+    label: "Marketplace",
+    links: [
+      { label: "Products",   href: "/products"   },
+      { label: "Categories", href: "/products"   },
+      { label: "Sell",       href: "/sell"        },
+    ],
+  },
+  {
+    label: "Company",
+    links: [
+      { label: "About",   href: "/about"   },
+      { label: "Blog",    href: "/blog"    },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    label: "Legal",
+    links: [
+      { label: "Terms",   href: "#" },
+      { label: "Privacy", href: "#" },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
     <footer
       style={{
-        padding: "48px clamp(24px, 5vw, 64px)",
+        padding: "64px clamp(24px, 5vw, 64px)",
         borderTop: "1px solid var(--line)",
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: "flex-start",
         flexWrap: "wrap",
-        gap: "16px",
+        gap: "48px",
         background: "var(--bg)",
       }}
     >
-      <div
-        style={{
-          fontSize: "11px",
-          color: "var(--ink-mute)",
-          fontWeight: 600,
-        }}
-      >
-        © 2026 AI Digital Products — All rights reserved.
+      {/* Left — brand + copy */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div
+          style={{
+            fontSize: "14px",
+            fontWeight: 800,
+            letterSpacing: "0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          AI Digital Products
+        </div>
+        <div
+          style={{
+            fontSize: "11px",
+            color: "var(--ink-mute)",
+            fontWeight: 600,
+          }}
+        >
+          © 2026 AI Digital Products — All rights reserved.
+        </div>
       </div>
 
-      <ul
-        style={{
-          display: "flex",
-          gap: "28px",
-          listStyle: "none",
-        }}
-      >
-        {footerLinks.map((link) => (
-          <li key={link.label}>
-            <a
-              href={link.href}
+      {/* Right — grouped links */}
+      <div className="footer-cols">
+        {footerGroups.map((group) => (
+          <div key={group.label} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div
               style={{
                 fontSize: "11px",
-                color: "var(--ink-faded)",
-                textDecoration: "none",
-                fontWeight: 600,
-                letterSpacing: "0.05em",
+                fontWeight: 700,
+                color: "var(--ink)",
+                letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                transition: "color 0.25s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.color = "var(--ink)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.color = "var(--ink-faded)";
               }}
             >
-              {link.label}
-            </a>
-          </li>
+              {group.label}
+            </div>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+              {group.links.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="footer-link">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
     </footer>
   );
 }

@@ -95,11 +95,200 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Buttons (CSS-only hover — no JS needed) ───────────────────────────────── */
+.btn {
+  display: inline-block;
+  padding: 14px 30px;
+  border-radius: 980px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  text-align: center;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+  border: 1px solid var(--ink);
+}
+.btn-primary:hover {
+  background: transparent;
+  color: var(--ink);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink-soft);
+}
+.btn-ghost:hover {
+  border-color: var(--ink);
+}
+.btn-sm {
+  padding: 10px 22px;
+  font-size: 13px;
+}
+
+/* ── Inner page hero ────────────────────────────────────────────────────────── */
+.page-hero {
+  padding: 160px 24px clamp(80px, 10vw, 120px);
+  text-align: center;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* ── Catalog grid (products, blog, sell trio) ───────────────────────────────── */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+/* ── Product detail — two-column ────────────────────────────────────────────── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+}
+
+/* ── Hairline divider ────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--line);
+}
+
+/* ── Prose (about page, narrow centered) ────────────────────────────────────── */
+.prose-inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ── Footer columns ──────────────────────────────────────────────────────────── */
+.footer-cols {
+  display: flex;
+  gap: clamp(32px, 6vw, 80px);
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-faded);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.field input,
+.field textarea {
+  background: transparent;
+  border: 1px solid var(--ink-soft);
+  border-radius: 0;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  width: 100%;
+  transition: border-color 0.2s;
+  outline: none;
+  resize: vertical;
+  -webkit-appearance: none;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--ink);
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--ink-mute);
+}
+
+/* ── Underline link (CSS hover) ─────────────────────────────────────────────── */
+.underline-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink-soft);
+  padding-bottom: 3px;
+  transition: border-color 0.25s;
+}
+.underline-link:hover { border-bottom-color: var(--ink); }
+
+/* ── Product / blog card ─────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg);
+  transition: background 0.3s;
+  cursor: pointer;
+}
+.card:hover { background: var(--bg-soft); }
+.card .card-arrow {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: all 0.3s;
+  display: block;
+  margin-top: 32px;
+  font-size: 20px;
+  color: var(--ink);
+}
+.card:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Footer link hover (CSS) ────────────────────────────────────────────────── */
+.footer-link {
+  font-size: 11px;
+  color: var(--ink-faded);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color 0.25s;
+}
+.footer-link:hover { color: var(--ink); }
+
+/* ── Nav link hover (CSS) ────────────────────────────────────────────────────── */
+.nav-link {
+  color: var(--ink-faded);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: color 0.25s;
+}
+.nav-link:hover { color: var(--ink); }
+
+.nav-cta-link {
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 8px 18px;
+  border-radius: 980px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.25s;
+}
+.nav-cta-link:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
 /* ── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .product-grid { grid-template-columns: 1fr; }
-  .pricing-grid { grid-template-columns: 1fr; }
-  .stats-grid   { grid-template-columns: repeat(2, 1fr); }
+  .product-grid  { grid-template-columns: 1fr; }
+  .pricing-grid  { grid-template-columns: 1fr; }
+  .stats-grid    { grid-template-columns: repeat(2, 1fr); }
+  .catalog-grid  { grid-template-columns: 1fr; }
+  .detail-grid   { grid-template-columns: 1fr; }
+  .footer-cols   { flex-direction: column; gap: 32px; }
 }
 
 @media (max-width: 600px) {

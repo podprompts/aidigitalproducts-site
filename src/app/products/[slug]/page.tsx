@@ -1,0 +1,306 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
+import { mockProducts } from "@/lib/mock-data";
+
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateStaticParams() {
+  return mockProducts.map((p) => ({ slug: p.slug }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const product = mockProducts.find((p) => p.slug === slug);
+  if (!product) return {};
+  return {
+    title: `${product.title} — AI Digital Products`,
+    description: product.description,
+  };
+}
+
+export default async function ProductDetailPage({ params }: Props) {
+  const { slug } = await params;
+  const product = mockProducts.find((p) => p.slug === slug);
+  if (!product) notFound();
+
+  const included = [
+    "Full product files and documentation",
+    "Setup walkthrough and configuration guide",
+    "Email support from the seller",
+    "Instant download after purchase",
+  ];
+
+  return (
+    <>
+      <Nav />
+      <main style={{ paddingTop: "64px" }}>
+        {/* Two-column detail */}
+        <section
+          style={{
+            borderBottom: "1px solid var(--line-soft)",
+            padding: "clamp(48px, 8vw, 80px) 24px",
+          }}
+        >
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div className="detail-grid">
+              {/* Left — placeholder */}
+              <div
+                style={{
+                  background: "var(--bg-alt)",
+                  aspectRatio: "4/3",
+                  border: "1px solid var(--line)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "var(--ink-mute)",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Preview
+                </span>
+              </div>
+
+              {/* Right — info */}
+              <div
+                style={{
+                  padding: "48px 40px",
+                  background: "var(--bg)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: "var(--ink-faded)",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    marginBottom: "16px",
+                  }}
+                >
+                  {product.category}
+                </div>
+
+                <h1
+                  className="display"
+                  style={{
+                    fontSize: "clamp(32px, 4vw, 56px)",
+                    lineHeight: 1,
+                    color: "var(--ink)",
+                  }}
+                >
+                  {product.title}
+                </h1>
+
+                <div
+                  style={{
+                    marginTop: "24px",
+                    fontSize: "48px",
+                    fontWeight: 800,
+                    letterSpacing: "-0.04em",
+                    color: "var(--ink)",
+                    lineHeight: 1,
+                  }}
+                >
+                  ${product.price}
+                </div>
+
+                <p
+                  style={{
+                    marginTop: "20px",
+                    fontSize: "15px",
+                    fontWeight: 500,
+                    color: "var(--ink-faded)",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {product.description}
+                </p>
+
+                <div
+                  style={{
+                    marginTop: "36px",
+                    display: "flex",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <a href="#" className="btn btn-primary">Buy Now</a>
+                  <a href="#" className="btn btn-ghost">Add to Cart</a>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "32px",
+                    paddingTop: "24px",
+                    borderTop: "1px solid var(--line)",
+                    fontSize: "12px",
+                    color: "var(--ink-mute)",
+                    fontWeight: 600,
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  Sold by {product.seller}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* About this product */}
+        <section className="block">
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--ink-faded)",
+                textTransform: "uppercase",
+                letterSpacing: "0.22em",
+                marginBottom: "24px",
+              }}
+            >
+              — About this product —
+            </div>
+            <h2
+              className="display"
+              style={{
+                fontSize: "clamp(28px, 3.5vw, 40px)",
+                lineHeight: 1.05,
+                color: "var(--ink)",
+                marginBottom: "28px",
+              }}
+            >
+              What it does. <span style={{ color: "var(--ink-mute)" }}>How it works.</span>
+            </h2>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: 500,
+                color: "var(--ink-faded)",
+                lineHeight: 1.7,
+                marginBottom: "20px",
+              }}
+            >
+              {product.description} This product is built to be deployed, not studied. Everything
+              you need to get it running is included.
+            </p>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: 500,
+                color: "var(--ink-faded)",
+                lineHeight: 1.7,
+              }}
+            >
+              The documentation covers the full setup process from start to finish. If you run into
+              anything, seller support is included.
+            </p>
+          </div>
+        </section>
+
+        {/* What's included */}
+        <section className="block alt">
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--ink-faded)",
+                textTransform: "uppercase",
+                letterSpacing: "0.22em",
+                marginBottom: "24px",
+              }}
+            >
+              — What&apos;s included —
+            </div>
+            <h2
+              className="display"
+              style={{
+                fontSize: "clamp(28px, 3.5vw, 40px)",
+                lineHeight: 1.05,
+                color: "var(--ink)",
+                marginBottom: "36px",
+              }}
+            >
+              Everything you need. <span style={{ color: "var(--ink-mute)" }}>Nothing extra.</span>
+            </h2>
+            <ul style={{ listStyle: "none" }}>
+              {included.map((item, i) => (
+                <li
+                  key={i}
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color: "var(--ink-faded)",
+                    padding: "14px 0",
+                    borderBottom: "1px solid var(--line)",
+                    display: "flex",
+                    gap: "12px",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <span style={{ color: "var(--ink-mute)", flexShrink: 0 }}>—</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* Seller */}
+        <section className="block">
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--ink-faded)",
+                textTransform: "uppercase",
+                letterSpacing: "0.22em",
+                marginBottom: "24px",
+              }}
+            >
+              — Seller —
+            </div>
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: 800,
+                letterSpacing: "-0.025em",
+                color: "var(--ink)",
+                marginBottom: "16px",
+              }}
+            >
+              {product.seller}
+            </div>
+            <p
+              style={{
+                fontSize: "15px",
+                fontWeight: 500,
+                color: "var(--ink-faded)",
+                lineHeight: 1.65,
+                maxWidth: "480px",
+              }}
+            >
+              An independent builder specialising in AI digital products. All products are tested,
+              documented, and supported directly by the seller.
+            </p>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+}
