@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { mockProducts, mockBlogPosts, mockTrendingSearches } from "@/lib/mock-data";
 
 interface TickerItem {
   label: string;
   text: string;
+  href: string;
 }
 
 function buildItems(): TickerItem[] {
@@ -19,13 +22,22 @@ function buildItems(): TickerItem[] {
       items.push({
         label: "NEW",
         text: `${mockProducts[i].title} — $${mockProducts[i].price}`,
+        href: `/products/${mockProducts[i].slug}`,
       });
     }
     if (mockBlogPosts[i]) {
-      items.push({ label: "POST", text: mockBlogPosts[i].title });
+      items.push({
+        label: "POST",
+        text: mockBlogPosts[i].title,
+        href: `/blog/${mockBlogPosts[i].slug}`,
+      });
     }
     if (mockTrendingSearches[i]) {
-      items.push({ label: "TRENDING", text: mockTrendingSearches[i] });
+      items.push({
+        label: "TRENDING",
+        text: mockTrendingSearches[i],
+        href: `/products?q=${encodeURIComponent(mockTrendingSearches[i])}`,
+      });
     }
   }
   return items;
@@ -34,37 +46,27 @@ function buildItems(): TickerItem[] {
 const items = buildItems();
 
 export default function Ticker() {
+  const [paused, setPaused] = useState(false);
+
   return (
-    <div className="ticker-bar" aria-hidden="true">
+    <div
+      className={`ticker-bar${paused ? " paused" : ""}`}
+      aria-hidden="true"
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      onTouchCancel={() => setPaused(false)}
+    >
       <div className="ticker-track">
-        {/* Content duplicated to create a seamless loop */}
         {[...items, ...items].map((item, i) => (
-          <span
+          <Link
             key={i}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "0 24px",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--bg)",
-            }}
+            href={item.href}
+            className="ticker-item"
           >
-            <span style={{ opacity: 0.45, fontSize: "10px" }}>{item.label}</span>
-            {item.text}
-            <span
-              style={{
-                marginLeft: "16px",
-                color: "rgba(244,244,242,0.25)",
-                fontWeight: 300,
-              }}
-            >
-              │
-            </span>
-          </span>
+            <span className="ticker-label">{item.label}</span>
+            <span className="ticker-text">{item.text}</span>
+            <span className="ticker-sep">│</span>
+          </Link>
         ))}
       </div>
     </div>

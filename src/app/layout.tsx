@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Ticker from "@/components/Ticker";
+import BackToTop from "@/components/BackToTop";
+import CookieBanner from "@/components/CookieBanner";
+import PageTransition from "@/components/PageTransition";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -11,9 +14,28 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "AI Digital Products — The AI Marketplace",
+  metadataBase: new URL("https://aidigitalproducts.com"),
+  title: {
+    template: "%s — AI Digital Products",
+    default: "AI Digital Products — The Marketplace for AI",
+  },
   description:
-    "Ready-made AI products that work out of the box. Chatbots, voice agents, automations, content systems, and more — built by experts, deployed in minutes.",
+    "A curated marketplace for AI digital products. Chatbots, voice agents, automations, and more. Built for the new way.",
+  openGraph: {
+    title: "AI Digital Products — The Marketplace for AI",
+    description:
+      "A curated marketplace for AI digital products. Chatbots, voice agents, automations, and more. Built for the new way.",
+    url: "https://aidigitalproducts.com",
+    siteName: "AI Digital Products",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Digital Products — The Marketplace for AI",
+    description:
+      "A curated marketplace for AI digital products. Chatbots, voice agents, automations, and more. Built for the new way.",
+  },
 };
 
 export default function RootLayout({
@@ -25,7 +47,9 @@ export default function RootLayout({
     <html lang="en" className={plusJakartaSans.variable}>
       <body style={{ fontFamily: "var(--font-jakarta), -apple-system, sans-serif" }}>
         <Ticker />
-        {children}
+        <PageTransition>{children}</PageTransition>
+        <BackToTop />
+        <CookieBanner />
       </body>
     </html>
   );

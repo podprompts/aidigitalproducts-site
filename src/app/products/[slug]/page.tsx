@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import StickyBuyBar from "@/components/StickyBuyBar";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -58,27 +59,11 @@ export default async function ProductDetailPage({ params }: Props) {
             color: "var(--ink-faded)",
           }}
         >
-          <Link
-            href="/products"
-            style={{
-              color: "var(--ink-faded)",
-              textDecoration: "none",
-              transition: "color 0.2s",
-            }}
-            className="nav-link"
-          >
+          <Link href="/products" className="nav-link">
             Products
           </Link>
           <span style={{ color: "var(--ink-mute)" }}>/</span>
-          <Link
-            href={`/categories/${categorySlug}`}
-            style={{
-              color: "var(--ink-faded)",
-              textDecoration: "none",
-              transition: "color 0.2s",
-            }}
-            className="nav-link"
-          >
+          <Link href={`/categories/${categorySlug}`} className="nav-link">
             {product.category}
           </Link>
           <span style={{ color: "var(--ink-mute)" }}>/</span>
@@ -94,7 +79,7 @@ export default async function ProductDetailPage({ params }: Props) {
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div className="detail-grid">
-              {/* Left — placeholder */}
+              {/* Left — preview placeholder */}
               <div
                 style={{
                   background: "var(--bg-alt)",
@@ -394,49 +379,53 @@ export default async function ProductDetailPage({ params }: Props) {
                   <div
                     className="card"
                     style={{
-                      padding: "40px 28px",
+                      padding: "28px 28px 40px",
                       minHeight: "220px",
                       display: "flex",
                       flexDirection: "column",
-                      justifyContent: "space-between",
                     }}
                   >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: "var(--ink-faded)",
-                          letterSpacing: "0.18em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {p.category}
+                    {/* Thumbnail */}
+                    <div className="card-thumbnail" />
+
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            color: "var(--ink-faded)",
+                            letterSpacing: "0.18em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {p.category}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "16px",
+                            fontWeight: 800,
+                            letterSpacing: "-0.02em",
+                            color: "var(--ink)",
+                            marginTop: "8px",
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {p.title}
+                        </div>
+                        <div className="card-seller">Seller · {p.seller}</div>
+                        <div
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: 700,
+                            color: "var(--ink)",
+                          }}
+                        >
+                          ${p.price}
+                        </div>
                       </div>
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: 800,
-                          letterSpacing: "-0.02em",
-                          color: "var(--ink)",
-                          marginTop: "8px",
-                          lineHeight: 1.25,
-                        }}
-                      >
-                        {p.title}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          fontSize: "14px",
-                          fontWeight: 700,
-                          color: "var(--ink)",
-                        }}
-                      >
-                        ${p.price}
-                      </div>
+                      <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
                     </div>
-                    <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
                   </div>
                 </Link>
               ))}
@@ -445,6 +434,9 @@ export default async function ProductDetailPage({ params }: Props) {
         </section>
       </main>
       <Footer />
+
+      {/* Mobile sticky buy bar */}
+      <StickyBuyBar price={product.price} />
     </>
   );
 }

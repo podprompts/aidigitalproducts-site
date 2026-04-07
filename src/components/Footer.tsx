@@ -51,16 +51,18 @@ export default function Footer() {
       >
         {/* Left — brand + copy */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div
+          <Link
+            href="/"
             style={{
               fontSize: "14px",
               fontWeight: 800,
               letterSpacing: "0.02em",
               color: "var(--ink)",
+              textDecoration: "none",
             }}
           >
             AI Digital Products
-          </div>
+          </Link>
           <div
             style={{
               fontSize: "11px",

@@ -62,7 +62,7 @@ export default function Home() {
       </div>
 
       {/* Recently Added */}
-      <section className="block">
+      <section className="block" id="recently-added">
         <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
           <div
             style={{
@@ -100,14 +100,16 @@ export default function Home() {
                 <div
                   className="card"
                   style={{
-                    padding: "48px 36px",
+                    padding: "36px 36px 48px",
                     minHeight: "240px",
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "space-between",
                     textAlign: "left",
                   }}
                 >
+                  {/* Thumbnail */}
+                  <div className="card-thumbnail" />
+
                   <div>
                     <div
                       style={{
@@ -143,9 +145,9 @@ export default function Home() {
                     >
                       {product.title}
                     </div>
+                    <div className="card-seller">Seller · {product.seller}</div>
                     <div
                       style={{
-                        marginTop: "10px",
                         fontSize: "16px",
                         fontWeight: 700,
                         color: "var(--ink)",
@@ -154,7 +156,7 @@ export default function Home() {
                       ${product.price}
                     </div>
                   </div>
-                  <span className="card-arrow">→</span>
+                  <span className="card-arrow" style={{ marginTop: "auto" }}>→</span>
                 </div>
               </Link>
             ))}

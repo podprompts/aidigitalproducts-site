@@ -1,5 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import VideoSlot from "@/components/VideoSlot";
+import { videoConfig } from "@/lib/video-config";
+
 export default function Hero() {
   return (
     <section
@@ -34,6 +38,13 @@ export default function Hero() {
         The AI Marketplace
         <span style={{ display: "inline-block", width: "28px", height: "1px", background: "var(--ink-soft)" }} />
       </div>
+
+      {/* Video slot — hidden when videoType is "none" */}
+      <VideoSlot
+        videoType={videoConfig.videoType}
+        videoSrc={videoConfig.videoSrc}
+        posterImage={videoConfig.posterImage}
+      />
 
       {/* Headline */}
       <h1
@@ -84,12 +95,13 @@ export default function Hero() {
           animation: "fadeUp 0.9s ease forwards 0.75s",
         }}
       >
-        <BtnPrimary>Browse Products</BtnPrimary>
-        <BtnGhost>Start Selling</BtnGhost>
+        <Link href="/products" className="btn btn-primary">Browse Products</Link>
+        <Link href="/sell" className="btn btn-ghost">Start Selling</Link>
       </div>
 
       {/* Scroll cue */}
-      <div
+      <Link
+        href="#recently-added"
         style={{
           position: "absolute",
           bottom: "40px",
@@ -100,74 +112,14 @@ export default function Hero() {
           letterSpacing: "0.2em",
           textTransform: "uppercase",
           color: "var(--ink-mute)",
+          textDecoration: "none",
           opacity: 0,
-          animation: "fadeUp 0.9s ease forwards 1s",
+          animation: "fadeUp 0.9s ease forwards 1s, scrollBounce 2s ease 1.5s infinite",
+          whiteSpace: "nowrap",
         }}
       >
         Scroll
-      </div>
+      </Link>
     </section>
-  );
-}
-
-function BtnPrimary({ children }: { children: React.ReactNode }) {
-  return (
-    <button
-      className="btn"
-      style={{
-        padding: "14px 30px",
-        borderRadius: "980px",
-        fontSize: "14px",
-        fontWeight: 700,
-        fontFamily: "inherit",
-        cursor: "pointer",
-        letterSpacing: "0.01em",
-        background: "var(--ink)",
-        color: "var(--bg)",
-        border: "1px solid var(--ink)",
-        transition: "all 0.25s",
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget;
-        el.style.background = "transparent";
-        el.style.color = "var(--ink)";
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget;
-        el.style.background = "var(--ink)";
-        el.style.color = "var(--bg)";
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function BtnGhost({ children }: { children: React.ReactNode }) {
-  return (
-    <button
-      className="btn"
-      style={{
-        padding: "14px 30px",
-        borderRadius: "980px",
-        fontSize: "14px",
-        fontWeight: 700,
-        fontFamily: "inherit",
-        cursor: "pointer",
-        letterSpacing: "0.01em",
-        background: "transparent",
-        color: "var(--ink)",
-        border: "1px solid var(--ink-soft)",
-        transition: "all 0.25s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--ink)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--ink-soft)";
-      }}
-    >
-      {children}
-    </button>
   );
 }

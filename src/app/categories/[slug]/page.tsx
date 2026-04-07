@@ -90,61 +90,64 @@ export default async function CategoryPage({ params }: Props) {
                     <div
                       className="card"
                       style={{
-                        padding: "48px 36px",
+                        padding: "32px 36px 48px",
                         minHeight: "260px",
                         display: "flex",
                         flexDirection: "column",
-                        justifyContent: "space-between",
                       }}
                     >
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            color: "var(--ink-mute)",
-                            letterSpacing: "0.15em",
-                          }}
-                        >
-                          {String(i + 1).padStart(2, "0")}
+                      {/* Thumbnail */}
+                      <div className="card-thumbnail" />
+
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              color: "var(--ink-mute)",
+                              letterSpacing: "0.15em",
+                            }}
+                          >
+                            {String(i + 1).padStart(2, "0")}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: "var(--ink-faded)",
+                              letterSpacing: "0.18em",
+                              textTransform: "uppercase",
+                              marginTop: "12px",
+                            }}
+                          >
+                            {product.category}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "20px",
+                              fontWeight: 800,
+                              letterSpacing: "-0.02em",
+                              color: "var(--ink)",
+                              marginTop: "8px",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            {product.title}
+                          </div>
+                          <div className="card-seller">Seller · {product.seller}</div>
+                          <div
+                            style={{
+                              fontSize: "16px",
+                              fontWeight: 700,
+                              color: "var(--ink)",
+                            }}
+                          >
+                            ${product.price}
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: "10px",
-                            fontWeight: 700,
-                            color: "var(--ink-faded)",
-                            letterSpacing: "0.18em",
-                            textTransform: "uppercase",
-                            marginTop: "12px",
-                          }}
-                        >
-                          {product.category}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "20px",
-                            fontWeight: 800,
-                            letterSpacing: "-0.02em",
-                            color: "var(--ink)",
-                            marginTop: "8px",
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          {product.title}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: "12px",
-                            fontSize: "16px",
-                            fontWeight: 700,
-                            color: "var(--ink)",
-                            letterSpacing: "-0.01em",
-                          }}
-                        >
-                          ${product.price}
-                        </div>
+                        <span className="card-arrow">→</span>
                       </div>
-                      <span className="card-arrow">→</span>
                     </div>
                   </Link>
                 ))}

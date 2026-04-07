@@ -1,14 +1,48 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { mockProducts } from "@/lib/mock-data";
 
 const featured = mockProducts.slice(0, 6);
+// Triple for infinite loop
+const tripled = [...featured, ...featured, ...featured];
 
 export default function ProductGrid() {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    // Start scroll at the middle copy
+    const singleWidth = track.scrollWidth / 3;
+    track.scrollLeft = singleWidth;
+
+    let rafId: number;
+    const onScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const sw = track.scrollWidth / 3;
+        if (track.scrollLeft < sw * 0.3) {
+          track.scrollLeft += sw;
+        } else if (track.scrollLeft > sw * 2.1) {
+          track.scrollLeft -= sw;
+        }
+      });
+    };
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      track.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   return (
     <section className="block" id="products">
-      <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
+      {/* Heading — constrained */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center", paddingBottom: "0" }}>
         <div
           style={{
             fontSize: "11px",
@@ -51,101 +85,80 @@ export default function ProductGrid() {
           Curated digital products across automation, content, and intelligence — vetted for
           quality, ready for deployment.
         </p>
+      </div>
 
-        <div className="product-grid">
-          {featured.map((product, i) => (
+      {/* Carousel — full width, extends past viewport edge */}
+      <div className="carousel-wrap">
+        <div className="carousel-fade-left" />
+        <div ref={trackRef} className="carousel-track">
+          {tripled.map((product, i) => (
             <Link
-              key={product.id}
+              key={i}
               href={`/products/${product.slug}`}
-              style={{ textDecoration: "none" }}
+              style={{ textDecoration: "none", display: "block", flexShrink: 0 }}
             >
-              <div
-                style={{
-                  background: "var(--bg)",
-                  padding: "56px 36px",
-                  textAlign: "left",
-                  minHeight: "280px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  transition: "background 0.3s",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background = "var(--bg-soft)";
-                  const arrow = e.currentTarget.querySelector<HTMLSpanElement>(".cell-arrow");
-                  if (arrow) {
-                    arrow.style.opacity = "1";
-                    arrow.style.transform = "translateX(0)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.background = "var(--bg)";
-                  const arrow = e.currentTarget.querySelector<HTMLSpanElement>(".cell-arrow");
-                  if (arrow) {
-                    arrow.style.opacity = "0";
-                    arrow.style.transform = "translateX(-6px)";
-                  }
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "var(--ink-mute)",
-                      letterSpacing: "0.15em",
-                    }}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      color: "var(--ink-faded)",
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      marginTop: "10px",
-                    }}
-                  >
-                    {product.category}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "22px",
-                      fontWeight: 800,
-                      letterSpacing: "-0.02em",
-                      color: "var(--ink)",
-                      marginTop: "8px",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {product.title}
-                  </div>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "var(--ink-faded)",
-                      lineHeight: 1.55,
-                      marginTop: "12px",
-                    }}
-                  >
-                    {product.description.split(".")[0]}.
-                  </p>
-                </div>
-                <span
-                  className="cell-arrow"
+              <div className="carousel-cell">
+                {/* Thumbnail */}
+                <div className="card-thumbnail" />
+
+                {/* Meta */}
+                <div
                   style={{
-                    marginTop: "32px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: "var(--ink-mute)",
+                    letterSpacing: "0.15em",
+                  }}
+                >
+                  {String((i % featured.length) + 1).padStart(2, "0")}
+                </div>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    color: "var(--ink-faded)",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    marginTop: "10px",
+                  }}
+                >
+                  {product.category}
+                </div>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: 800,
+                    letterSpacing: "-0.02em",
+                    color: "var(--ink)",
+                    marginTop: "8px",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {product.title}
+                </div>
+                <div className="card-seller">Seller · {product.seller}</div>
+                <div
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    color: "var(--ink)",
+                  }}
+                >
+                  ${product.price}
+                </div>
+
+                <span
+                  style={{
+                    marginTop: "auto",
+                    paddingTop: "24px",
                     fontSize: "20px",
                     color: "var(--ink)",
+                    display: "block",
                     opacity: 0,
                     transform: "translateX(-6px)",
                     transition: "all 0.3s",
-                    display: "block",
                   }}
+                  className="carousel-arrow"
                 >
                   →
                 </span>
@@ -153,14 +166,15 @@ export default function ProductGrid() {
             </Link>
           ))}
         </div>
+        <div className="carousel-fade-right" />
+      </div>
 
-        <div
-          className="link-row"
-          style={{ display: "flex", justifyContent: "center", gap: "32px", marginTop: "36px", flexWrap: "wrap" }}
-        >
-          <Link href="/products" className="underline-link">Explore the marketplace</Link>
-          <Link href="/products" className="underline-link">See what&apos;s new</Link>
-        </div>
+      <div
+        className="link-row"
+        style={{ display: "flex", justifyContent: "center", gap: "32px", marginTop: "36px", flexWrap: "wrap" }}
+      >
+        <Link href="/products" className="underline-link">Explore the marketplace</Link>
+        <Link href="/products" className="underline-link">See what&apos;s new</Link>
       </div>
     </section>
   );
