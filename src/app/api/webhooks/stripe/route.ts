@@ -26,24 +26,36 @@ export async function POST(req: NextRequest) {
   }
 
   // Record the raw event for idempotency / audit
-  await supabaseAdmin.from("webhook_events").insert({
-    event_id: event.id,
-    event_type: event.type,
-    payload: event,
-  });
+  // Columns: stripe_event_id, event_type, payload (processed_at has a DB default)
+  const { error: webhookInsertError } = await supabaseAdmin
+    .from("webhook_events")
+    .insert({
+      stripe_event_id: event.id,
+      event_type: event.type,
+      payload: event,
+    });
+
+  if (webhookInsertError) {
+    // Duplicate event_id means we already processed this — acknowledge and stop
+    if (webhookInsertError.code === "23505") {
+      return NextResponse.json({ received: true });
+    }
+    console.error("[webhook] failed to record event", webhookInsertError);
+  }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const productId = session.metadata?.productId ?? null;
 
-    // Upsert order
+    // Columns: stripe_checkout_session_id, email, amount_cents, currency, status, metadata
+    // product_id lives in the metadata jsonb since there is no top-level product_id column
     const { error } = await supabaseAdmin.from("orders").insert({
-      stripe_session_id: session.id,
-      customer_email: session.customer_details?.email ?? null,
-      amount_total: session.amount_total,
+      stripe_checkout_session_id: session.id,
+      email: session.customer_details?.email ?? null,
+      amount_cents: session.amount_total,        // Stripe amount_total is already in cents
       currency: session.currency,
-      payment_status: session.payment_status,
-      product_id: productId,
+      status: session.payment_status,            // "paid" | "unpaid" | "no_payment_required"
+      metadata: { product_id: productId },
     });
 
     if (error) {
