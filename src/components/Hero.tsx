@@ -112,7 +112,7 @@ export default function Hero() {
           whiteSpace: "nowrap",
         }}
       >
-        Scroll
+        Keep Scrolling
       </Link>
     </section>
   );

@@ -17,6 +17,8 @@ export interface PricingTier {
   features: string[];
   btnLabel: string;
   btnHref: string;
+  /** Override the default 56px amount font size for longer price strings */
+  amountSize?: string;
 }
 
 export interface FooterLink {
@@ -92,6 +94,7 @@ export const pricingTiers: PricingTier[] = [
     ],
     btnLabel: "Contact Adrien",
     btnHref: "/contact",
+    amountSize: "36px",
   },
   {
     tier: "Enterprise",

@@ -74,11 +74,12 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
       <div
         style={{
           marginTop: "24px",
-          fontSize: "56px",
+          fontSize: tier.amountSize ?? "56px",
           fontWeight: 800,
           letterSpacing: "-0.04em",
           color: "var(--ink)",
           lineHeight: 1,
+          whiteSpace: "nowrap",
         }}
       >
         {tier.amount}
