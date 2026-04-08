@@ -48,25 +48,30 @@ export default async function ProductDetailPage({ params }: Props) {
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
 
-  // Fetch gallery images — fall back to thumbnailUrl if none in DB
-  const { data: dbImages, error: dbImagesError } = await supabaseAdmin
+  // Fetch authoritative product data from Supabase by slug.
+  // The slug is always consistent; the DB uuid may differ from the hardcoded mock id.
+  const [{ data: dbProductData }, ] = await Promise.all([
+    supabaseAdmin
+      .from("products")
+      .select("id, attributes, thumbnail_url")
+      .eq("slug", slug)
+      .single(),
+  ]);
+
+  const attributes     = (dbProductData?.attributes as Record<string, unknown> | null) ?? {};
+  // Use the real DB uuid so the product_images join is always correct
+  const dbProductId    = dbProductData?.id ?? product.id;
+  const dbThumbnailUrl = (dbProductData?.thumbnail_url as string | null) ?? null;
+
+  // Fetch gallery images using the confirmed DB id
+  const { data: dbImages } = await supabaseAdmin
     .from("product_images")
     .select("url, is_primary, display_order, alt_text")
-    .eq("product_id", product.id)
+    .eq("product_id", dbProductId)
     .order("display_order", { ascending: true });
-
-  // Fetch attributes from Supabase
-  const { data: dbProductData } = await supabaseAdmin
-    .from("products")
-    .select("attributes")
-    .eq("id", product.id)
-    .single();
-
-  const attributes = (dbProductData?.attributes as Record<string, unknown> | null) ?? {};
 
   let galleryImages: GalleryImage[];
   if (dbImages && dbImages.length > 0) {
-    // Put primary image first, preserve display_order for the rest
     const sorted = [...dbImages].sort((a, b) => {
       if (a.is_primary && !b.is_primary) return -1;
       if (!a.is_primary && b.is_primary) return 1;
@@ -77,9 +82,9 @@ export default async function ProductDetailPage({ params }: Props) {
       alt: (img.alt_text as string | null) ?? product.title,
     }));
   } else {
-    galleryImages = product.thumbnailUrl
-      ? [{ url: product.thumbnailUrl, alt: product.title }]
-      : [];
+    // Fallback chain: Supabase thumbnail_url → mock thumbnailUrl
+    const fallback = dbThumbnailUrl ?? product.thumbnailUrl ?? null;
+    galleryImages = fallback ? [{ url: fallback, alt: product.title }] : [];
   }
 
   return (

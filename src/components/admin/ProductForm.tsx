@@ -265,24 +265,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           )
         );
 
-        // Upsert new images
-        const newImgs = finalImages.filter(i => !i.id);
-        for (const [idx, img] of newImgs.entries()) {
-          await fetch("/api/admin/images/reorder", {
-            method: "PUT",
-            headers: adminHeaders(token),
-            body: JSON.stringify({
-              images: [], // will use insert below
-            }),
-          });
-          // Insert into product_images
-          await fetch("/api/admin/products", {
-            // We'll hit supabaseAdmin directly via our own route isn't ideal;
-            // for simplicity insert via upload results
-          });
-        }
-
-        // Upsert all images via reorder endpoint (handles display_order + is_primary)
+        // Update display_order + is_primary for existing images
         const existingToUpdate = finalImages.filter(i => i.id);
         if (existingToUpdate.length > 0) {
           await fetch("/api/admin/images/reorder", {
