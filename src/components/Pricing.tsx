@@ -66,6 +66,7 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
           textTransform: "uppercase",
           letterSpacing: "0.18em",
           color: "var(--ink-faded)",
+          whiteSpace: "nowrap",
         }}
       >
         {tier.tier}

@@ -69,7 +69,7 @@ export const stats: Stat[] = [
 export const pricingTiers: PricingTier[] = [
   {
     tier: "Starter",
-    amount: "$9–$39",
+    amount: "$9 - $197",
     period: "/once",
     desc: "Entry-level templates and lightweight automations.",
     features: [
@@ -80,6 +80,7 @@ export const pricingTiers: PricingTier[] = [
     ],
     btnLabel: "Browse Starter",
     btnHref: "/products",
+    amountSize: "36px",
   },
   {
     tier: "Professional",
@@ -109,6 +110,7 @@ export const pricingTiers: PricingTier[] = [
     ],
     btnLabel: "Contact Adrien",
     btnHref: "/contact",
+    amountSize: "36px",
   },
 ];
 
