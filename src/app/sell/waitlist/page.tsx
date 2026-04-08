@@ -36,7 +36,7 @@ export default function SellerWaitlistPage() {
                 color: "var(--ink)",
               }}
             >
-              Join the waitlist.
+              Become a seller.
             </h1>
             <p
               style={{
@@ -49,8 +49,8 @@ export default function SellerWaitlistPage() {
                 margin: "28px auto 0",
               }}
             >
-              We&apos;re onboarding sellers in waves. Drop your info below and we&apos;ll
-              reach out when your spot opens.
+              Start selling your AI products to thousands of buyers. Tell us about
+              yourself and what you want to sell.
             </p>
           </div>
         </section>

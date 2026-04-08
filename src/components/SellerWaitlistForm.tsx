@@ -87,10 +87,10 @@ export default function SellerWaitlistForm() {
           className="display"
           style={{ fontSize: "clamp(28px, 4vw, 48px)", color: "var(--ink)", marginBottom: "16px" }}
         >
-          We&apos;ll be in touch.
+          Thanks for applying.
         </h2>
         <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--ink-faded)", lineHeight: 1.6 }}>
-          You&apos;re on the list. When your spot opens, we&apos;ll reach out directly.
+          We&apos;re onboarding sellers in waves and will reach out when your spot opens.
         </p>
       </div>
     );
@@ -222,7 +222,7 @@ export default function SellerWaitlistForm() {
         className="btn btn-primary"
         style={{ alignSelf: "flex-start", opacity: status === "loading" ? 0.6 : 1 }}
       >
-        {status === "loading" ? "Submitting…" : "Join the Waitlist"}
+        {status === "loading" ? "Submitting…" : "Apply to Sell"}
       </button>
     </form>
   );

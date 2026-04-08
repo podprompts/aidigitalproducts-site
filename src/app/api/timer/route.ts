@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getActiveOverride } from "@/lib/timer-overrides";
 
 const SALE_MINUTES = 30;
 const REGULAR_HOURS = 24;
@@ -47,6 +48,20 @@ async function createNewTimer(ip: string, productId: string) {
 async function getOrCreateTimer(ip: string, productId: string) {
   const now = Date.now();
 
+  // ── Admin overrides take priority over visitor timer state ─────────────────
+  const override = await getActiveOverride(productId, ip);
+
+  if (override === "force_sale") {
+    // Return a synthetic 30-min sale window without touching visitor_timers
+    const expiresAt = new Date(now + SALE_MINUTES * 60 * 1000).toISOString();
+    return { saleActive: true, secondsRemaining: SALE_MINUTES * 60, expiresAt, adminOverride: true };
+  }
+
+  if (override === "force_regular") {
+    return { saleActive: false, secondsRemaining: 0, expiresAt: null, adminOverride: true };
+  }
+
+  // ── Normal 3-phase timer logic ─────────────────────────────────────────────
   const { data: existing } = await supabaseAdmin
     .from("visitor_timers")
     .select("expires_at")

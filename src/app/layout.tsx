@@ -14,6 +14,15 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aidigitalproducts.com"),
+  icons: {
+    // favicon.ico in app/ is served automatically by Next.js — no entry needed here.
+    // Add these once the PNG files are placed in /public:
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    other: [
+      { rel: "icon", url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { rel: "icon", url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  },
   title: {
     template: "%s — AI Digital Products",
     default: "AI Digital Products — The Marketplace for AI",

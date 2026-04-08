@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Sell — AI Digital Products",
   description:
-    "List your AI digital products on the fastest-growing AI marketplace. Free to list. 30% per sale. Paid weekly.",
+    "List your AI digital products on the fastest-growing AI marketplace. Free to list. A % per sale. Paid weekly.",
 };
 
 const howItWorks = [
@@ -17,7 +17,7 @@ const howItWorks = [
   },
   {
     num: "02",
-    heading: "30% Per Sale",
+    heading: "A % Per Sale",
     body: "We only earn when you earn. One flat rate on every transaction.",
   },
   {

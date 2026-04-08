@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mockProducts } from "@/lib/mock-data";
+import { getActiveOverride } from "@/lib/timer-overrides";
 
 function getIp(req: NextRequest): string {
   return (
@@ -24,8 +25,17 @@ async function resolvePrice(
     return { priceId: clientPriceId, priceInDollars: product?.price };
   }
 
-  // Product has a sale — verify timer phase server-side
+  // Product has a sale — check admin override first, then visitor timer
   const ip = getIp(req);
+
+  const override = await getActiveOverride(productId, ip);
+  if (override === "force_sale") {
+    return { priceId: product.priceId, priceInDollars: product.price };
+  }
+  if (override === "force_regular") {
+    return { priceId: product.regularPriceId, priceInDollars: product.regularPrice };
+  }
+
   const { data } = await supabaseAdmin
     .from("visitor_timers")
     .select("expires_at")

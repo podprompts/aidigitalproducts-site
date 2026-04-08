@@ -18,7 +18,11 @@ export default function RecentlyAddedCarousel() {
     <div
       style={{ position: "relative", overflow: "hidden", marginTop: "64px" }}
       onClickCapture={(e) => {
-        if (didDragRef.current) e.stopPropagation();
+        // Dragged >10px → swipe gesture, never navigate
+        if (didDragRef.current) { e.stopPropagation(); return; }
+        // Single click → do nothing (double-click navigates)
+        if (e.detail === 1) e.stopPropagation();
+        // Double-click (detail >= 2) falls through → Link navigates
       }}
     >
       <div
