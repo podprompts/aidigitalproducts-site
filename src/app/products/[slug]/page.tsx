@@ -7,6 +7,7 @@ import StickyBuyBar from "@/components/StickyBuyBar";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import PriceAndBuySection from "@/components/PriceAndBuySection";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
+import ViewTracker from "@/components/ViewTracker";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -445,6 +446,9 @@ export default async function ProductDetailPage({ params }: Props) {
         </section>
       </main>
       <Footer />
+
+      {/* View tracking — fires once per page visit */}
+      <ViewTracker productId={product.id} />
 
       {/* Mobile sticky buy bar */}
       <StickyBuyBar

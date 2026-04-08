@@ -63,6 +63,16 @@ export async function POST(req: NextRequest) {
       // Return 500 so Stripe retries
       return NextResponse.json({ error: "DB insert failed" }, { status: 500 });
     }
+
+    // Increment purchase counter — non-fatal if it fails
+    if (productId) {
+      const { error: rpcError } = await supabaseAdmin.rpc("increment_purchases", {
+        product_id: productId,
+      });
+      if (rpcError) {
+        console.error("[webhook] increment_purchases failed", rpcError);
+      }
+    }
   }
 
   return NextResponse.json({ received: true });

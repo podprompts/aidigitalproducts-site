@@ -18,7 +18,7 @@ import Footer from "@/components/Footer";
 //   set YOUTUBE_VIDEO_ID = "dQw4w9WgXcQ"
 // To hide the video entirely: set SHOW_HOMEPAGE_VIDEO = false
 // ─────────────────────────────────────────────────────────────────────────────
-const YOUTUBE_VIDEO_ID = "r6LeN1Wdbgk";
+const YOUTUBE_VIDEO_ID = "gBV5FT40N_M";
 const SHOW_HOMEPAGE_VIDEO = true;
 
 export default function Home() {
