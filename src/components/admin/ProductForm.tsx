@@ -335,20 +335,30 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0", maxWidth: "860px" }}>
 
-      {/* Toast */}
+      {/* Toast — fixed overlay so it's visible regardless of scroll position */}
       {toast && (
         <div
           style={{
-            padding: "12px 16px",
-            background: toast.ok ? "#f0fdf4" : "#fef2f2",
-            border: `1px solid ${toast.ok ? "#bbf7d0" : "#fecaca"}`,
-            color: toast.ok ? "#166534" : "#991b1b",
+            position: "fixed",
+            bottom: "28px",
+            right: "28px",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "14px 20px",
+            background: toast.ok ? "#166534" : "#991b1b",
+            color: "#fff",
             fontSize: "13px",
-            fontWeight: 600,
-            marginBottom: "24px",
-            borderRadius: "2px",
+            fontWeight: 700,
+            borderRadius: "4px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+            letterSpacing: "0.01em",
+            minWidth: "220px",
+            pointerEvents: "none",
           }}
         >
+          <span style={{ fontSize: "16px", lineHeight: 1 }}>{toast.ok ? "✓" : "✕"}</span>
           {toast.msg}
         </div>
       )}

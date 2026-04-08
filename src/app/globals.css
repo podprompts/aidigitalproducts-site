@@ -586,12 +586,11 @@ body {
   position: relative;
   overflow: hidden;
   background: var(--bg-alt);
-  height: 100%;
+  aspect-ratio: 1 / 1;
   min-height: 320px;
 }
 @media (max-width: 900px) {
   .gallery-single {
-    height: auto;
     min-height: 0;
     aspect-ratio: 1 / 1;
   }
@@ -603,7 +602,8 @@ body {
   gap: 16px;
   padding: 20px;
   background: var(--bg-alt);
-  height: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 320px;
 }
 .gallery-thumbs {
   display: flex;
@@ -644,7 +644,7 @@ body {
     flex-direction: column-reverse;
     padding: 16px;
     gap: 12px;
-    height: auto;
+    min-height: 0;
   }
   .gallery-thumbs {
     flex-direction: row;

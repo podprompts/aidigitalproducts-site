@@ -38,11 +38,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const related = mockProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
 
-  const included = product.features ?? [
-    "Full product files and documentation",
-    "Setup walkthrough and configuration guide",
-    "Email support from the seller",
-    "Instant download after purchase",
+  const howToUseSteps = [
+    "Download your prompt pack instantly after purchase",
+    "Copy any prompt into Midjourney, DALL-E 3, or Ideogram",
+    "Generate stunning designs ready for print-on-demand",
   ];
 
   const isComingSoon = !product.priceId;
@@ -284,7 +283,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </section>
 
-        {/* What's included */}
+        {/* How To Use */}
         <section className="block alt">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -297,7 +296,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 marginBottom: "24px",
               }}
             >
-              — What&apos;s included —
+              — How to use —
             </div>
             <h2
               className="display"
@@ -305,32 +304,51 @@ export default async function ProductDetailPage({ params }: Props) {
                 fontSize: "clamp(28px, 3.5vw, 40px)",
                 lineHeight: 1.05,
                 color: "var(--ink)",
-                marginBottom: "36px",
+                marginBottom: "48px",
               }}
             >
-              Everything you need.{" "}
-              <span style={{ color: "var(--ink-mute)" }}>Nothing extra.</span>
+              Ready in 3 simple steps.{" "}
+              <span style={{ color: "var(--ink-mute)" }}>Start creating today.</span>
             </h2>
-            <ul style={{ listStyle: "none" }}>
-              {included.map((item, i) => (
+            <ol style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0" }}>
+              {howToUseSteps.map((step, i) => (
                 <li
                   key={i}
                   style={{
-                    fontSize: "14px",
-                    fontWeight: 500,
-                    color: "var(--ink-faded)",
-                    padding: "14px 0",
-                    borderBottom: "1px solid var(--line)",
                     display: "flex",
-                    gap: "12px",
+                    gap: "24px",
                     alignItems: "flex-start",
+                    padding: "20px 0",
+                    borderBottom: "1px solid var(--line)",
                   }}
                 >
-                  <span style={{ color: "var(--ink-mute)", flexShrink: 0 }}>—</span>
-                  {item}
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 800,
+                      color: "var(--ink-mute)",
+                      letterSpacing: "0.1em",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                      paddingTop: "2px",
+                      minWidth: "20px",
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 600,
+                      color: "var(--ink-faded)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {step}
+                  </span>
                 </li>
               ))}
-            </ul>
+            </ol>
           </div>
         </section>
 
