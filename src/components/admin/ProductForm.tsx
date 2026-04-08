@@ -216,19 +216,19 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     try {
       // 1 — Save product record
       const payload = {
-        name:              form.name,
-        slug:              form.slug,
-        description:       form.description,
-        category:          form.category,
-        price:             form.price ? parseFloat(form.price) : null,
-        regular_price:     form.regular_price ? parseFloat(form.regular_price) : null,
-        price_id:          form.price_id || null,
-        regular_price_id:  form.regular_price_id || null,
-        seller:            form.seller,
-        features:          form.features.split("\n").map(s => s.trim()).filter(Boolean),
-        status:            form.status,
-        is_featured:       form.is_featured,
-        attributes:        buildAttributesPayload(attrs),
+        name:                 form.name,
+        slug:                 form.slug,
+        description:          form.description,
+        category:             form.category,
+        sale_price_cents:     form.price ? Math.round(parseFloat(form.price) * 100) : null,
+        regular_price_cents:  form.regular_price ? Math.round(parseFloat(form.regular_price) * 100) : null,
+        price_id:             form.price_id || null,
+        regular_price_id:     form.regular_price_id || null,
+        seller:               form.seller,
+        features:             form.features.split("\n").map(s => s.trim()).filter(Boolean),
+        status:               form.status,
+        is_featured:          form.is_featured,
+        attributes:           buildAttributesPayload(attrs),
       };
 
       const productRes = await fetch(
@@ -438,7 +438,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         {/* Right column */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-          <Field label="Sale Price ($) *">
+          <Field label="Sale Price ($)">
             <input
               style={inputStyle}
               type="number"
@@ -447,7 +447,6 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               value={form.price}
               onChange={(e) => set("price", e.target.value)}
               placeholder="e.g. 9.99"
-              required
             />
           </Field>
 

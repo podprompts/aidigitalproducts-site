@@ -11,7 +11,7 @@ interface Product {
   name: string;
   slug: string;
   category: string;
-  price: number;
+  sale_price_cents: number | null;
   status: string | null;
   thumbnail_url: string | null;
   created_at: string;
@@ -196,7 +196,7 @@ function ProductsTable() {
                   </td>
                   <td style={{ padding: "10px 14px", color: "var(--ink-faded)", whiteSpace: "nowrap" }}>{p.category}</td>
                   <td style={{ padding: "10px 14px", fontWeight: 700, color: "var(--ink)", whiteSpace: "nowrap" }}>
-                    ${p.price?.toFixed(2) ?? "—"}
+                    {p.sale_price_cents ? `$${(p.sale_price_cents / 100).toFixed(2)}` : "—"}
                   </td>
                   <td style={{ padding: "10px 14px" }}>{statusBadge(p.status)}</td>
                   <td style={{ padding: "10px 14px" }}>

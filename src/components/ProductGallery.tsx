@@ -66,7 +66,7 @@ export default function ProductGallery({ images, alt }: Props) {
           fill
           sizes="(max-width: 900px) 100vw, 50vw"
           style={{
-            objectFit: "cover",
+            objectFit: "contain",
             transform: mainHovered ? "scale(1.02)" : "scale(1)",
             transition: "transform 0.4s ease",
           }}
@@ -115,7 +115,7 @@ export default function ProductGallery({ images, alt }: Props) {
             fill
             sizes="(max-width: 900px) 100vw, 45vw"
             style={{
-              objectFit: "cover",
+              objectFit: "contain",
               transform: mainHovered ? "scale(1.02)" : "scale(1)",
               transition: "transform 0.4s ease",
             }}
