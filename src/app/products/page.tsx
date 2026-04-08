@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ProductsClient from "./ProductsClient";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { mockProducts, mockCategories } from "@/lib/mock-data";
 
 export const metadata: Metadata = {
   title: "Browse Products — AI Digital Products",
@@ -9,7 +11,22 @@ export const metadata: Metadata = {
     "Browse the full catalog of AI digital products. Chatbots, voice agents, automations, content systems, and more. New listings daily.",
 };
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  const { data: dbProducts } = await supabaseAdmin
+    .from("products")
+    .select("id, thumbnail_url");
+
+  const thumbMap = Object.fromEntries(
+    (dbProducts ?? []).map((p) => [p.id, p.thumbnail_url as string | null])
+  );
+
+  const products = mockProducts.map((p) => ({
+    ...p,
+    thumbnailUrl: thumbMap[p.id] ?? p.thumbnailUrl,
+  }));
+
+  const categoryNames = mockCategories.map((c) => c.name);
+
   return (
     <>
       <Nav />
@@ -60,7 +77,7 @@ export default function ProductsPage() {
 
         {/* Filterable grid */}
         <section style={{ paddingBottom: "clamp(80px, 12vw, 160px)" }}>
-          <ProductsClient />
+          <ProductsClient products={products} categoryNames={categoryNames} />
         </section>
       </main>
       <Footer />

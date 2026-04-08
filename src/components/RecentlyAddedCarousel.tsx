@@ -2,15 +2,15 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { mockProducts } from "@/lib/mock-data";
+import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
-const PRODUCTS = mockProducts.slice(0, 6);
-// Tripled so the infinite-loop jump is always seamless in both directions.
-const tripled = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
+export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
+  const PRODUCTS = (products ?? mockProducts).slice(0, 6);
+  // Tripled so the infinite-loop jump is always seamless in both directions.
+  const tripled = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
 
-export default function RecentlyAddedCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const { didDragRef } = useInfiniteCarousel(trackRef, PRODUCTS.length);
 

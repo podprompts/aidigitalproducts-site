@@ -2,17 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { mockProducts, mockCategories } from "@/lib/mock-data";
+import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 
 const ALL = "All";
-const categories = [ALL, ...mockCategories.map((c) => c.name)];
 
-export default function ProductsClient() {
+export default function ProductsClient({
+  products,
+  categoryNames,
+}: {
+  products: Product[];
+  categoryNames: string[];
+}) {
+  const categories = [ALL, ...categoryNames];
   const [active, setActive] = useState(ALL);
 
   const displayed =
-    active === ALL ? mockProducts : mockProducts.filter((p) => p.category === active);
+    active === ALL ? products : products.filter((p) => p.category === active);
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
