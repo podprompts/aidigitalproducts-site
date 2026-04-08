@@ -58,14 +58,8 @@ export default function Hero() {
           animation: "fadeUp 1s ease forwards 0.35s",
         }}
       >
-        Stop buying
-        <br />
-        prompts.{" "}
-        <span style={{ color: "var(--ink-mute)" }}>
-          Start
-          <br />
-          buying solutions.
-        </span>
+        Skip the Build.{" "}
+        <span style={{ color: "var(--ink-mute)" }}>Buy the Solution.</span>
       </h1>
 
       {/* Subtext */}

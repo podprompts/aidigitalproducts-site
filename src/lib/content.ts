@@ -16,6 +16,7 @@ export interface PricingTier {
   desc: string;
   features: string[];
   btnLabel: string;
+  btnHref: string;
 }
 
 export interface FooterLink {
@@ -66,7 +67,7 @@ export const stats: Stat[] = [
 export const pricingTiers: PricingTier[] = [
   {
     tier: "Starter",
-    amount: "$9",
+    amount: "$9–$39",
     period: "/once",
     desc: "Entry-level templates and lightweight automations.",
     features: [
@@ -76,11 +77,12 @@ export const pricingTiers: PricingTier[] = [
       "Instant download",
     ],
     btnLabel: "Browse Starter",
+    btnHref: "/products",
   },
   {
     tier: "Professional",
-    amount: "$97",
-    period: "/once",
+    amount: "$297–$997",
+    period: "/+retainer",
     desc: "Full-stack systems built for real business results.",
     features: [
       "Plug-and-play systems",
@@ -88,12 +90,13 @@ export const pricingTiers: PricingTier[] = [
       "Setup walkthroughs",
       "Email support",
     ],
-    btnLabel: "Browse Pro",
+    btnLabel: "Contact Adrien",
+    btnHref: "/contact",
   },
   {
     tier: "Enterprise",
-    amount: "$497",
-    period: "/once",
+    amount: "Contact Us",
+    period: "",
     desc: "Premium, done-for-you AI systems. White-glove quality.",
     features: [
       "Complete deployments",
@@ -101,7 +104,8 @@ export const pricingTiers: PricingTier[] = [
       "Priority support",
       "Lifetime updates",
     ],
-    btnLabel: "Browse Enterprise",
+    btnLabel: "Contact Adrien",
+    btnHref: "/contact",
   },
 ];
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { pricingTiers } from "@/lib/content";
 
 export default function Pricing() {
@@ -129,18 +130,19 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
         ))}
       </ul>
 
-      <button
+      <Link
+        href={tier.btnHref}
         style={{
           marginTop: "28px",
+          display: "inline-block",
           padding: "13px 24px",
           borderRadius: "980px",
           fontSize: "13px",
           fontWeight: 700,
-          fontFamily: "inherit",
           background: "transparent",
           color: "var(--ink)",
           border: "1px solid var(--ink)",
-          cursor: "pointer",
+          textDecoration: "none",
           transition: "all 0.25s",
         }}
         onMouseEnter={(e) => {
@@ -155,7 +157,7 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
         }}
       >
         {tier.btnLabel}
-      </button>
+      </Link>
     </div>
   );
 }
