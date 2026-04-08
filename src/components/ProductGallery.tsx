@@ -32,12 +32,12 @@ export default function ProductGallery({ images, alt }: Props) {
 
   const squareContainer: React.CSSProperties = {
     width: "100%",
-    aspectRatio: "1 / 1",
+    maxWidth: "500px",
+    height: "500px",
     position: "relative",
     background: "var(--bg-alt)",
     overflow: "hidden",
-    alignSelf: "start",
-    maxHeight: "600px",
+    flexShrink: 0,
   };
 
   // Empty — no images at all
@@ -86,7 +86,7 @@ export default function ProductGallery({ images, alt }: Props) {
   return (
     <div
       className="gallery"
-      style={{ alignSelf: "start", maxHeight: "600px", aspectRatio: "1 / 1", width: "100%" }}
+      style={{ width: "100%", maxWidth: "500px", height: "500px", flexShrink: 0 }}
     >
       {/* Thumbnail strip */}
       <div className="gallery-thumbs">

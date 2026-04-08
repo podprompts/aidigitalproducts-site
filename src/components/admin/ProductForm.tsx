@@ -216,19 +216,18 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     try {
       // 1 — Save product record
       const payload = {
-        name:                 form.name,
-        slug:                 form.slug,
-        description:          form.description,
-        category:             form.category,
-        sale_price_cents:     form.price ? Math.round(parseFloat(form.price) * 100) : null,
-        regular_price_cents:  form.regular_price ? Math.round(parseFloat(form.regular_price) * 100) : null,
-        sale_stripe_price_id:     form.sale_stripe_price_id || null,
-        regular_stripe_price_id:  form.regular_stripe_price_id || null,
-        seller:               form.seller,
-        features:             form.features.split("\n").map(s => s.trim()).filter(Boolean),
-        status:               form.status,
-        is_featured:          form.is_featured,
-        attributes:           buildAttributesPayload(attrs),
+        name:                    form.name,
+        slug:                    form.slug,
+        description:             form.description,
+        category:                form.category,
+        features:                form.features.split("\n").map(s => s.trim()).filter(Boolean),
+        sale_price_cents:        form.price ? Math.round(parseFloat(form.price) * 100) : null,
+        regular_price_cents:     form.regular_price ? Math.round(parseFloat(form.regular_price) * 100) : null,
+        sale_stripe_price_id:    form.sale_stripe_price_id || null,
+        regular_stripe_price_id: form.regular_stripe_price_id || null,
+        is_active:               form.status === "active",
+        is_featured:             form.is_featured,
+        attributes:              buildAttributesPayload(attrs),
       };
 
       const productRes = await fetch(
