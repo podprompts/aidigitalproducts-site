@@ -5,12 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const navLinks = [
-  { label: "Products", href: "/products" },
-  { label: "Sell",     href: "/sell"     },
-  { label: "Pricing",  href: "/pricing"  },
-  { label: "About",    href: "/about"    },
-  { label: "Blog",     href: "/blog"     },
-  { label: "Contact",  href: "/contact"  },
+  { label: "Browse Products", href: "/products" },
+  { label: "Start Selling",   href: "/sell"     },
 ];
 
 interface SearchResult {

@@ -1,44 +1,17 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { mockProducts } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
+import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
 const featured = mockProducts.slice(0, 6);
-// Triple for infinite loop
 const tripled = [...featured, ...featured, ...featured];
 
 export default function ProductGrid() {
   const trackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    // Start scroll at the middle copy
-    const singleWidth = track.scrollWidth / 3;
-    track.scrollLeft = singleWidth;
-
-    let rafId: number;
-    const onScroll = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const sw = track.scrollWidth / 3;
-        if (track.scrollLeft < sw * 0.3) {
-          track.scrollLeft += sw;
-        } else if (track.scrollLeft > sw * 2.1) {
-          track.scrollLeft -= sw;
-        }
-      });
-    };
-
-    track.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      track.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
+  const { didDragRef } = useInfiniteCarousel(trackRef, featured.length);
 
   return (
     <section className="block" id="products">
@@ -91,12 +64,24 @@ export default function ProductGrid() {
       {/* Carousel — full width, extends past viewport edge */}
       <div className="carousel-wrap">
         <div className="carousel-fade-left" />
-        <div ref={trackRef} className="carousel-track">
+        <div
+          ref={trackRef}
+          className="carousel-track"
+          style={{
+            cursor: "grab",
+            userSelect: "none",
+            scrollSnapType: "none", // snap handled in JS for infinite-loop compatibility
+          }}
+          onClickCapture={(e) => {
+            if (didDragRef.current) e.stopPropagation();
+          }}
+        >
           {tripled.map((product, i) => (
             <Link
               key={i}
               href={`/products/${product.slug}`}
               style={{ textDecoration: "none", display: "block", flexShrink: 0 }}
+              draggable={false}
             >
               <div className="carousel-cell">
                 {/* Thumbnail */}

@@ -6,7 +6,7 @@ export default function Pricing() {
   return (
     <section className="block" id="pricing">
       <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-        <Eyebrow>— Pricing —</Eyebrow>
+        <Eyebrow>— Done For You AI —</Eyebrow>
 
         <h2
           className="display"

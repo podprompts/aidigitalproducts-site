@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function FinalCTA() {
   return (
     <section className="final-cta">
@@ -29,7 +31,8 @@ export default function FinalCTA() {
         The marketplace for people who want results, not experiments.
       </p>
 
-      <button
+      <Link
+        href="/products"
         style={{
           marginTop: "44px",
           display: "inline-block",
@@ -37,13 +40,12 @@ export default function FinalCTA() {
           borderRadius: "980px",
           fontSize: "14px",
           fontWeight: 700,
-          fontFamily: "inherit",
-          cursor: "pointer",
           letterSpacing: "0.01em",
           background: "var(--ink)",
           color: "var(--bg)",
           border: "1px solid var(--ink)",
           transition: "all 0.25s",
+          textDecoration: "none",
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget;
@@ -56,8 +58,8 @@ export default function FinalCTA() {
           el.style.color = "var(--bg)";
         }}
       >
-        Get Started
-      </button>
+        Browse Products
+      </Link>
     </section>
   );
 }

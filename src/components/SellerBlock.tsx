@@ -46,8 +46,8 @@ export default function SellerBlock() {
             flexWrap: "wrap",
           }}
         >
-          <UnderlineLink href="#">Become a seller</UnderlineLink>
-          <UnderlineLink href="#">Read the guide</UnderlineLink>
+          <UnderlineLink href="/sell/waitlist">Become a seller</UnderlineLink>
+          <UnderlineLink href="/sell/waitlist">Read the guide</UnderlineLink>
         </div>
       </div>
     </section>
