@@ -48,11 +48,16 @@ export default async function ProductDetailPage({ params }: Props) {
   const hasSale = !!(product.regularPrice && product.regularPriceId);
 
   // Fetch gallery images — fall back to thumbnailUrl if none in DB
-  const { data: dbImages } = await supabaseAdmin
+  const { data: dbImages, error: dbImagesError } = await supabaseAdmin
     .from("product_images")
     .select("url, is_primary, display_order, alt_text")
     .eq("product_id", product.id)
     .order("display_order", { ascending: true });
+
+  console.log("[gallery] product.id:", product.id);
+  console.log("[gallery] dbImages:", dbImages);
+  console.log("[gallery] dbImagesError:", dbImagesError);
+  console.log("[gallery] product.thumbnailUrl:", product.thumbnailUrl);
 
   let galleryImages: GalleryImage[];
   if (dbImages && dbImages.length > 0) {
