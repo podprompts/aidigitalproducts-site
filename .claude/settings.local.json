@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls C:/Users/user/Documents/AiDigitalProducts-Site/.env*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:imszwjevnmukemxlryox.supabase.co)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}

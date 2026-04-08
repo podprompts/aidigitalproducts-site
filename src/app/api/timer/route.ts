@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-const TIMER_MINUTES = 30;
+const SALE_MINUTES = 30;
+const REGULAR_HOURS = 24;
 
 function getIp(req: NextRequest): string {
   return (
@@ -11,28 +12,9 @@ function getIp(req: NextRequest): string {
   );
 }
 
-async function getOrCreateTimer(ip: string, productId: string) {
+async function createNewTimer(ip: string, productId: string) {
   const now = Date.now();
-
-  // Check for existing timer
-  const { data: existing } = await supabaseAdmin
-    .from("visitor_timers")
-    .select("expires_at")
-    .eq("ip_address", ip)
-    .eq("product_id", productId)
-    .maybeSingle();
-
-  if (existing) {
-    const expiresAt = existing.expires_at as string;
-    const secondsRemaining = Math.max(
-      0,
-      Math.floor((new Date(expiresAt).getTime() - now) / 1000)
-    );
-    return { secondsRemaining, expiresAt, saleActive: secondsRemaining > 0 };
-  }
-
-  // Create new timer
-  const expiresAt = new Date(now + TIMER_MINUTES * 60 * 1000).toISOString();
+  const expiresAt = new Date(now + SALE_MINUTES * 60 * 1000).toISOString();
   const startedAt = new Date(now).toISOString();
 
   const { error } = await supabaseAdmin.from("visitor_timers").insert({
@@ -42,7 +24,7 @@ async function getOrCreateTimer(ip: string, productId: string) {
     expires_at: expiresAt,
   });
 
-  // If a concurrent request already inserted, fetch the one that won
+  // Concurrent insert race — fetch the winner
   if (error?.code === "23505") {
     const { data: race } = await supabaseAdmin
       .from("visitor_timers")
@@ -56,10 +38,50 @@ async function getOrCreateTimer(ip: string, productId: string) {
       0,
       Math.floor((new Date(raceExpiry).getTime() - now) / 1000)
     );
-    return { secondsRemaining, expiresAt: raceExpiry, saleActive: secondsRemaining > 0 };
+    return { saleActive: true, secondsRemaining, expiresAt: raceExpiry };
   }
 
-  return { secondsRemaining: TIMER_MINUTES * 60, expiresAt, saleActive: true };
+  return { saleActive: true, secondsRemaining: SALE_MINUTES * 60, expiresAt };
+}
+
+async function getOrCreateTimer(ip: string, productId: string) {
+  const now = Date.now();
+
+  const { data: existing } = await supabaseAdmin
+    .from("visitor_timers")
+    .select("expires_at")
+    .eq("ip_address", ip)
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  // No record → brand new visitor → start sale phase
+  if (!existing) {
+    return createNewTimer(ip, productId);
+  }
+
+  const expiresAt = existing.expires_at as string;
+  const expiryMs = new Date(expiresAt).getTime();
+  const resetMs = expiryMs + REGULAR_HOURS * 60 * 60 * 1000;
+
+  // Phase 1 — sale window still active
+  if (now < expiryMs) {
+    const secondsRemaining = Math.floor((expiryMs - now) / 1000);
+    return { saleActive: true, secondsRemaining, expiresAt };
+  }
+
+  // Phase 3 — past the 24-hr regular window → delete and start fresh
+  if (now >= resetMs) {
+    await supabaseAdmin
+      .from("visitor_timers")
+      .delete()
+      .eq("ip_address", ip)
+      .eq("product_id", productId);
+
+    return createNewTimer(ip, productId);
+  }
+
+  // Phase 2 — in the 24-hr regular window (timer expired, no reset yet)
+  return { saleActive: false, secondsRemaining: 0, expiresAt: null };
 }
 
 export async function GET(req: NextRequest) {

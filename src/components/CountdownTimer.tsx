@@ -3,46 +3,34 @@
 import { useEffect, useRef, useState } from "react";
 
 interface Props {
-  productId: string;
+  expiresAt: string;
   onExpire: () => void;
 }
 
-export default function CountdownTimer({ productId, onExpire }: Props) {
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+export default function CountdownTimer({ expiresAt, onExpire }: Props) {
+  const expiry = new Date(expiresAt).getTime();
+  const [secondsLeft, setSecondsLeft] = useState(() =>
+    Math.max(0, Math.floor((expiry - Date.now()) / 1000))
+  );
   const onExpireRef = useRef(onExpire);
   onExpireRef.current = onExpire;
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-
-    async function init() {
-      try {
-        const res = await fetch(`/api/timer?productId=${encodeURIComponent(productId)}`);
-        if (!res.ok) return;
-        const { expiresAt } = await res.json();
-        const expiry = new Date(expiresAt).getTime();
-
-        const tick = () => {
-          const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
-          setSecondsLeft(remaining);
-          if (remaining === 0) {
-            clearInterval(interval);
-            onExpireRef.current();
-          }
-        };
-
-        tick();
-        interval = setInterval(tick, 1000);
-      } catch {
-        // Don't break the product page if the timer API fails
+    const tick = () => {
+      const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+      setSecondsLeft(remaining);
+      if (remaining === 0) {
+        clearInterval(interval);
+        onExpireRef.current();
       }
-    }
+    };
 
-    init();
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [productId]);
+  }, [expiry]);
 
-  if (secondsLeft === null || secondsLeft === 0) return null;
+  if (secondsLeft === 0) return null;
 
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;

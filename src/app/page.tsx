@@ -4,15 +4,22 @@ import Ticker from "@/components/Ticker";
 import Hero from "@/components/Hero";
 import StatsCarousel from "@/components/StatsCarousel";
 import ProductGrid from "@/components/ProductGrid";
+import RecentlyAddedCarousel from "@/components/RecentlyAddedCarousel";
 import Stats from "@/components/Stats";
 import SellerBlock from "@/components/SellerBlock";
 import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
-import { mockProducts } from "@/lib/mock-data";
-import ProductThumbnail from "@/components/ProductThumbnail";
 
-const recentProducts = mockProducts.slice(0, 3);
+// ─────────────────────────────────────────────────────────────────────────────
+// HOMEPAGE VIDEO
+// To change the video: replace the ID below with the new YouTube video ID.
+//   Example: for https://www.youtube.com/watch?v=dQw4w9WgXcQ
+//   set YOUTUBE_VIDEO_ID = "dQw4w9WgXcQ"
+// To hide the video entirely: set SHOW_HOMEPAGE_VIDEO = false
+// ─────────────────────────────────────────────────────────────────────────────
+const YOUTUBE_VIDEO_ID = "r6LeN1Wdbgk";
+const SHOW_HOMEPAGE_VIDEO = true;
 
 export default function Home() {
   return (
@@ -23,40 +30,46 @@ export default function Home() {
       <Nav />
       <Hero />
 
-      {/* YouTube video — below "The AI Marketplace" hero */}
-      <section
-        style={{
-          padding: "clamp(48px, 7vw, 80px) 24px",
-          borderBottom: "1px solid var(--line-soft)",
-        }}
-      >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div
-            style={{
-              position: "relative",
-              paddingBottom: "56.25%", // 16:9
-              height: 0,
-              overflow: "hidden",
-              borderRadius: "6px",
-              background: "var(--bg-alt)",
-            }}
-          >
-            <iframe
-              src="https://www.youtube.com/embed/PWIoFOYw2gg"
-              title="AI Digital Products"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
+      {/* ── HOMEPAGE VIDEO ────────────────────────────────────────────────── */}
+      {/* To hide this section: change SHOW_HOMEPAGE_VIDEO to false (line ~20) */}
+      {/* To change the video: change YOUTUBE_VIDEO_ID (line ~19)             */}
+      {SHOW_HOMEPAGE_VIDEO && (
+        <section
+          style={{
+            padding: "clamp(48px, 7vw, 80px) 24px",
+            borderBottom: "1px solid var(--line-soft)",
+          }}
+        >
+          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+            <div
               style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                border: "none",
+                position: "relative",
+                paddingBottom: "56.25%", /* 16:9 aspect ratio */
+                height: 0,
+                overflow: "hidden",
+                borderRadius: "6px",
+                background: "var(--bg-alt)",
               }}
-            />
+            >
+              <iframe
+                key={YOUTUBE_VIDEO_ID}
+                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?rel=0`}
+                title="AI Digital Products intro video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+      {/* ── END HOMEPAGE VIDEO ──────────────────────────────────────────── */}
 
       {/* Stats bar — swipeable/draggable infinite carousel */}
       <StatsCarousel />
@@ -89,84 +102,15 @@ export default function Home() {
             Fresh off the press.{" "}
             <span style={{ color: "var(--ink-mute)" }}>New products daily.</span>
           </h2>
+        </div>
 
-          <div className="product-grid" style={{ marginTop: "64px" }}>
-            {recentProducts.map((product, i) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.slug}`}
-                style={{ textDecoration: "none" }}
-              >
-                <div
-                  className="card"
-                  style={{
-                    padding: "36px 36px 48px",
-                    minHeight: "240px",
-                    display: "flex",
-                    flexDirection: "column",
-                    textAlign: "left",
-                  }}
-                >
-                  {/* Thumbnail */}
-                  <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
+        {/* Full-width draggable carousel — bleeds past the centered container */}
+        <RecentlyAddedCarousel />
 
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        color: "var(--ink-mute)",
-                        letterSpacing: "0.15em",
-                      }}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        color: "var(--ink-faded)",
-                        letterSpacing: "0.18em",
-                        textTransform: "uppercase",
-                        marginTop: "10px",
-                      }}
-                    >
-                      {product.category}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: 800,
-                        letterSpacing: "-0.02em",
-                        color: "var(--ink)",
-                        marginTop: "8px",
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {product.title}
-                    </div>
-                    <div className="card-seller">Seller · {product.seller}</div>
-                    <div
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: 700,
-                        color: "var(--ink)",
-                      }}
-                    >
-                      ${product.price}
-                    </div>
-                  </div>
-                  <span className="card-arrow" style={{ marginTop: "auto" }}>→</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div style={{ marginTop: "36px" }}>
-            <Link href="/products" className="underline-link">
-              Browse all products
-            </Link>
-          </div>
+        <div style={{ maxWidth: "1200px", margin: "36px auto 0", textAlign: "center" }}>
+          <Link href="/products" className="underline-link">
+            Browse all products
+          </Link>
         </div>
       </section>
 

@@ -24,7 +24,7 @@ async function resolvePrice(
     return { priceId: clientPriceId, priceInDollars: product?.price };
   }
 
-  // Product has a sale — verify timer server-side
+  // Product has a sale — verify timer phase server-side
   const ip = getIp(req);
   const { data } = await supabaseAdmin
     .from("visitor_timers")
@@ -33,14 +33,28 @@ async function resolvePrice(
     .eq("product_id", productId)
     .maybeSingle();
 
-  const saleActive =
-    data && new Date(data.expires_at as string).getTime() > Date.now();
+  const now = Date.now();
 
-  if (saleActive) {
+  // No record → new visitor (or post-reset) → sale price
+  if (!data) {
     return { priceId: product.priceId, priceInDollars: product.price };
-  } else {
-    return { priceId: product.regularPriceId, priceInDollars: product.regularPrice };
   }
+
+  const expiryMs = new Date(data.expires_at as string).getTime();
+  const resetMs = expiryMs + 24 * 60 * 60 * 1000;
+
+  // Phase 1: sale window active → sale price
+  if (now < expiryMs) {
+    return { priceId: product.priceId, priceInDollars: product.price };
+  }
+
+  // Phase 3: past 24-hr reset window → sale price (timer will reset on next page load)
+  if (now >= resetMs) {
+    return { priceId: product.priceId, priceInDollars: product.price };
+  }
+
+  // Phase 2: in the 24-hr regular window → regular price
+  return { priceId: product.regularPriceId, priceInDollars: product.regularPrice };
 }
 
 export async function POST(req: NextRequest) {

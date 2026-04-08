@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BuyButton from "@/components/BuyButton";
 import CountdownTimer from "@/components/CountdownTimer";
 
@@ -18,6 +18,11 @@ interface Props {
   description: string;
 }
 
+interface TimerState {
+  saleActive: boolean;
+  expiresAt: string | null;
+}
+
 export default function PriceAndBuySection({
   productId,
   productName,
@@ -28,9 +33,31 @@ export default function PriceAndBuySection({
   description,
 }: Props) {
   const hasSale = !!(regularPrice && salePriceId && regularPriceId);
-  const [saleActive, setSaleActive] = useState(true);
 
-  // After timer expires: charge regular price
+  // null = loading (server hasn't told us yet)
+  const [timerState, setTimerState] = useState<TimerState | null>(null);
+
+  useEffect(() => {
+    if (!hasSale) {
+      setTimerState({ saleActive: false, expiresAt: null });
+      return;
+    }
+    fetch(`/api/timer?productId=${encodeURIComponent(productId)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setTimerState({
+          saleActive: !!data.saleActive,
+          expiresAt: data.expiresAt ?? null,
+        });
+      })
+      .catch(() => {
+        // On error, default to regular price (safer than falsely showing sale)
+        setTimerState({ saleActive: false, expiresAt: null });
+      });
+  }, [productId, hasSale]);
+
+  const saleActive = timerState?.saleActive ?? false;
+
   const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
   const activePrice = hasSale && !saleActive ? regularPrice! : salePrice;
 
@@ -38,20 +65,35 @@ export default function PriceAndBuySection({
     <>
       {/* ── Price block ── */}
       <div style={{ marginTop: "24px" }}>
-        {hasSale ? (
+        {timerState === null ? (
+          // Loading — avoid flashing wrong price
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: 800,
+              letterSpacing: "-0.04em",
+              color: "var(--ink-faded)",
+              lineHeight: 1,
+            }}
+          >
+            —
+          </div>
+        ) : hasSale ? (
           <>
-            <p
-              style={{
-                fontSize: "13px",
-                fontWeight: 600,
-                color: "var(--ink-faded)",
-                textDecoration: "line-through",
-                letterSpacing: "0.02em",
-                marginBottom: "4px",
-              }}
-            >
-              Was ${regularPrice!.toFixed(2)}
-            </p>
+            {saleActive && (
+              <p
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "var(--ink-faded)",
+                  textDecoration: "line-through",
+                  letterSpacing: "0.02em",
+                  marginBottom: "4px",
+                }}
+              >
+                Was ${regularPrice!.toFixed(2)}
+              </p>
+            )}
             <div
               style={{
                 fontSize: "48px",
@@ -61,14 +103,16 @@ export default function PriceAndBuySection({
                 lineHeight: 1,
               }}
             >
-              ${saleActive ? salePrice.toFixed(2) : regularPrice!.toFixed(2)}
+              ${activePrice.toFixed(2)}
             </div>
-            {saleActive ? (
+            {saleActive && timerState.expiresAt ? (
               <CountdownTimer
-                productId={productId}
-                onExpire={() => setSaleActive(false)}
+                expiresAt={timerState.expiresAt}
+                onExpire={() =>
+                  setTimerState({ saleActive: false, expiresAt: null })
+                }
               />
-            ) : (
+            ) : !saleActive ? (
               <p
                 style={{
                   marginTop: "8px",
@@ -81,7 +125,7 @@ export default function PriceAndBuySection({
               >
                 Sale ended
               </p>
-            )}
+            ) : null}
           </>
         ) : (
           <div
@@ -121,7 +165,7 @@ export default function PriceAndBuySection({
           alignItems: "center",
         }}
       >
-        {activePriceId ? (
+        {timerState === null ? null : activePriceId ? (
           <BuyButton
             priceId={activePriceId}
             productId={productId}
