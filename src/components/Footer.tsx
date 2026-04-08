@@ -51,7 +51,7 @@ export default function Footer() {
         }}
       >
         {/* Left — brand + copy */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "340px" }}>
           <Link
             href="/"
             style={{
@@ -64,6 +64,18 @@ export default function Footer() {
           >
             AI Digital Products
           </Link>
+          <p
+            style={{
+              fontSize: "12px",
+              fontWeight: 500,
+              color: "var(--ink-mute)",
+              lineHeight: 1.65,
+              margin: "4px 0 8px",
+            }}
+          >
+            A curated marketplace for high-quality, ready-to-use AI tools, templates, and
+            systems—built by experts and creators to help you launch, automate, and scale faster.
+          </p>
           <div
             style={{
               fontSize: "11px",
