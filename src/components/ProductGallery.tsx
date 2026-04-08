@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 
 export interface GalleryImage {
@@ -30,13 +30,20 @@ export default function ProductGallery({ images, alt }: Props) {
   const current   = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
 
+  const squareContainer: React.CSSProperties = {
+    width: "100%",
+    aspectRatio: "1 / 1",
+    position: "relative",
+    background: "var(--bg-alt)",
+    overflow: "hidden",
+    alignSelf: "start",
+    maxHeight: "600px",
+  };
+
   // Empty — no images at all
   if (images.length === 0) {
     return (
-      <div
-        className="gallery-single"
-        style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
+      <div style={{ ...squareContainer, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span
           style={{
             fontSize: "11px",
@@ -56,7 +63,7 @@ export default function ProductGallery({ images, alt }: Props) {
   if (!showThumbs) {
     return (
       <div
-        className="gallery-single"
+        style={squareContainer}
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
       >
@@ -77,7 +84,10 @@ export default function ProductGallery({ images, alt }: Props) {
 
   // Full gallery — thumbnail strip + main image
   return (
-    <div className="gallery">
+    <div
+      className="gallery"
+      style={{ alignSelf: "start", maxHeight: "600px", aspectRatio: "1 / 1", width: "100%" }}
+    >
       {/* Thumbnail strip */}
       <div className="gallery-thumbs">
         {images.map((img, i) => (

@@ -14,8 +14,8 @@ export interface AdminProductData {
   category: string;
   price: string;
   regular_price: string;
-  price_id: string;
-  regular_price_id: string;
+  sale_stripe_price_id: string;
+  regular_stripe_price_id: string;
   seller: string;
   features: string;        // newline-separated
   status: "active" | "coming_soon" | "archived";
@@ -117,7 +117,7 @@ function buildAttributesPayload(attrs: AttributeState): Record<string, unknown> 
 
 const EMPTY: AdminProductData = {
   name: "", slug: "", description: "", category: mockCategories[0]?.name ?? "",
-  price: "", regular_price: "", price_id: "", regular_price_id: "",
+  price: "", regular_price: "", sale_stripe_price_id: "", regular_stripe_price_id: "",
   seller: "AI Digital Products", features: "",
   status: "active", is_featured: false,
 };
@@ -222,8 +222,8 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         category:             form.category,
         sale_price_cents:     form.price ? Math.round(parseFloat(form.price) * 100) : null,
         regular_price_cents:  form.regular_price ? Math.round(parseFloat(form.regular_price) * 100) : null,
-        price_id:             form.price_id || null,
-        regular_price_id:     form.regular_price_id || null,
+        sale_stripe_price_id:     form.sale_stripe_price_id || null,
+        regular_stripe_price_id:  form.regular_stripe_price_id || null,
         seller:               form.seller,
         features:             form.features.split("\n").map(s => s.trim()).filter(Boolean),
         status:               form.status,
@@ -465,8 +465,8 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           <Field label="Stripe Sale Price ID">
             <input
               style={inputStyle}
-              value={form.price_id}
-              onChange={(e) => set("price_id", e.target.value)}
+              value={form.sale_stripe_price_id}
+              onChange={(e) => set("sale_stripe_price_id", e.target.value)}
               placeholder="price_xxx"
             />
           </Field>
@@ -474,8 +474,8 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           <Field label="Stripe Regular Price ID — optional">
             <input
               style={inputStyle}
-              value={form.regular_price_id}
-              onChange={(e) => set("regular_price_id", e.target.value)}
+              value={form.regular_stripe_price_id}
+              onChange={(e) => set("regular_stripe_price_id", e.target.value)}
               placeholder="price_xxx"
             />
           </Field>
