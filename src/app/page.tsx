@@ -10,8 +10,7 @@ import SellerBlock from "@/components/SellerBlock";
 import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { mockProducts } from "@/lib/mock-data";
+import { getProducts } from "@/lib/products";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HOMEPAGE VIDEO
@@ -24,19 +23,7 @@ const YOUTUBE_VIDEO_ID = "gBV5FT40N_M";
 const SHOW_HOMEPAGE_VIDEO = true;
 
 export default async function Home() {
-  // Fetch thumbnail_url for all known products and merge into mock data
-  const { data: dbProducts } = await supabaseAdmin
-    .from("products")
-    .select("id, thumbnail_url");
-
-  const thumbMap = Object.fromEntries(
-    (dbProducts ?? []).map((p) => [p.id, p.thumbnail_url as string | null])
-  );
-
-  const products = mockProducts.map((p) => ({
-    ...p,
-    thumbnailUrl: thumbMap[p.id] ?? p.thumbnailUrl,
-  }));
+  const products = await getProducts();
 
   return (
     <>

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { mockCategories, mockProducts } from "@/lib/mock-data";
+import { mockCategories } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getProductsByCategory } from "@/lib/products";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -28,17 +28,7 @@ export default async function CategoryPage({ params }: Props) {
   const category = mockCategories.find((c) => c.slug === slug);
   if (!category) notFound();
 
-  const { data: dbProducts } = await supabaseAdmin
-    .from("products")
-    .select("id, thumbnail_url");
-
-  const thumbMap = Object.fromEntries(
-    (dbProducts ?? []).map((p) => [p.id, p.thumbnail_url as string | null])
-  );
-
-  const products = mockProducts
-    .filter((p) => p.category === category.name)
-    .map((p) => ({ ...p, thumbnailUrl: thumbMap[p.id] ?? p.thumbnailUrl }));
+  const products = await getProductsByCategory(slug);
 
   return (
     <>

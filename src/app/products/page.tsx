@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ProductsClient from "./ProductsClient";
-import { supabaseAdmin } from "@/lib/supabase/server";
-import { mockProducts, mockCategories } from "@/lib/mock-data";
+import { getProducts, getCategoryNames } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Browse Products — AI Digital Products",
@@ -12,20 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ProductsPage() {
-  const { data: dbProducts } = await supabaseAdmin
-    .from("products")
-    .select("id, thumbnail_url");
-
-  const thumbMap = Object.fromEntries(
-    (dbProducts ?? []).map((p) => [p.id, p.thumbnail_url as string | null])
-  );
-
-  const products = mockProducts.map((p) => ({
-    ...p,
-    thumbnailUrl: thumbMap[p.id] ?? p.thumbnailUrl,
-  }));
-
-  const categoryNames = mockCategories.map((c) => c.name);
+  const [products, categoryNames] = await Promise.all([
+    getProducts(),
+    Promise.resolve(getCategoryNames()),
+  ]);
 
   return (
     <>
