@@ -34,13 +34,8 @@ export default function ProductGallery({ images, alt }: Props) {
   if (images.length === 0) {
     return (
       <div
-        style={{
-          background: "var(--bg-alt)",
-          aspectRatio: "1",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        className="gallery-single"
+        style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
       >
         <span
           style={{
@@ -57,16 +52,11 @@ export default function ProductGallery({ images, alt }: Props) {
     );
   }
 
-  // Single image — no thumbnail strip needed
+  // Single image — no thumbnail strip
   if (!showThumbs) {
     return (
       <div
-        style={{
-          background: "var(--bg-alt)",
-          aspectRatio: "1",
-          position: "relative",
-          overflow: "hidden",
-        }}
+        className="gallery-single"
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
       >
