@@ -22,6 +22,97 @@ export interface AdminProductData {
   is_featured: boolean;
   thumbnail_url?: string;
   download_file_url?: string;
+  attributes?: Record<string, unknown>;
+}
+
+// ── Attribute state ───────────────────────────────────────────────────────────
+
+const WORKS_WITH_OPTIONS = [
+  "Midjourney", "DALL-E 3", "Ideogram", "Stable Diffusion",
+  "ChatGPT", "Claude", "GPT-4",
+];
+
+const PREDEFINED_ATTR_KEYS = [
+  "promptsIncluded","worksWith","license","format","lastUpdated",
+  "version","instantDownload","support","difficultyLevel","builtWith",
+  "requirements","aiModel",
+];
+
+interface AttributeState {
+  promptsIncluded: string;
+  worksWith: string[];
+  license: string;
+  format: string;
+  lastUpdated: string;
+  version: string;
+  instantDownload: string; // "true" | "false" | ""
+  support: string;
+  difficultyLevel: string;
+  builtWith: string;
+  requirements: string;
+  aiModel: string;
+  custom: { key: string; value: string }[];
+}
+
+function todayISO() {
+  return new Date().toISOString().split("T")[0];
+}
+
+const DEFAULT_ATTRS: AttributeState = {
+  promptsIncluded: "",
+  worksWith:       [],
+  license:         "Commercial Use",
+  format:          "",
+  lastUpdated:     todayISO(),
+  version:         "1.0",
+  instantDownload: "true",
+  support:         "",
+  difficultyLevel: "",
+  builtWith:       "",
+  requirements:    "",
+  aiModel:         "",
+  custom:          [],
+};
+
+function attrsFromRecord(a: Record<string, unknown>): AttributeState {
+  const custom = Object.entries(a)
+    .filter(([k]) => !PREDEFINED_ATTR_KEYS.includes(k))
+    .map(([k, v]) => ({ key: k, value: String(v) }));
+  return {
+    promptsIncluded: a.promptsIncluded != null ? String(a.promptsIncluded) : "",
+    worksWith:       Array.isArray(a.worksWith) ? (a.worksWith as string[]) : [],
+    license:         (a.license as string)         ?? "",
+    format:          (a.format as string)           ?? "",
+    lastUpdated:     (a.lastUpdated as string)      ?? "",
+    version:         (a.version as string)          ?? "",
+    instantDownload: a.instantDownload === true ? "true" : a.instantDownload === false ? "false" : "",
+    support:         (a.support as string)          ?? "",
+    difficultyLevel: (a.difficultyLevel as string)  ?? "",
+    builtWith:       (a.builtWith as string)        ?? "",
+    requirements:    (a.requirements as string)     ?? "",
+    aiModel:         (a.aiModel as string)          ?? "",
+    custom,
+  };
+}
+
+function buildAttributesPayload(attrs: AttributeState): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  if (attrs.promptsIncluded)            result.promptsIncluded = Number(attrs.promptsIncluded);
+  if (attrs.worksWith.length > 0)       result.worksWith = attrs.worksWith;
+  if (attrs.license)                    result.license = attrs.license;
+  if (attrs.format)                     result.format = attrs.format;
+  if (attrs.lastUpdated)                result.lastUpdated = attrs.lastUpdated;
+  if (attrs.version)                    result.version = attrs.version;
+  if (attrs.instantDownload !== "")     result.instantDownload = attrs.instantDownload === "true";
+  if (attrs.support)                    result.support = attrs.support;
+  if (attrs.difficultyLevel)            result.difficultyLevel = attrs.difficultyLevel;
+  if (attrs.builtWith)                  result.builtWith = attrs.builtWith;
+  if (attrs.requirements)               result.requirements = attrs.requirements;
+  if (attrs.aiModel)                    result.aiModel = attrs.aiModel;
+  for (const c of attrs.custom) {
+    if (c.key.trim() && c.value.trim()) result[c.key.trim()] = c.value.trim();
+  }
+  return result;
 }
 
 const EMPTY: AdminProductData = {
@@ -75,6 +166,13 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
   const [uploading,    setUploading]    = useState(false);
   const [toast,        setToast]        = useState<{ msg: string; ok: boolean } | null>(null);
   const [slugManual,   setSlugManual]   = useState(!!initial.slug);
+  const [attrs,        setAttrs]        = useState<AttributeState>(() =>
+    initial.attributes && Object.keys(initial.attributes).length > 0
+      ? attrsFromRecord(initial.attributes)
+      : initial.id ? { ...DEFAULT_ATTRS, instantDownload: "", license: "", version: "", lastUpdated: "" }
+      : DEFAULT_ATTRS
+  );
+  const [showAttrs,    setShowAttrs]    = useState(false);
 
   const isEdit = !!initial.id;
 
@@ -130,6 +228,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         features:          form.features.split("\n").map(s => s.trim()).filter(Boolean),
         status:            form.status,
         is_featured:       form.is_featured,
+        attributes:        buildAttributesPayload(attrs),
       };
 
       const productRes = await fetch(
@@ -459,6 +558,244 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           </div>
         </div>
 
+      </div>
+
+      {/* ── Attributes ─────────────────────────────────────────────────── */}
+      <div style={{ marginTop: "32px", borderTop: "1px solid var(--line)", paddingTop: "24px" }}>
+        <button
+          type="button"
+          onClick={() => setShowAttrs((v) => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            background: "none", border: "none", padding: "0",
+            cursor: "pointer", fontSize: "11px", fontWeight: 700,
+            color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em",
+          }}
+        >
+          <span style={{ fontSize: "14px", lineHeight: 1 }}>{showAttrs ? "▾" : "▸"}</span>
+          Product Attributes
+        </button>
+
+        {showAttrs && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginTop: "20px" }}>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px" }}>
+
+              <Field label="Prompts Included">
+                <input
+                  style={inputStyle}
+                  type="number"
+                  min="0"
+                  value={attrs.promptsIncluded}
+                  onChange={(e) => setAttrs((a) => ({ ...a, promptsIncluded: e.target.value }))}
+                  placeholder="e.g. 50"
+                />
+              </Field>
+
+              <Field label="License">
+                <select
+                  style={{ ...inputStyle, appearance: "auto" }}
+                  value={attrs.license}
+                  onChange={(e) => setAttrs((a) => ({ ...a, license: e.target.value }))}
+                >
+                  <option value="">— Select —</option>
+                  <option value="Personal Use">Personal Use</option>
+                  <option value="Commercial Use">Commercial Use</option>
+                  <option value="Extended Commercial">Extended Commercial</option>
+                </select>
+              </Field>
+
+              <Field label="Format">
+                <input
+                  style={inputStyle}
+                  value={attrs.format}
+                  onChange={(e) => setAttrs((a) => ({ ...a, format: e.target.value }))}
+                  placeholder="e.g. PDF + TXT"
+                />
+              </Field>
+
+              <Field label="Version">
+                <input
+                  style={inputStyle}
+                  value={attrs.version}
+                  onChange={(e) => setAttrs((a) => ({ ...a, version: e.target.value }))}
+                  placeholder="e.g. 1.0"
+                />
+              </Field>
+
+              <Field label="Last Updated">
+                <input
+                  style={inputStyle}
+                  type="date"
+                  value={attrs.lastUpdated}
+                  onChange={(e) => setAttrs((a) => ({ ...a, lastUpdated: e.target.value }))}
+                />
+              </Field>
+
+              <Field label="Instant Download">
+                <select
+                  style={{ ...inputStyle, appearance: "auto" }}
+                  value={attrs.instantDownload}
+                  onChange={(e) => setAttrs((a) => ({ ...a, instantDownload: e.target.value }))}
+                >
+                  <option value="">— Select —</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+              </Field>
+
+              <Field label="Support">
+                <select
+                  style={{ ...inputStyle, appearance: "auto" }}
+                  value={attrs.support}
+                  onChange={(e) => setAttrs((a) => ({ ...a, support: e.target.value }))}
+                >
+                  <option value="">— Select —</option>
+                  <option value="Email">Email</option>
+                  <option value="Community">Community</option>
+                  <option value="None">None</option>
+                </select>
+              </Field>
+
+              <Field label="Difficulty Level">
+                <select
+                  style={{ ...inputStyle, appearance: "auto" }}
+                  value={attrs.difficultyLevel}
+                  onChange={(e) => setAttrs((a) => ({ ...a, difficultyLevel: e.target.value }))}
+                >
+                  <option value="">— Select —</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </Field>
+
+              <Field label="AI Model">
+                <input
+                  style={inputStyle}
+                  value={attrs.aiModel}
+                  onChange={(e) => setAttrs((a) => ({ ...a, aiModel: e.target.value }))}
+                  placeholder="e.g. GPT-4, Claude"
+                />
+              </Field>
+
+              <Field label="Built With">
+                <input
+                  style={inputStyle}
+                  value={attrs.builtWith}
+                  onChange={(e) => setAttrs((a) => ({ ...a, builtWith: e.target.value }))}
+                  placeholder="e.g. Notion, Airtable"
+                />
+              </Field>
+
+            </div>
+
+            <Field label="Requirements">
+              <input
+                style={inputStyle}
+                value={attrs.requirements}
+                onChange={(e) => setAttrs((a) => ({ ...a, requirements: e.target.value }))}
+                placeholder="e.g. Node.js 18+, Python 3"
+              />
+            </Field>
+
+            {/* Works With — checkboxes */}
+            <div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "10px" }}>
+                Works With
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {WORKS_WITH_OPTIONS.map((opt) => {
+                  const checked = attrs.worksWith.includes(opt);
+                  return (
+                    <label
+                      key={opt}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "6px",
+                        padding: "6px 12px",
+                        border: `1px solid ${checked ? "var(--ink)" : "var(--ink-soft)"}`,
+                        background: checked ? "var(--ink)" : "transparent",
+                        cursor: "pointer",
+                        borderRadius: "2px",
+                        userSelect: "none",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() =>
+                          setAttrs((a) => ({
+                            ...a,
+                            worksWith: checked
+                              ? a.worksWith.filter((w) => w !== opt)
+                              : [...a.worksWith, opt],
+                          }))
+                        }
+                        style={{ display: "none" }}
+                      />
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: checked ? "var(--bg)" : "var(--ink-faded)" }}>
+                        {opt}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom attributes */}
+            <div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "10px" }}>
+                Custom Attributes
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {attrs.custom.map((c, i) => (
+                  <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <input
+                      style={{ ...inputStyle, flex: "0 0 180px" }}
+                      value={c.key}
+                      onChange={(e) => setAttrs((a) => {
+                        const custom = [...a.custom];
+                        custom[i] = { ...custom[i], key: e.target.value };
+                        return { ...a, custom };
+                      })}
+                      placeholder="Attribute name"
+                    />
+                    <input
+                      style={{ ...inputStyle, flex: 1 }}
+                      value={c.value}
+                      onChange={(e) => setAttrs((a) => {
+                        const custom = [...a.custom];
+                        custom[i] = { ...custom[i], value: e.target.value };
+                        return { ...a, custom };
+                      })}
+                      placeholder="Value"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAttrs((a) => ({ ...a, custom: a.custom.filter((_, j) => j !== i) }))}
+                      style={{
+                        background: "none", border: "none", padding: "4px 8px",
+                        cursor: "pointer", fontSize: "16px", color: "var(--ink-mute)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setAttrs((a) => ({ ...a, custom: [...a.custom, { key: "", value: "" }] }))}
+                  className="btn btn-ghost btn-sm"
+                  style={{ alignSelf: "flex-start", marginTop: "4px" }}
+                >
+                  + Add Custom Attribute
+                </button>
+              </div>
+            </div>
+
+          </div>
+        )}
       </div>
 
       {/* Actions */}

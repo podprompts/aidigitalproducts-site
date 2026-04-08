@@ -9,6 +9,7 @@ import PriceAndBuySection from "@/components/PriceAndBuySection";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 import ViewTracker from "@/components/ViewTracker";
 import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
+import ProductAttributes from "@/components/ProductAttributes";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -53,6 +54,15 @@ export default async function ProductDetailPage({ params }: Props) {
     .select("url, is_primary, display_order, alt_text")
     .eq("product_id", product.id)
     .order("display_order", { ascending: true });
+
+  // Fetch attributes from Supabase
+  const { data: dbProductData } = await supabaseAdmin
+    .from("products")
+    .select("attributes")
+    .eq("id", product.id)
+    .single();
+
+  const attributes = (dbProductData?.attributes as Record<string, unknown> | null) ?? {};
 
   let galleryImages: GalleryImage[];
   if (dbImages && dbImages.length > 0) {
@@ -207,6 +217,10 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   Sold by {product.seller}
                 </div>
+
+                {Object.keys(attributes).length > 0 && (
+                  <ProductAttributes attributes={attributes} />
+                )}
               </div>
             </div>
           </div>

@@ -41,6 +41,7 @@ function EditProductContent({ id }: { id: string }) {
           status:           product.status ?? "active",
           is_featured:      product.is_featured ?? false,
           thumbnail_url:    product.thumbnail_url ?? "",
+          attributes:       (product.attributes as Record<string, unknown>) ?? {},
         });
 
         setImages(
