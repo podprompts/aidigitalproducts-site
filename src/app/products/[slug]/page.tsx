@@ -8,6 +8,8 @@ import ProductThumbnail from "@/components/ProductThumbnail";
 import PriceAndBuySection from "@/components/PriceAndBuySection";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 import ViewTracker from "@/components/ViewTracker";
+import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -44,6 +46,31 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
+
+  // Fetch gallery images — fall back to thumbnailUrl if none in DB
+  const { data: dbImages } = await supabaseAdmin
+    .from("product_images")
+    .select("url, is_primary, display_order, alt_text")
+    .eq("product_id", product.id)
+    .order("display_order", { ascending: true });
+
+  let galleryImages: GalleryImage[];
+  if (dbImages && dbImages.length > 0) {
+    // Put primary image first, preserve display_order for the rest
+    const sorted = [...dbImages].sort((a, b) => {
+      if (a.is_primary && !b.is_primary) return -1;
+      if (!a.is_primary && b.is_primary) return 1;
+      return 0;
+    });
+    galleryImages = sorted.map((img) => ({
+      url: img.url,
+      alt: (img.alt_text as string | null) ?? product.title,
+    }));
+  } else {
+    galleryImages = product.thumbnailUrl
+      ? [{ url: product.thumbnailUrl, alt: product.title }]
+      : [];
+  }
 
   return (
     <>
@@ -85,12 +112,8 @@ export default async function ProductDetailPage({ params }: Props) {
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div className="detail-grid">
-              {/* Left — preview */}
-              <ProductThumbnail
-                url={product.thumbnailUrl}
-                alt={product.title}
-                variant="detail"
-              />
+              {/* Left — gallery */}
+              <ProductGallery images={galleryImages} alt={product.title} />
 
               {/* Right — info */}
               <div

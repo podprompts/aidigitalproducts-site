@@ -581,6 +581,73 @@ body {
   .related-grid               { grid-template-columns: 1fr; }
 }
 
+/* ── Product Gallery ────────────────────────────────────────────────────────── */
+.gallery {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-alt);
+  height: 100%;
+}
+.gallery-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 80px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.gallery-thumbs::-webkit-scrollbar { display: none; }
+.gallery-thumb {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  background: var(--bg-soft);
+  border: 2px solid transparent;
+  padding: 0;
+  display: block;
+}
+.gallery-thumb:hover { transform: scale(1.05); }
+.gallery-thumb-active { border-color: var(--ink); }
+.gallery-main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-alt);
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .gallery {
+    flex-direction: column-reverse;
+    padding: 16px;
+    gap: 12px;
+    height: auto;
+  }
+  .gallery-thumbs {
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .gallery-thumb {
+    width: 60px;
+    height: 60px;
+  }
+  .gallery-main {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+  }
+}
+
 /* ── Countdown timer pulse ───────────────────────────────────────────────────── */
 @keyframes timer-pulse {
   0%, 100% { opacity: 1; }
