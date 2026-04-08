@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { sendOrderConfirmation } from "@/lib/email";
 import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -49,14 +50,14 @@ export async function POST(req: NextRequest) {
 
     // Columns: stripe_checkout_session_id, email, amount_cents, currency, status, metadata
     // product_id lives in the metadata jsonb since there is no top-level product_id column
-    const { error } = await supabaseAdmin.from("orders").insert({
+    const { data: order, error } = await supabaseAdmin.from("orders").insert({
       stripe_checkout_session_id: session.id,
       email: session.customer_details?.email ?? null,
       amount_cents: session.amount_total,        // Stripe amount_total is already in cents
       currency: session.currency,
       status: session.payment_status,            // "paid" | "unpaid" | "no_payment_required"
       metadata: { product_id: productId },
-    });
+    }).select("id").single();
 
     if (error) {
       console.error("[webhook] failed to insert order", error);
@@ -71,6 +72,52 @@ export async function POST(req: NextRequest) {
       });
       if (rpcError) {
         console.error("[webhook] increment_purchases failed", rpcError);
+      }
+    }
+
+    // Generate download token and send confirmation email — non-fatal if either fails
+    if (productId && order?.id) {
+      const token     = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { error: tokenError } = await supabaseAdmin.from("download_tokens").insert({
+        order_id:       order.id,
+        product_id:     productId,
+        token,
+        expires_at:     expiresAt,
+        download_count: 0,
+        max_downloads:  5,
+      });
+
+      if (tokenError) {
+        console.error("[webhook] failed to create download token", tokenError);
+      } else {
+        // Send order confirmation email
+        const customerEmail = session.customer_details?.email;
+        const customerName  = session.customer_details?.name ?? undefined;
+
+        if (customerEmail) {
+          const { data: product } = await supabaseAdmin
+            .from("products")
+            .select("name")
+            .eq("id", productId)
+            .single();
+
+          const siteUrl     = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
+          const downloadUrl = `${siteUrl}/api/download/${token}`;
+
+          sendOrderConfirmation({
+            toEmail:     customerEmail,
+            toName:      customerName,
+            productName: product?.name ?? "Your product",
+            amountCents: session.amount_total ?? 0,
+            currency:    session.currency ?? "usd",
+            downloadUrl,
+            orderId:     order.id,
+          }).catch((err) => {
+            console.error("[webhook] failed to send confirmation email", err);
+          });
+        }
       }
     }
   }

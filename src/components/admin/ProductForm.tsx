@@ -21,6 +21,7 @@ export interface AdminProductData {
   status: "active" | "coming_soon" | "archived";
   is_featured: boolean;
   thumbnail_url?: string;
+  download_file_url?: string;
 }
 
 const EMPTY: AdminProductData = {
@@ -67,12 +68,13 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
   const { token } = useAdmin();
   const router    = useRouter();
 
-  const [form,      setForm]      = useState<AdminProductData>({ ...EMPTY, ...initial });
-  const [images,    setImages]    = useState<UIImage[]>(initialImages);
-  const [saving,    setSaving]    = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [toast,     setToast]     = useState<{ msg: string; ok: boolean } | null>(null);
-  const [slugManual, setSlugManual] = useState(!!initial.slug);
+  const [form,         setForm]         = useState<AdminProductData>({ ...EMPTY, ...initial });
+  const [images,       setImages]       = useState<UIImage[]>(initialImages);
+  const [downloadFile, setDownloadFile] = useState<File | null>(null);
+  const [saving,       setSaving]       = useState(false);
+  const [uploading,    setUploading]    = useState(false);
+  const [toast,        setToast]        = useState<{ msg: string; ok: boolean } | null>(null);
+  const [slugManual,   setSlugManual]   = useState(!!initial.slug);
 
   const isEdit = !!initial.id;
 
@@ -219,6 +221,22 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             headers: adminHeaders(token),
             body: JSON.stringify({ thumbnail_url: primary.url }),
           });
+        }
+      }
+
+      // Upload download file if one was selected
+      if (downloadFile) {
+        const fd = new FormData();
+        fd.append("file", downloadFile);
+        fd.append("productId", productId);
+        const fileRes = await fetch("/api/admin/upload-file", {
+          method: "POST",
+          headers: { "x-admin-key": token },
+          body: fd,
+        });
+        if (!fileRes.ok) {
+          const err = await fileRes.json();
+          throw new Error(err.error ?? "File upload failed");
         }
       }
 
@@ -404,6 +422,43 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           <ImageUploader images={images} onChange={setImages} uploading={uploading} />
         </div>
 
+        {/* Download file upload */}
+        <div>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "12px" }}>
+            Download File
+          </div>
+          {initial.download_file_url && !downloadFile && (
+            <div style={{ fontSize: "12px", color: "var(--ink-faded)", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+              Current: <span style={{ fontFamily: "monospace" }}>{initial.download_file_url.split("/").pop()}</span>
+            </div>
+          )}
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              padding: "12px 16px",
+              border: "1px dashed var(--ink-soft)",
+              cursor: "pointer",
+              fontSize: "13px",
+              color: "var(--ink-faded)",
+            }}
+          >
+            <input
+              type="file"
+              style={{ display: "none" }}
+              onChange={(e) => setDownloadFile(e.target.files?.[0] ?? null)}
+            />
+            {downloadFile
+              ? <><strong style={{ color: "var(--ink)" }}>{downloadFile.name}</strong> — {(downloadFile.size / 1024 / 1024).toFixed(2)} MB</>
+              : <>{initial.download_file_url ? "Replace file…" : "Choose file to upload…"}</>
+            }
+          </label>
+          <div style={{ marginTop: "6px", fontSize: "11px", color: "var(--ink-mute)" }}>
+            Uploaded to private storage. Customers receive a secure signed URL after purchase.
+          </div>
+        </div>
+
       </div>
 
       {/* Actions */}
@@ -414,7 +469,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           disabled={saving}
           style={{ opacity: saving ? 0.6 : 1 }}
         >
-          {saving ? (uploading ? "Uploading images…" : "Saving…") : isEdit ? "Save Changes" : "Create Product"}
+          {saving ? (uploading ? "Uploading…" : "Saving…") : isEdit ? "Save Changes" : "Create Product"}
         </button>
         <button
           type="button"

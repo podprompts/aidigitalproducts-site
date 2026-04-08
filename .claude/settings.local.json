@@ -8,7 +8,9 @@
       "Bash(npx tsc:*)",
       "Bash(python3 -c ':*)",
       "Bash(node -e ':*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)"
     ]
   }
 }

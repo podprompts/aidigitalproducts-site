@@ -54,11 +54,6 @@ export default async function ProductDetailPage({ params }: Props) {
     .eq("product_id", product.id)
     .order("display_order", { ascending: true });
 
-  console.log("[gallery] product.id:", product.id);
-  console.log("[gallery] dbImages:", dbImages);
-  console.log("[gallery] dbImagesError:", dbImagesError);
-  console.log("[gallery] product.thumbnailUrl:", product.thumbnailUrl);
-
   let galleryImages: GalleryImage[];
   if (dbImages && dbImages.length > 0) {
     // Put primary image first, preserve display_order for the rest
