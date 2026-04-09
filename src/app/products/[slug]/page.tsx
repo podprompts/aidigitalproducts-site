@@ -86,13 +86,13 @@ export default async function ProductDetailPage({ params }: Props) {
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "100px" }}>
+      <main style={{ paddingTop: "clamp(60px, 10vw, 100px)" }}>
         {/* Breadcrumb */}
         <div
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "24px 24px 0",
+            padding: "12px 24px 0",
             display: "flex",
             gap: "8px",
             alignItems: "center",
