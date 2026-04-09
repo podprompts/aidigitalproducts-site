@@ -27,17 +27,32 @@ export default function ProductGallery({ images, alt }: Props) {
     }, 150);
   }
 
-  const current    = images[activeIdx] ?? null;
+  const current   = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
+
+  const squareContainer: React.CSSProperties = {
+    width: "100%",
+    maxWidth: "600px",
+    height: "600px",
+    position: "relative",
+    background: "var(--bg-alt)",
+    overflow: "hidden",
+    flexShrink: 0,
+  };
 
   // Empty — no images at all
   if (images.length === 0) {
     return (
-      <div className="gallery-single" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{
-          fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)",
-          letterSpacing: "0.18em", textTransform: "uppercase",
-        }}>
+      <div style={{ ...squareContainer, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: 700,
+            color: "var(--ink-mute)",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+          }}
+        >
           Preview
         </span>
       </div>
@@ -46,32 +61,32 @@ export default function ProductGallery({ images, alt }: Props) {
 
   // Single image — no thumbnail strip
   if (!showThumbs) {
-  return (
-    <div
-      className="gallery-single"
-      onMouseEnter={() => setMainHovered(true)}
-      onMouseLeave={() => setMainHovered(false)}
-    >
-      <Image
-        src={current!.url}
-        alt={current!.alt ?? alt}
-        fill
-        sizes="(max-width: 900px) 100vw, 50vw"
-        style={{
-          objectFit: "contain",
-          transform: mainHovered ? "scale(1.02)" : "scale(1)",
-          transition: "transform 0.4s ease",
-        }}
-      />
-    </div>
-  );
-}
+    return (
+      <div
+        style={squareContainer}
+        onMouseEnter={() => setMainHovered(true)}
+        onMouseLeave={() => setMainHovered(false)}
+      >
+        <Image
+          src={current!.url}
+          alt={current!.alt ?? alt}
+          fill
+          sizes="(max-width: 900px) 100vw, 50vw"
+          style={{
+            objectFit: "contain",
+            transform: mainHovered ? "scale(1.02)" : "scale(1)",
+            transition: "transform 0.4s ease",
+          }}
+        />
+      </div>
+    );
+  }
 
   // Full gallery — thumbnail strip + main image
   return (
     <div
       className="gallery"
-      style={{ width: "100%", maxWidth: "600px", flexShrink: 0 }}
+      style={{ width: "100%", maxWidth: "500px", height: "500px", flexShrink: 0 }}
     >
       {/* Thumbnail strip */}
       <div className="gallery-thumbs">
@@ -110,7 +125,7 @@ export default function ProductGallery({ images, alt }: Props) {
             fill
             sizes="(max-width: 900px) 100vw, 45vw"
             style={{
-              objectFit: "cover",
+              objectFit: "contain",
               transform: mainHovered ? "scale(1.02)" : "scale(1)",
               transition: "transform 0.4s ease",
             }}

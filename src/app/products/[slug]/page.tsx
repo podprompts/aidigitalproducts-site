@@ -118,7 +118,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <section
           style={{
             borderBottom: "1px solid var(--line-soft)",
-            padding: "clamp(32px, 5vw, 56px) 24px clamp(48px, 8vw, 80px)",
+            padding: "0 0 clamp(48px, 8vw, 80px)",
           }}
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>

@@ -591,7 +591,8 @@ body {
   aspect-ratio: 1 / 1;
   width: 100%;
   max-width: 100%;
-  align-self: stretch;
+  align-self: start;
+  margin-top: -1px;
 }
 @media (max-width: 900px) {
   .gallery-single {
