@@ -37,8 +37,8 @@ export default async function ProductDetailPage({ params }: Props) {
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
 
-  const allProducts = await getProducts(); // already imports withThumbnails
-const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
+  const allProducts = await getProducts();
+  const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
 
   const howToUseSteps = [
     "Download your prompt pack instantly after purchase",
@@ -49,9 +49,7 @@ const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
 
-  // Fetch authoritative product data from Supabase by slug.
-  // The slug is always consistent; the DB uuid may differ from the hardcoded mock id.
-  const [{ data: dbProductData }, ] = await Promise.all([
+  const [{ data: dbProductData }] = await Promise.all([
     supabaseAdmin
       .from("products")
       .select("id, attributes, thumbnail_url")
@@ -60,11 +58,9 @@ const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
   ]);
 
   const attributes     = (dbProductData?.attributes as Record<string, unknown> | null) ?? {};
-  // Use the real DB uuid so the product_images join is always correct
   const dbProductId    = dbProductData?.id ?? product.id;
   const dbThumbnailUrl = (dbProductData?.thumbnail_url as string | null) ?? null;
 
-  // Fetch gallery images using the confirmed DB id
   const { data: dbImages } = await supabaseAdmin
     .from("product_images")
     .select("url, is_primary, display_order, alt_text")
@@ -83,7 +79,6 @@ const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
       alt: (img.alt_text as string | null) ?? product.title,
     }));
   } else {
-    // Fallback chain: Supabase thumbnail_url → mock thumbnailUrl
     const fallback = dbThumbnailUrl ?? product.thumbnailUrl ?? null;
     galleryImages = fallback ? [{ url: fallback, alt: product.title }] : [];
   }
@@ -228,8 +223,8 @@ const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
                   <ProductAttributes attributes={attributes} />
                 )}
               </div>
-            </div>
-          </div>
+            </div>  {/* ← closes detail-grid */}
+          </div>    {/* ← closes maxWidth wrapper */}
         </section>
 
         {/* About this product */}

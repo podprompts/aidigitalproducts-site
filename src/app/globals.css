@@ -225,7 +225,7 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 1px;
   background: var(--line);
-  align-items: start;
+  align-items: stretch;
 }
 
 
@@ -587,11 +587,11 @@ body {
 .gallery-single {
   position: relative;
   overflow: hidden;
-  background: var(--bg-alt);
+  background: var(--bg);
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 600px;
-  align-self: start;
+  max-width: 100%;
+  align-self: stretch;
 }
 @media (max-width: 900px) {
   .gallery-single {
@@ -606,9 +606,9 @@ body {
   gap: 16px;
   padding: 20px;
   background: var(--bg-alt);
-  aspect-ratio: 1 / 1;
+  /* ← aspect-ratio removed: it belongs on gallery-main, not the outer wrapper */
   width: 100%;
-  max-width: 600px;
+  max-width: 100%;       /* ← was 600px, now fills the grid column */
   align-self: start;
 }
 .gallery-thumbs {
@@ -643,7 +643,7 @@ body {
   overflow: hidden;
   background: var(--bg-alt);
   min-height: 0;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 1;  /* ← aspect-ratio stays here where it belongs */
 }
 
 @media (max-width: 900px) {

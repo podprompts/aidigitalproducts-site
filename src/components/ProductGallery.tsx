@@ -46,26 +46,26 @@ export default function ProductGallery({ images, alt }: Props) {
 
   // Single image — no thumbnail strip
   if (!showThumbs) {
-    return (
-      <div
-        className="gallery-single"
-        onMouseEnter={() => setMainHovered(true)}
-        onMouseLeave={() => setMainHovered(false)}
-      >
-        <Image
-          src={current!.url}
-          alt={current!.alt ?? alt}
-          fill
-          sizes="(max-width: 900px) 100vw, 50vw"
-          style={{
-            objectFit: "cover",
-            transform: mainHovered ? "scale(1.02)" : "scale(1)",
-            transition: "transform 0.4s ease",
-          }}
-        />
-      </div>
-    );
-  }
+  return (
+    <div
+      className="gallery-single"
+      onMouseEnter={() => setMainHovered(true)}
+      onMouseLeave={() => setMainHovered(false)}
+    >
+      <Image
+        src={current!.url}
+        alt={current!.alt ?? alt}
+        fill
+        sizes="(max-width: 900px) 100vw, 50vw"
+        style={{
+          objectFit: "contain",
+          transform: mainHovered ? "scale(1.02)" : "scale(1)",
+          transition: "transform 0.4s ease",
+        }}
+      />
+    </div>
+  );
+}
 
   // Full gallery — thumbnail strip + main image
   return (
