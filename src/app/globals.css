@@ -553,7 +553,7 @@ body {
   .nav-search-wrapper { display: none; }
   .nav-hamburger      { display: flex; }
   .nav-mobile-hide    { display: none; }
-  main                { padding-top: 64px !important; }
+ 
 
   .sticky-buy-bar {
     display: flex;
@@ -600,7 +600,7 @@ body {
     min-height: 0;
     aspect-ratio: unset;
     height: 100vw;
-    margin-top: 0;
+    
   }
 }
 

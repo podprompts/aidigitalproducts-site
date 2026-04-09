@@ -31,14 +31,14 @@ export default function ProductGallery({ images, alt }: Props) {
   const showThumbs = images.length > 1;
 
   const squareContainer: React.CSSProperties = {
-    width: "100%",
-    maxWidth: "600px",
-    height: "600px",
-    position: "relative",
-    background: "var(--bg-alt)",
-    overflow: "hidden",
-    flexShrink: 0,
-  };
+  width: "100%",
+  maxWidth: "600px",
+  height: "600px",  // ← replaces fixed height
+  position: "relative",
+  background: "var(--bg-alt)",
+  overflow: "hidden",
+  flexShrink: 0,
+};
 
   // Empty — no images at all
   if (images.length === 0) {
