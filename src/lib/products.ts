@@ -8,15 +8,15 @@ import { mockProducts, mockCategories, type Product } from "@/lib/mock-data";
 async function withThumbnails(products: Product[]): Promise<Product[]> {
   const { data } = await supabaseAdmin
     .from("products")
-    .select("id, thumbnail_url");
+    .select("slug, thumbnail_url"); // ← was "id, thumbnail_url"
 
   const thumbMap = Object.fromEntries(
-    (data ?? []).map((p) => [p.id, p.thumbnail_url as string | null])
+    (data ?? []).map((p) => [p.slug, p.thumbnail_url as string | null])
   );
 
   return products.map((p) => ({
     ...p,
-    thumbnailUrl: thumbMap[p.id] ?? p.thumbnailUrl,
+    thumbnailUrl: thumbMap[p.slug] ?? p.thumbnailUrl, // ← was thumbMap[p.id]
   }));
 }
 

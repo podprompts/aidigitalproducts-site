@@ -5,9 +5,11 @@ import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 export async function POST(req: NextRequest) {
   if (!isAdminAuthed(req)) return unauthorized();
 
-  const formData = await req.formData();
+  const formData  = await req.formData();
   const file      = formData.get("file") as File | null;
   const productId = formData.get("productId") as string | null;
+  const isPrimary = formData.get("isPrimary") === "true";
+  const displayOrder = parseInt(formData.get("displayOrder") as string ?? "0", 10);
 
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
@@ -28,5 +30,28 @@ export async function POST(req: NextRequest) {
     .from("product-images")
     .getPublicUrl(path);
 
-  return NextResponse.json({ url: urlData.publicUrl, path });
+  const publicUrl = urlData.publicUrl;
+
+  // ── NEW: write to DB ──────────────────────────────────────────────────────
+  if (productId) {
+    // Insert into product_images table
+    await supabaseAdmin.from("product_images").insert({
+      product_id:    productId,
+      url:           publicUrl,
+      is_primary:    isPrimary,
+      display_order: displayOrder,
+      storage_path:  path,
+    });
+
+    // If primary, stamp thumbnail_url on the product row too
+    if (isPrimary) {
+      await supabaseAdmin
+        .from("products")
+        .update({ thumbnail_url: publicUrl })
+        .eq("id", productId);
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  return NextResponse.json({ url: publicUrl, path });
 }

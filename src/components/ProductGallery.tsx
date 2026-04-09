@@ -30,13 +30,15 @@ export default function ProductGallery({ images, alt }: Props) {
   const current   = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
 
- const squareContainer: React.CSSProperties = {
+const squareContainer: React.CSSProperties = {
   width: "100%",
   maxWidth: "600px",
+  aspectRatio: "1 / 1",      // ← fixes the stretch
   position: "relative",
   background: "var(--bg-alt)",
   overflow: "hidden",
   flexShrink: 0,
+  alignSelf: "flex-start",   // ← stops it growing to match Attributes column
 };
 
   // Empty — no images at all

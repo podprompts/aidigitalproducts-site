@@ -2,12 +2,12 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { mockProducts, type Product } from "@/lib/mock-data";
+import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
-export default function ProductGrid({ products }: { products?: Product[] }) {
-  const featured = (products ?? mockProducts).slice(0, 6);
+export default function ProductGrid({ products }: { products: Product[] }) {
+  const featured = (products ?? []).slice(0, 6);
   const tripled = [...featured, ...featured, ...featured];
 
   const trackRef = useRef<HTMLDivElement>(null);

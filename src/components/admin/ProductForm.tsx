@@ -197,6 +197,8 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
       const fd = new FormData();
       fd.append("file", img.file);
       fd.append("productId", productId);
+      fd.append("isPrimary", String(img.is_primary));
+      fd.append("displayOrder", String(img.display_order)); 
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "x-admin-key": token },
