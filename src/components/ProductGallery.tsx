@@ -30,15 +30,14 @@ export default function ProductGallery({ images, alt }: Props) {
   const current   = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
 
-  const squareContainer: React.CSSProperties = {
-    width: "100%",
-    maxWidth: "500px",
-    height: "500px",
-    position: "relative",
-    background: "var(--bg-alt)",
-    overflow: "hidden",
-    flexShrink: 0,
-  };
+ const squareContainer: React.CSSProperties = {
+  width: "100%",
+  maxWidth: "600px",
+  position: "relative",
+  background: "var(--bg-alt)",
+  overflow: "hidden",
+  flexShrink: 0,
+};
 
   // Empty — no images at all
   if (images.length === 0) {
@@ -72,11 +71,11 @@ export default function ProductGallery({ images, alt }: Props) {
           alt={current!.alt ?? alt}
           fill
           sizes="(max-width: 900px) 100vw, 50vw"
-          style={{
-            objectFit: "contain",
-            transform: mainHovered ? "scale(1.02)" : "scale(1)",
-            transition: "transform 0.4s ease",
-          }}
+style={{
+  objectFit: "cover",
+  transform: mainHovered ? "scale(1.02)" : "scale(1)",
+  transition: "transform 0.4s ease",
+}}
         />
       </div>
     );
@@ -84,10 +83,10 @@ export default function ProductGallery({ images, alt }: Props) {
 
   // Full gallery — thumbnail strip + main image
   return (
-    <div
-      className="gallery"
-      style={{ width: "100%", maxWidth: "500px", height: "500px", flexShrink: 0 }}
-    >
+<div
+  className="gallery"
+  style={{ width: "100%", maxWidth: "600px", flexShrink: 0 }}
+>
       {/* Thumbnail strip */}
       <div className="gallery-thumbs">
         {images.map((img, i) => (
@@ -125,7 +124,7 @@ export default function ProductGallery({ images, alt }: Props) {
             fill
             sizes="(max-width: 900px) 100vw, 45vw"
             style={{
-              objectFit: "contain",
+              objectFit: "cover",
               transform: mainHovered ? "scale(1.02)" : "scale(1)",
               transition: "transform 0.4s ease",
             }}
