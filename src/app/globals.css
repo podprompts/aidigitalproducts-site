@@ -223,8 +223,11 @@ body {
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  align-items: start; /* 👈 ADD THIS */
+  gap: 1px;
+  background: var(--line);
+  align-items: start;
 }
+
 
 /* ── Hairline divider ────────────────────────────────────────────────────────── */
 .divider {
