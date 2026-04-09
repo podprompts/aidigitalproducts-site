@@ -231,6 +231,53 @@ export default function Nav() {
         <button className="nav-overlay-close" onClick={close} aria-label="Close menu">
           ×
         </button>
+
+        {/* Mobile search */}
+        <div style={{ position: "relative", width: "100%", marginBottom: "24px" }}>
+          <div style={{ position: "relative" }}>
+            <input
+              className="nav-search"
+              type="search"
+              placeholder="Search products, categories..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => { if (results.length > 0 || search.length >= 2) setOpen(true); }}
+              onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+              aria-label="Search"
+              style={{ width: "100%", paddingRight: "36px" }}
+            />
+            <span style={{
+              position: "absolute", right: "12px", top: "50%",
+              transform: "translateY(-50%)", color: "var(--ink-mute)",
+              display: "flex", alignItems: "center", pointerEvents: "none",
+            }}>
+              <SearchIcon />
+            </span>
+          </div>
+
+          {showDropdown && (
+            <div role="listbox" className="search-dropdown">
+              {searching && <div className="search-dropdown-status">Searching…</div>}
+              {!searching && results.length === 0 && (
+                <div className="search-dropdown-status">No products found</div>
+              )}
+              {!searching && results.map((r) => (
+                <button
+                  key={r.id}
+                  role="option"
+                  type="button"
+                  className="search-result-item"
+                  onClick={() => { handleResultClick(r.slug); close(); }}
+                >
+                  <span className="search-result-meta">{r.category}</span>
+                  <span className="search-result-name">{r.name}</span>
+                  <span className="search-result-price">${(r.sale_price_cents / 100).toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {navLinks.map((link) => {
           const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
           return (
