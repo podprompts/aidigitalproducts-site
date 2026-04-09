@@ -1,13 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+
+import { useRef, useMemo } from "react";
 import Link from "next/link";
 import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
 export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
-  const PRODUCTS = (products ?? mockProducts).slice(0, 6);
+  const PRODUCTS = useMemo(() => {
+  const list = [...(products ?? mockProducts)];
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list.slice(0, 6);
+}, [products]);
   // Tripled so the infinite-loop jump is always seamless in both directions.
   const tripled = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
 
