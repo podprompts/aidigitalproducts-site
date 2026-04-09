@@ -1,3 +1,4 @@
+import { getProducts } from "@/lib/products";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -36,7 +37,8 @@ export default async function ProductDetailPage({ params }: Props) {
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
 
-  const related = mockProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
+  const allProducts = await getProducts(); // already imports withThumbnails
+const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
 
   const howToUseSteps = [
     "Download your prompt pack instantly after purchase",

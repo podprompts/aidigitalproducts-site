@@ -27,33 +27,17 @@ export default function ProductGallery({ images, alt }: Props) {
     }, 150);
   }
 
-  const current   = images[activeIdx] ?? null;
+  const current    = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
-
-const squareContainer: React.CSSProperties = {
-  width: "100%",
-  maxWidth: "600px",
-  aspectRatio: "1 / 1",      // ← fixes the stretch
-  position: "relative",
-  background: "var(--bg-alt)",
-  overflow: "hidden",
-  flexShrink: 0,
-  alignSelf: "flex-start",   // ← stops it growing to match Attributes column
-};
 
   // Empty — no images at all
   if (images.length === 0) {
     return (
-      <div style={{ ...squareContainer, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span
-          style={{
-            fontSize: "11px",
-            fontWeight: 700,
-            color: "var(--ink-mute)",
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-          }}
-        >
+      <div className="gallery-single" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{
+          fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)",
+          letterSpacing: "0.18em", textTransform: "uppercase",
+        }}>
           Preview
         </span>
       </div>
@@ -64,7 +48,7 @@ const squareContainer: React.CSSProperties = {
   if (!showThumbs) {
     return (
       <div
-        style={squareContainer}
+        className="gallery-single"
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
       >
@@ -73,11 +57,11 @@ const squareContainer: React.CSSProperties = {
           alt={current!.alt ?? alt}
           fill
           sizes="(max-width: 900px) 100vw, 50vw"
-style={{
-  objectFit: "cover",
-  transform: mainHovered ? "scale(1.02)" : "scale(1)",
-  transition: "transform 0.4s ease",
-}}
+          style={{
+            objectFit: "cover",
+            transform: mainHovered ? "scale(1.02)" : "scale(1)",
+            transition: "transform 0.4s ease",
+          }}
         />
       </div>
     );
@@ -85,10 +69,10 @@ style={{
 
   // Full gallery — thumbnail strip + main image
   return (
-<div
-  className="gallery"
-  style={{ width: "100%", maxWidth: "600px", flexShrink: 0 }}
->
+    <div
+      className="gallery"
+      style={{ width: "100%", maxWidth: "600px", flexShrink: 0 }}
+    >
       {/* Thumbnail strip */}
       <div className="gallery-thumbs">
         {images.map((img, i) => (

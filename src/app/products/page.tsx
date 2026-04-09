@@ -1,3 +1,4 @@
+export const revalidate = 0; // always fetch fresh from Supabase
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
