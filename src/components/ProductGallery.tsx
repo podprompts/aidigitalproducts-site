@@ -27,18 +27,18 @@ export default function ProductGallery({ images, alt }: Props) {
     }, 150);
   }
 
-  const current   = images[activeIdx] ?? null;
+  const current    = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
 
   const squareContainer: React.CSSProperties = {
-  width: "100%",
-  maxWidth: "600px",
-  height: "600px",  // ← replaces fixed height
-  position: "relative",
-  background: "var(--bg-alt)",
-  overflow: "hidden",
-  flexShrink: 0,
-};
+    width: "100%",
+    aspectRatio: "1 / 1",
+    position: "relative",
+    background: "var(--bg-alt)",
+    overflow: "hidden",
+    flexShrink: 0,
+    alignSelf: "start",
+  };
 
   // Empty — no images at all
   if (images.length === 0) {
@@ -86,7 +86,7 @@ export default function ProductGallery({ images, alt }: Props) {
   return (
     <div
       className="gallery"
-      style={{ width: "100%", maxWidth: "500px", height: "500px", flexShrink: 0 }}
+      style={{ width: "100%", flexShrink: 0, alignSelf: "start" }}
     >
       {/* Thumbnail strip */}
       <div className="gallery-thumbs">
