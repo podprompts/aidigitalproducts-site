@@ -14,7 +14,7 @@ import ProductAttributes from "@/components/ProductAttributes";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const dynamicParams = true;
-
+export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
