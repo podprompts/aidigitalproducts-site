@@ -1,23 +1,23 @@
 "use client";
-
+ 
 import React, { useState } from "react";
 import Image from "next/image";
-
+ 
 export interface GalleryImage {
   url: string;
   alt?: string;
 }
-
+ 
 interface Props {
   images: GalleryImage[];
   alt: string;
 }
-
+ 
 export default function ProductGallery({ images, alt }: Props) {
   const [activeIdx, setActiveIdx]     = useState(0);
   const [fading, setFading]           = useState(false);
   const [mainHovered, setMainHovered] = useState(false);
-
+ 
   function select(idx: number) {
     if (idx === activeIdx || fading) return;
     setFading(true);
@@ -26,24 +26,29 @@ export default function ProductGallery({ images, alt }: Props) {
       setFading(false);
     }, 150);
   }
-
+ 
   const current    = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
-
+ 
+  // Base styles shared across all variants — aspectRatio is now
+  // handled via the "gallery-main-wrap" CSS class so we can override
+  // it per breakpoint (square on mobile, fill height on desktop).
   const squareContainer: React.CSSProperties = {
     width: "100%",
-    aspectRatio: "1 / 1",
     position: "relative",
     background: "var(--bg-alt)",
     overflow: "hidden",
     flexShrink: 0,
     alignSelf: "start",
   };
-
+ 
   // Empty — no images at all
   if (images.length === 0) {
     return (
-      <div style={{ ...squareContainer, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        className="gallery-main-wrap"
+        style={{ ...squareContainer, display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
         <span
           style={{
             fontSize: "11px",
@@ -58,11 +63,12 @@ export default function ProductGallery({ images, alt }: Props) {
       </div>
     );
   }
-
+ 
   // Single image — no thumbnail strip
   if (!showThumbs) {
     return (
       <div
+        className="gallery-main-wrap"
         style={squareContainer}
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
@@ -81,11 +87,11 @@ export default function ProductGallery({ images, alt }: Props) {
       </div>
     );
   }
-
+ 
   // Full gallery — thumbnail strip + main image
   return (
     <div
-      className="gallery"
+      className="gallery gallery-main-wrap"
       style={{ width: "100%", flexShrink: 0, alignSelf: "start" }}
     >
       {/* Thumbnail strip */}
@@ -107,7 +113,7 @@ export default function ProductGallery({ images, alt }: Props) {
           </button>
         ))}
       </div>
-
+ 
       {/* Main image */}
       <div
         className="gallery-main"
