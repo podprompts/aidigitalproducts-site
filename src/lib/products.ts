@@ -24,12 +24,38 @@ async function getSupabaseProducts(): Promise<Product[]> {
   }));
 }
 
-/** All products — Supabase first, then mock fill-ins, deduped by slug */
+/** All products — Supabase first, then mock fill-ins, deduped by slug.
+ *  Also merges Supabase thumbnail_url into mock products that already exist. */
 export async function getProducts(): Promise<Product[]> {
+  const { data: thumbData } = await supabaseAdmin
+    .from("products")
+    .select("slug, thumbnail_url, sale_price_cents, id");
+
+  const thumbMap = Object.fromEntries(
+    (thumbData ?? []).map((p) => [p.slug, {
+      thumbnailUrl: p.thumbnail_url as string | null,
+      priceId: undefined,
+    }])
+  );
+
   const supabaseProducts = await getSupabaseProducts();
   const supabaseSlugs = new Set(supabaseProducts.map((p) => p.slug));
-  const mockFillIns = mockProducts.filter((p) => !supabaseSlugs.has(p.slug));
-  return [...supabaseProducts, ...mockFillIns];
+
+  // Merge thumbnails into mock products
+  const mockFillIns = mockProducts
+    .filter((p) => !supabaseSlugs.has(p.slug))
+    .map((p) => ({
+      ...p,
+      thumbnailUrl: thumbMap[p.slug]?.thumbnailUrl ?? p.thumbnailUrl ?? undefined,
+    }));
+
+  // For mock products that DO exist in Supabase (by slug), merge thumbnail
+  const mergedSupabase = supabaseProducts.map((p) => ({
+    ...p,
+    thumbnailUrl: p.thumbnailUrl ?? thumbMap[p.slug]?.thumbnailUrl ?? undefined,
+  }));
+
+  return [...mergedSupabase, ...mockFillIns];
 }
 
 /** Products filtered to a single category (matched by category slug). */
