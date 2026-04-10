@@ -50,14 +50,13 @@ export default async function ProductDetailPage({ params }: Props) {
   if (!product) {
     const { data: dbProduct } = await supabaseAdmin
       .from("products")
-      .select("id, name, slug, category, sale_price_cents, description, seller, is_active")
+      .select("id, name, slug, category, sale_price_cents, description, is_active")
       .eq("slug", slug)
       .eq("is_active", true)
       .single();
 
     if (!dbProduct) notFound();
 
-    // Shape it to match the mockProduct structure
     const shaped = {
       id: dbProduct!.id,
       slug: dbProduct!.slug,
@@ -65,7 +64,7 @@ export default async function ProductDetailPage({ params }: Props) {
       category: dbProduct!.category ?? "Prompt Packs",
       price: (dbProduct!.sale_price_cents ?? 0) / 100,
       description: dbProduct!.description ?? "",
-      seller: dbProduct!.seller ?? "AI Digital Products",
+      seller: "AI Digital Products",
       priceId: null,
       thumbnailUrl: null,
     };
@@ -74,7 +73,6 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   if (!product) notFound();
-
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
 

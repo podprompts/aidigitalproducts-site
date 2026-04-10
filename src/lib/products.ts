@@ -5,7 +5,7 @@ import { mockProducts, mockCategories, type Product } from "@/lib/mock-data";
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, description, seller, thumbnail_url, is_active")
+    .select("id, name, slug, category, sale_price_cents, description, thumbnail_url, is_active")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
@@ -18,41 +18,35 @@ async function getSupabaseProducts(): Promise<Product[]> {
     category: p.category,
     price: p.sale_price_cents / 100,
     description: p.description ?? "",
-    seller: p.seller ?? "AI Digital Products",
+    seller: "AI Digital Products",
     thumbnailUrl: p.thumbnail_url ?? undefined,
     priceId: undefined,
   }));
 }
 
-/** All products — Supabase first, then mock fill-ins, deduped by slug.
- *  Also merges Supabase thumbnail_url into mock products that already exist. */
+/** All products — Supabase first, then mock fill-ins, deduped by slug */
 export async function getProducts(): Promise<Product[]> {
   const { data: thumbData } = await supabaseAdmin
     .from("products")
-    .select("slug, thumbnail_url, sale_price_cents, id");
+    .select("slug, thumbnail_url");
 
   const thumbMap = Object.fromEntries(
-    (thumbData ?? []).map((p) => [p.slug, {
-      thumbnailUrl: p.thumbnail_url as string | null,
-      priceId: undefined,
-    }])
+    (thumbData ?? []).map((p) => [p.slug, p.thumbnail_url as string | null])
   );
 
   const supabaseProducts = await getSupabaseProducts();
   const supabaseSlugs = new Set(supabaseProducts.map((p) => p.slug));
 
-  // Merge thumbnails into mock products
   const mockFillIns = mockProducts
     .filter((p) => !supabaseSlugs.has(p.slug))
     .map((p) => ({
       ...p,
-      thumbnailUrl: thumbMap[p.slug]?.thumbnailUrl ?? p.thumbnailUrl ?? undefined,
+      thumbnailUrl: thumbMap[p.slug] ?? p.thumbnailUrl ?? undefined,
     }));
 
-  // For mock products that DO exist in Supabase (by slug), merge thumbnail
   const mergedSupabase = supabaseProducts.map((p) => ({
     ...p,
-    thumbnailUrl: p.thumbnailUrl ?? thumbMap[p.slug]?.thumbnailUrl ?? undefined,
+    thumbnailUrl: p.thumbnailUrl ?? thumbMap[p.slug] ?? undefined,
   }));
 
   return [...mergedSupabase, ...mockFillIns];
