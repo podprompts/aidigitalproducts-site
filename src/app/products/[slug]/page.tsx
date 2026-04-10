@@ -13,10 +13,22 @@ import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
 import ProductAttributes from "@/components/ProductAttributes";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
+export const dynamicParams = true;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return mockProducts.map((p) => ({ slug: p.slug }));
+  const { data } = await supabaseAdmin
+    .from("products")
+    .select("slug")
+    .eq("is_active", true);
+
+  const supabaseSlugs = (data ?? []).map((p) => ({ slug: p.slug }));
+  const mockSlugs = mockProducts.map((p) => ({ slug: p.slug }));
+
+  return [...supabaseSlugs, ...mockSlugs].filter(
+    (p, i, arr) => arr.findIndex((x) => x.slug === p.slug) === i
+  );
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -31,8 +43,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-  const product = mockProducts.find((p) => p.slug === slug);
-  if (!product) notFound();
+
+  // Try mockProducts first, then fall back to Supabase
+  let product = mockProducts.find((p) => p.slug === slug);
+
+  if (!product) {
+    const { data: dbProduct } = await supabaseAdmin
+      .from("products")
+      .select("id, name, slug, category, sale_price_cents, description, seller, is_active")
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .single();
+
+    if (!dbProduct) notFound();
+
+    // Shape it to match the mockProduct structure
+    product = {
+      id: dbProduct!.id,
+      slug: dbProduct!.slug,
+      title: dbProduct!.name,
+      category: dbProduct!.category,
+      price: dbProduct!.sale_price_cents / 100,
+      description: dbProduct!.description ?? "",
+      seller: dbProduct!.seller ?? "AI Digital Products",
+      priceId: null,
+      thumbnailUrl: null,
+    } as any;
+  }
 
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
@@ -86,13 +123,13 @@ export default async function ProductDetailPage({ params }: Props) {
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "100px" }}>
+      <main style={{ paddingTop: "clamp(60px, 10vw, 100px)" }}>
         {/* Breadcrumb */}
         <div
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "24px 24px 0",
+            padding: "12px 24px 0",
             display: "flex",
             gap: "8px",
             alignItems: "center",
@@ -440,7 +477,6 @@ export default async function ProductDetailPage({ params }: Props) {
                       flexDirection: "column",
                     }}
                   >
-                    {/* Thumbnail */}
                     <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
 
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -504,10 +540,8 @@ export default async function ProductDetailPage({ params }: Props) {
       </main>
       <Footer />
 
-      {/* View tracking — fires once per page visit */}
       <ViewTracker productId={product.id} />
 
-      {/* Mobile sticky buy bar */}
       <StickyBuyBar
         price={product.price}
         priceId={product.priceId}

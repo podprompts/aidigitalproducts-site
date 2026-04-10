@@ -1,13 +1,22 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
 export default function ProductGrid({ products }: { products: Product[] }) {
-  const featured = (products ?? []).slice(0, 6);
+  const [featured, setFeatured] = useState(() => (products ?? []).slice(0, 6));
+
+useEffect(() => {
+  const list = [...(products ?? [])];
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  setFeatured(list.slice(0, 6));
+}, [products]);
   const tripled = [...featured, ...featured, ...featured];
 
   const trackRef = useRef<HTMLDivElement>(null);
