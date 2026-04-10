@@ -25,12 +25,12 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
   const [secondsLeft, setSecondsLeft] = useState(() =>
     Math.max(0, Math.floor((expiry - Date.now()) / 1000))
   );
-  const [expired, setExpired]         = useState(false);
+  const [expired, setExpired]           = useState(false);
   const [resetSeconds, setResetSeconds] = useState(RESET_SECONDS);
-  const [email, setEmail]             = useState("");
-  const [submitted, setSubmitted]     = useState(false);
-  const [submitting, setSubmitting]   = useState(false);
-  const [emailError, setEmailError]   = useState("");
+  const [email, setEmail]               = useState("");
+  const [submitted, setSubmitted]       = useState(false);
+  const [submitting, setSubmitting]     = useState(false);
+  const [emailError, setEmailError]     = useState("");
   const onExpireRef = useRef(onExpire);
   onExpireRef.current = onExpire;
  
@@ -50,7 +50,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
     return () => clearInterval(interval);
   }, [expiry]);
  
-  // 4-hour reset countdown (starts when sale expires)
+  // 4-hour reset countdown — when it hits zero, re-fetch timer state
   useEffect(() => {
     if (!expired) return;
     setResetSeconds(RESET_SECONDS);
@@ -58,13 +58,21 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
       setResetSeconds((s) => {
         if (s <= 1) {
           clearInterval(interval);
+          fetch(`/api/timer?productId=${encodeURIComponent(productId)}`)
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.saleActive && data.expiresAt) {
+                onExpireRef.current();
+              }
+            })
+            .catch(() => {});
           return 0;
         }
         return s - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [expired]);
+  }, [expired, productId]);
  
   async function handleSubmit() {
     const trimmed = email.trim();
@@ -118,7 +126,6 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
         borderTop: "1px solid var(--line)",
       }}
     >
-      {/* Sale ended label */}
       <p
         style={{
           fontSize: "11px",
@@ -146,7 +153,6 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
         Sale ended
       </p>
  
-      {/* Next sale countdown */}
       {resetSeconds > 0 && (
         <div style={{ marginBottom: "20px" }}>
           <p
@@ -175,19 +181,18 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
         </div>
       )}
  
-      {/* Email capture */}
       {submitted ? (
         <p
-  style={{
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "var(--ink-faded)",
-    letterSpacing: "0.04em",
-    animation: "fadeUp 0.4s ease both",
-  }}
->
-  You're on the list — we'll email you when the sale opens.
-</p>
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            color: "var(--ink-faded)",
+            letterSpacing: "0.04em",
+            animation: "fadeUp 0.4s ease both",
+          }}
+        >
+          You're on the list — we'll email you when the sale opens.
+        </p>
       ) : (
         <div>
           <p
@@ -203,14 +208,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
             Get notified when it drops
           </p>
  
-          {/* Input row — stacks on mobile */}
-          <div
-            style={{
-              display: "flex",
-              gap: "8px",
-              flexWrap: "wrap",
-            }}
-          >
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <input
               type="email"
               placeholder="your@email.com"
