@@ -1,36 +1,43 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mockProducts, mockCategories, type Product } from "@/lib/mock-data";
 
-/**
- * Fetches thumbnail_url values from Supabase and merges them into the given
- * products array. Supabase always wins; mock thumbnailUrl is the fallback.
- */
-async function withThumbnails(products: Product[]): Promise<Product[]> {
-  const { data } = await supabaseAdmin
+/** Fetch all active products from Supabase and shape them as Product */
+async function getSupabaseProducts(): Promise<Product[]> {
+  const { data, error } = await supabaseAdmin
     .from("products")
-    .select("slug, thumbnail_url"); // ← was "id, thumbnail_url"
+    .select("id, name, slug, category, sale_price_cents, description, seller, thumbnail_url, is_active")
+    .eq("is_active", true)
+    .order("display_order", { ascending: true });
 
-  const thumbMap = Object.fromEntries(
-    (data ?? []).map((p) => [p.slug, p.thumbnail_url as string | null])
-  );
+  if (error || !data) return [];
 
-  return products.map((p) => ({
-    ...p,
-    thumbnailUrl: thumbMap[p.slug] ?? p.thumbnailUrl, // ← was thumbMap[p.id]
+  return data.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    title: p.name,
+    category: p.category,
+    price: p.sale_price_cents / 100,
+    description: p.description ?? "",
+    seller: p.seller ?? "AI Digital Products",
+    thumbnailUrl: p.thumbnail_url ?? undefined,
+    priceId: undefined,
   }));
 }
 
-/** All products with thumbnails, preserving mock-data order. */
+/** All products — Supabase first, then mock fill-ins, deduped by slug */
 export async function getProducts(): Promise<Product[]> {
-  return withThumbnails(mockProducts);
+  const supabaseProducts = await getSupabaseProducts();
+  const supabaseSlugs = new Set(supabaseProducts.map((p) => p.slug));
+  const mockFillIns = mockProducts.filter((p) => !supabaseSlugs.has(p.slug));
+  return [...supabaseProducts, ...mockFillIns];
 }
 
 /** Products filtered to a single category (matched by category slug). */
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const category = mockCategories.find((c) => c.slug === categorySlug);
   if (!category) return [];
-  const filtered = mockProducts.filter((p) => p.category === category.name);
-  return withThumbnails(filtered);
+  const all = await getProducts();
+  return all.filter((p) => p.category === category.name);
 }
 
 /** Category names list (derived from mock-data, no DB call needed). */
