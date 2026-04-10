@@ -111,6 +111,7 @@ export default function PriceAndBuySection({
                 onExpire={() =>
                   setTimerState({ saleActive: false, expiresAt: null })
                 }
+                productId={productId}
               />
             ) : !saleActive ? (
               <p
