@@ -68,7 +68,7 @@ export default async function ProductDetailPage({ params }: Props) {
       seller: dbProduct!.seller ?? "AI Digital Products",
       priceId: null,
       thumbnailUrl: null,
-    } as any;
+    } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   const categoryObj = mockCategories.find((c) => c.name === product.category);
