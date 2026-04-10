@@ -58,18 +58,22 @@ export default async function ProductDetailPage({ params }: Props) {
     if (!dbProduct) notFound();
 
     // Shape it to match the mockProduct structure
-    product = {
+    const shaped = {
       id: dbProduct!.id,
       slug: dbProduct!.slug,
       title: dbProduct!.name,
-      category: dbProduct!.category,
-      price: dbProduct!.sale_price_cents / 100,
+      category: dbProduct!.category ?? "Prompt Packs",
+      price: (dbProduct!.sale_price_cents ?? 0) / 100,
       description: dbProduct!.description ?? "",
       seller: dbProduct!.seller ?? "AI Digital Products",
       priceId: null,
       thumbnailUrl: null,
-    } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    };
+    // @ts-ignore
+    product = shaped;
   }
+
+  if (!product) notFound();
 
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
