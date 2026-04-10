@@ -161,7 +161,7 @@ export default async function ProductDetailPage({ params }: Props) {
           }}
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div className="detail-grid">
+            <div className="detail-grid" style={{ alignItems: "start" }}>
               {/* Left — gallery */}
               <ProductGallery images={galleryImages} alt={product.title} />
 

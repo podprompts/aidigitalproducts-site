@@ -20,7 +20,7 @@ import { getProducts } from "@/lib/products";
 // To hide the video entirely: set SHOW_HOMEPAGE_VIDEO = false
 // ─────────────────────────────────────────────────────────────────────────────
 const YOUTUBE_VIDEO_ID = "gBV5FT40N_M";
-const SHOW_HOMEPAGE_VIDEO = false;
+const SHOW_HOMEPAGE_VIDEO = true;
 
 export default async function Home() {
   const products = await getProducts();
