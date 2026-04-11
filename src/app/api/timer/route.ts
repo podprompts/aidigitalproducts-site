@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getActiveOverride } from "@/lib/timer-overrides";
 
 const SALE_MINUTES = 30;
-const REGULAR_HOURS = 24;
+const REGULAR_HOURS = 4;
 
 function getIp(req: NextRequest): string {
   return (
@@ -52,7 +52,6 @@ async function getOrCreateTimer(ip: string, productId: string) {
   const override = await getActiveOverride(productId, ip);
 
   if (override === "force_sale") {
-    // Return a synthetic 30-min sale window without touching visitor_timers
     const expiresAt = new Date(now + SALE_MINUTES * 60 * 1000).toISOString();
     return { saleActive: true, secondsRemaining: SALE_MINUTES * 60, expiresAt, adminOverride: true };
   }
@@ -84,7 +83,7 @@ async function getOrCreateTimer(ip: string, productId: string) {
     return { saleActive: true, secondsRemaining, expiresAt };
   }
 
-  // Phase 3 — past the 24-hr regular window → delete and start fresh
+  // Phase 3 — past the 4-hr reset window → delete and start fresh
   if (now >= resetMs) {
     await supabaseAdmin
       .from("visitor_timers")
@@ -95,8 +94,9 @@ async function getOrCreateTimer(ip: string, productId: string) {
     return createNewTimer(ip, productId);
   }
 
-  // Phase 2 — in the 24-hr regular window (timer expired, no reset yet)
-  return { saleActive: false, secondsRemaining: 0, expiresAt: null };
+  // Phase 2 — sale expired, within 4-hr reset window
+  // Return expiresAt so the frontend can calculate the reset countdown
+  return { saleActive: false, secondsRemaining: 0, expiresAt };
 }
 
 export async function GET(req: NextRequest) {
