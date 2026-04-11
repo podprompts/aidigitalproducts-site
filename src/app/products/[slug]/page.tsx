@@ -534,20 +534,7 @@ export default async function ProductDetailPage({ params }: Props) {
                           }}
                         >
                           ${p.price}
-                          {!p.priceId && (
-                            <span
-                              style={{
-                                marginLeft: "8px",
-                                fontSize: "10px",
-                                fontWeight: 700,
-                                color: "var(--ink-faded)",
-                                letterSpacing: "0.12em",
-                                textTransform: "uppercase",
-                              }}
-                            >
-                              Coming Soon
-                            </span>
-                          )}
+                          
                         </div>
                       </div>
                       <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
