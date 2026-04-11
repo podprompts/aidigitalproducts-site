@@ -229,7 +229,6 @@ body {
   align-items: stretch;
 }
 
-
 /* ── Hairline divider ────────────────────────────────────────────────────────── */
 .divider {
   height: 1px;
@@ -488,6 +487,7 @@ body {
   background: var(--line);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  align-items: stretch; /* ← all cells match the tallest */
 }
 .carousel-track::-webkit-scrollbar { display: none; }
 .carousel-cell {
@@ -499,6 +499,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 320px;
+  height: 100%; /* ← stretch to fill the track row height */
   transition: background 0.3s;
   cursor: pointer;
 }
@@ -554,7 +555,6 @@ body {
   .nav-search-wrapper { display: none; }
   .nav-hamburger      { display: flex; }
   .nav-mobile-hide    { display: none; }
- 
 
   .sticky-buy-bar {
     display: flex;
@@ -601,7 +601,6 @@ body {
     min-height: 0;
     aspect-ratio: unset;
     height: 100vw;
-    
   }
 }
 
@@ -611,9 +610,8 @@ body {
   gap: 16px;
   padding: 20px;
   background: var(--bg-alt);
-  /* ← aspect-ratio removed: it belongs on gallery-main, not the outer wrapper */
   width: 100%;
-  max-width: 100%;       /* ← was 600px, now fills the grid column */
+  max-width: 100%;
   align-self: start;
 }
 .gallery-thumbs {
@@ -648,7 +646,7 @@ body {
   overflow: hidden;
   background: var(--bg-alt);
   min-height: 0;
-  aspect-ratio: 1 / 1;  /* ← aspect-ratio stays here where it belongs */
+  aspect-ratio: 1 / 1;
 }
 
 @media (max-width: 900px) {
