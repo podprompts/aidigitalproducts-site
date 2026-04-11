@@ -20,23 +20,39 @@ function formatTime(seconds: number) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
  
+function getInitialResetSeconds(expiresAt: string): number {
+  const resetEnd = new Date(expiresAt).getTime() + RESET_SECONDS * 1000;
+  return Math.max(0, Math.floor((resetEnd - Date.now()) / 1000));
+}
+ 
 export default function CountdownTimer({ expiresAt, onExpire, productId }: Props) {
   const expiry = new Date(expiresAt).getTime();
+ 
   const [secondsLeft, setSecondsLeft] = useState(() =>
     Math.max(0, Math.floor((expiry - Date.now()) / 1000))
   );
-  const [expired, setExpired]           = useState(false);
-  const [resetSeconds, setResetSeconds] = useState(RESET_SECONDS);
-  const [email, setEmail]               = useState("");
-  const [submitted, setSubmitted]       = useState(false);
-  const [submitting, setSubmitting]     = useState(false);
-  const [emailError, setEmailError]     = useState("");
-  const onExpireRef    = useRef(onExpire);
+ 
+  // If the sale is already expired on mount, start expired immediately
+  const alreadyExpired = expiry <= Date.now();
+  const [expired, setExpired] = useState(alreadyExpired);
+ 
+  // Calculate reset seconds remaining from expiresAt so refresh is resilient
+  const [resetSeconds, setResetSeconds] = useState(() =>
+    alreadyExpired ? getInitialResetSeconds(expiresAt) : RESET_SECONDS
+  );
+ 
+  const [email, setEmail]           = useState("");
+  const [submitted, setSubmitted]   = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState("");
+ 
+  const onExpireRef      = useRef(onExpire);
   const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  onExpireRef.current  = onExpire;
+  onExpireRef.current    = onExpire;
  
   // Main sale countdown
   useEffect(() => {
+    if (alreadyExpired) return;
     const intervalRef = { id: 0 as unknown as ReturnType<typeof setInterval> };
     const tick = () => {
       const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
@@ -44,20 +60,19 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
       if (remaining === 0) {
         clearInterval(intervalRef.id);
         setExpired(true);
+        // Reset the reset countdown from this exact moment
+        setResetSeconds(RESET_SECONDS);
         onExpireRef.current();
       }
     };
     tick();
     intervalRef.id = setInterval(tick, 1000);
     return () => clearInterval(intervalRef.id);
-  }, [expiry]);
+  }, [expiry, alreadyExpired]);
  
-  // 4-hour reset countdown — uses a ref so clearInterval is safe
+  // 4-hour reset countdown — resilient across refreshes
   useEffect(() => {
     if (!expired) return;
-    setResetSeconds(RESET_SECONDS);
- 
-    // Clear any previous reset interval
     if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
  
     resetIntervalRef.current = setInterval(() => {
