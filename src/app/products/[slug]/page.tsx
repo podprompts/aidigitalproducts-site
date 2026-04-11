@@ -12,25 +12,25 @@ import ViewTracker from "@/components/ViewTracker";
 import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
 import ProductAttributes from "@/components/ProductAttributes";
 import { supabaseAdmin } from "@/lib/supabase/server";
-
+ 
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ slug: string }> };
-
+ 
 export async function generateStaticParams() {
   const { data } = await supabaseAdmin
     .from("products")
     .select("slug")
     .eq("is_active", true);
-
+ 
   const supabaseSlugs = (data ?? []).map((p) => ({ slug: p.slug }));
   const mockSlugs = mockProducts.map((p) => ({ slug: p.slug }));
-
+ 
   return [...supabaseSlugs, ...mockSlugs].filter(
     (p, i, arr) => arr.findIndex((x) => x.slug === p.slug) === i
   );
 }
-
+ 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = mockProducts.find((p) => p.slug === slug);
@@ -40,13 +40,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: product.description,
   };
 }
-
+ 
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
-
+ 
   // Try mockProducts first, then fall back to Supabase
   let product = mockProducts.find((p) => p.slug === slug);
-
+ 
   if (!product) {
     const { data: dbProduct } = await supabaseAdmin
       .from("products")
@@ -54,9 +54,9 @@ export default async function ProductDetailPage({ params }: Props) {
       .eq("slug", slug)
       .eq("is_active", true)
       .single();
-
+ 
     if (!dbProduct) notFound();
-
+ 
     const shaped = {
       id: dbProduct!.id,
       slug: dbProduct!.slug,
@@ -71,23 +71,23 @@ export default async function ProductDetailPage({ params }: Props) {
     // @ts-ignore
     product = shaped;
   }
-
+ 
   if (!product) notFound();
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
-
+ 
   const allProducts = await getProducts();
   const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
-
+ 
   const howToUseSteps = [
     "Download your prompt pack instantly after purchase",
     "Copy any prompt into Midjourney, DALL-E 3, or Ideogram",
     "Generate stunning designs ready for print-on-demand",
   ];
-
+ 
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
-
+ 
   const [{ data: dbProductData }] = await Promise.all([
     supabaseAdmin
       .from("products")
@@ -95,17 +95,17 @@ export default async function ProductDetailPage({ params }: Props) {
       .eq("slug", slug)
       .single(),
   ]);
-
+ 
   const attributes     = (dbProductData?.attributes as Record<string, unknown> | null) ?? {};
   const dbProductId    = dbProductData?.id ?? product.id;
   const dbThumbnailUrl = (dbProductData?.thumbnail_url as string | null) ?? null;
-
+ 
   const { data: dbImages } = await supabaseAdmin
     .from("product_images")
     .select("url, is_primary, display_order, alt_text")
     .eq("product_id", dbProductId)
     .order("display_order", { ascending: true });
-
+ 
   let galleryImages: GalleryImage[];
   if (dbImages && dbImages.length > 0) {
     const sorted = [...dbImages].sort((a, b) => {
@@ -121,25 +121,27 @@ export default async function ProductDetailPage({ params }: Props) {
     const fallback = dbThumbnailUrl ?? product.thumbnailUrl ?? null;
     galleryImages = fallback ? [{ url: fallback, alt: product.title }] : [];
   }
-
+ 
   return (
     <>
       <Nav />
-      <main style={{ paddingTop: "clamp(60px, 10vw, 100px)" }}>
-        {/* Breadcrumb */}
+      <main style={{ paddingTop: "clamp(60px, 10vw, 100px)", overflowX: "hidden" }}>
+        {/* Breadcrumb — wraps on mobile to prevent horizontal overflow */}
         <div
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
             padding: "12px 24px 0",
             display: "flex",
-            gap: "8px",
+            flexWrap: "wrap",
+            gap: "6px 8px",
             alignItems: "center",
             fontSize: "11px",
             fontWeight: 600,
             letterSpacing: "0.15em",
             textTransform: "uppercase",
             color: "var(--ink-faded)",
+            overflow: "hidden",
           }}
         >
           <Link href="/products" className="nav-link">
@@ -150,28 +152,42 @@ export default async function ProductDetailPage({ params }: Props) {
             {product.category}
           </Link>
           <span style={{ color: "var(--ink-mute)" }}>/</span>
-          <span style={{ color: "var(--ink)" }}>{product.title}</span>
+          <span
+            style={{
+              color: "var(--ink)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "min(400px, 50vw)",
+            }}
+          >
+            {product.title}
+          </span>
         </div>
-
+ 
         {/* Two-column detail */}
         <section
           style={{
             borderBottom: "1px solid var(--line-soft)",
             padding: "0 0 clamp(48px, 8vw, 80px)",
+            overflow: "hidden",
           }}
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div className="detail-grid" style={{ alignItems: "start" }}>
+            {/* alignItems handled by CSS — stretch on desktop, auto on mobile */}
+            <div className="detail-grid">
               {/* Left — gallery */}
               <ProductGallery images={galleryImages} alt={product.title} />
-
-              {/* Right — info */}
+ 
+              {/* Right — info — reduced padding on mobile via clamp */}
               <div
                 style={{
-                  padding: "48px 40px",
+                  padding: "clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)",
                   background: "var(--bg)",
                   display: "flex",
                   flexDirection: "column",
+                  minWidth: 0,
+                  overflow: "hidden",
                 }}
               >
                 <div
@@ -186,18 +202,20 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   {product.category}
                 </div>
-
+ 
                 <h1
                   className="display"
                   style={{
-                    fontSize: "clamp(32px, 4vw, 56px)",
-                    lineHeight: 1,
+                    fontSize: "clamp(24px, 4vw, 56px)",
+                    lineHeight: 1.05,
                     color: "var(--ink)",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
                   }}
                 >
                   {product.title}
                 </h1>
-
+ 
                 {isComingSoon ? (
                   <>
                     <div
@@ -243,7 +261,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     description={product.description}
                   />
                 )}
-
+ 
                 <div
                   style={{
                     marginTop: "32px",
@@ -257,7 +275,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   Sold by {product.seller}
                 </div>
-
+ 
                 {Object.keys(attributes).length > 0 && (
                   <ProductAttributes attributes={attributes} />
                 )}
@@ -265,7 +283,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>  {/* ← closes detail-grid */}
           </div>    {/* ← closes maxWidth wrapper */}
         </section>
-
+ 
         {/* About this product */}
         <section className="block">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
@@ -318,7 +336,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </p>
           </div>
         </section>
-
+ 
         {/* How To Use */}
         <section className="block alt">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
@@ -387,7 +405,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </ol>
           </div>
         </section>
-
+ 
         {/* Seller */}
         <section className="block">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
@@ -428,7 +446,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </p>
           </div>
         </section>
-
+ 
         {/* You might also like */}
         <section
           style={{
@@ -480,7 +498,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     }}
                   >
                     <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
-
+ 
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>
                         <div
@@ -541,9 +559,9 @@ export default async function ProductDetailPage({ params }: Props) {
         </section>
       </main>
       <Footer />
-
+ 
       <ViewTracker productId={product.id} />
-
+ 
       <StickyBuyBar
         price={product.price}
         priceId={product.priceId}
