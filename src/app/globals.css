@@ -217,6 +217,7 @@ body {
   gap: 1px;
   background: var(--line);
   border: 1px solid var(--line);
+  align-items: stretch;
 }
 
 /* ── Product detail — two-column ────────────────────────────────────────────── */
