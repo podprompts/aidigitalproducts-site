@@ -96,20 +96,7 @@ export default function CountdownTimer({
             Date.now() + 30 * 60 * 1000
           ).toISOString();
 
-          // Fire notification emails to all subscribers, then reload regardless
-          fetch("/api/send-sale-notification", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              productId,
-              productName,
-              salePrice,
-              wasPrice,
-              expiresAt: newExpiresAt,
-            }),
-          }).finally(() => {
-            window.location.reload();
-          });
+          window.location.reload();
 
           return 0;
         }
