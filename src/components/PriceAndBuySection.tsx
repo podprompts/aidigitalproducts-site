@@ -110,16 +110,19 @@ export default function PriceAndBuySection({
                 onExpire only flips saleActive — expiresAt is preserved so
                 the component can show its own expired UI. */}
             {timerState.expiresAt && (
-              <CountdownTimer
-                expiresAt={timerState.expiresAt}
-                onExpire={() =>
-                  setTimerState((prev) =>
-                    prev ? { ...prev, saleActive: false } : prev
-                  )
-                }
-                productId={productId}
-              />
-            )}
+  <CountdownTimer
+    expiresAt={timerState.expiresAt}
+    onExpire={() =>
+      setTimerState((prev) =>
+        prev ? { ...prev, saleActive: false } : prev
+      )
+    }
+    productId={productId}
+    productName={productName}
+    salePrice={`$${salePrice.toFixed(2)}`}
+    wasPrice={regularPrice ? `$${regularPrice.toFixed(2)}` : ""}
+  />
+)}
           </>
         ) : (
           <div
