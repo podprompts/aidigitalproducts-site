@@ -32,11 +32,9 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
     Math.max(0, Math.floor((expiry - Date.now()) / 1000))
   );
  
-  // If the sale is already expired on mount, start expired immediately
   const alreadyExpired = expiry <= Date.now();
   const [expired, setExpired] = useState(alreadyExpired);
  
-  // Calculate reset seconds remaining from expiresAt so refresh is resilient
   const [resetSeconds, setResetSeconds] = useState(() =>
     alreadyExpired ? getInitialResetSeconds(expiresAt) : RESET_SECONDS
   );
@@ -60,7 +58,6 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
       if (remaining === 0) {
         clearInterval(intervalRef.id);
         setExpired(true);
-        // Reset the reset countdown from this exact moment
         setResetSeconds(RESET_SECONDS);
         onExpireRef.current();
       }
@@ -70,7 +67,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
     return () => clearInterval(intervalRef.id);
   }, [expiry, alreadyExpired]);
  
-  // 4-hour reset countdown — resilient across refreshes
+  // 4-hour reset countdown — reloads the page when it hits zero
   useEffect(() => {
     if (!expired) return;
     if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
@@ -82,14 +79,15 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
             clearInterval(resetIntervalRef.current);
             resetIntervalRef.current = null;
           }
+          // Try the API first; reload regardless so the sale phase restarts
           fetch(`/api/timer?productId=${encodeURIComponent(productId)}`)
             .then((r) => r.json())
-            .then((data) => {
-              if (data.saleActive && data.expiresAt) {
-                onExpireRef.current();
-              }
+            .then(() => {
+              window.location.reload();
             })
-            .catch(() => {});
+            .catch(() => {
+              window.location.reload();
+            });
           return 0;
         }
         return s - 1;
