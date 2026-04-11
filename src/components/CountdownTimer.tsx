@@ -8,7 +8,7 @@ interface Props {
   productId: string;
 }
  
-const RESET_SECONDS = 4 * 60 * 60; // 4 hours
+const RESET_SECONDS = 4 * 60 * 60;
  
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -31,33 +31,42 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
   const [submitted, setSubmitted]       = useState(false);
   const [submitting, setSubmitting]     = useState(false);
   const [emailError, setEmailError]     = useState("");
-  const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
+  const onExpireRef    = useRef(onExpire);
+  const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  onExpireRef.current  = onExpire;
  
   // Main sale countdown
   useEffect(() => {
+    const intervalRef = { id: 0 as unknown as ReturnType<typeof setInterval> };
     const tick = () => {
       const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
       setSecondsLeft(remaining);
       if (remaining === 0) {
-        clearInterval(interval);
+        clearInterval(intervalRef.id);
         setExpired(true);
         onExpireRef.current();
       }
     };
     tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
+    intervalRef.id = setInterval(tick, 1000);
+    return () => clearInterval(intervalRef.id);
   }, [expiry]);
  
-  // 4-hour reset countdown — when it hits zero, re-fetch timer state
+  // 4-hour reset countdown — uses a ref so clearInterval is safe
   useEffect(() => {
     if (!expired) return;
     setResetSeconds(RESET_SECONDS);
-    const interval = setInterval(() => {
+ 
+    // Clear any previous reset interval
+    if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
+ 
+    resetIntervalRef.current = setInterval(() => {
       setResetSeconds((s) => {
         if (s <= 1) {
-          clearInterval(interval);
+          if (resetIntervalRef.current) {
+            clearInterval(resetIntervalRef.current);
+            resetIntervalRef.current = null;
+          }
           fetch(`/api/timer?productId=${encodeURIComponent(productId)}`)
             .then((r) => r.json())
             .then((data) => {
@@ -71,7 +80,13 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
         return s - 1;
       });
     }, 1000);
-    return () => clearInterval(interval);
+ 
+    return () => {
+      if (resetIntervalRef.current) {
+        clearInterval(resetIntervalRef.current);
+        resetIntervalRef.current = null;
+      }
+    };
   }, [expired, productId]);
  
   async function handleSubmit() {
