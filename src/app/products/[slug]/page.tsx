@@ -174,12 +174,11 @@ export default async function ProductDetailPage({ params }: Props) {
           }}
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            {/* alignItems handled by CSS — stretch on desktop, auto on mobile */}
             <div className="detail-grid">
               {/* Left — gallery */}
               <ProductGallery images={galleryImages} alt={product.title} />
  
-              {/* Right — info — reduced padding on mobile via clamp */}
+              {/* Right — info */}
               <div
                 style={{
                   padding: "clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)",
@@ -486,7 +485,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 <Link
                   key={p.id}
                   href={`/products/${p.slug}`}
-                  style={{ textDecoration: "none" }}
+                  style={{ textDecoration: "none", display: "flex", height: "100%" }}
                 >
                   <div
                     className="card"
@@ -495,6 +494,8 @@ export default async function ProductDetailPage({ params }: Props) {
                       minHeight: "220px",
                       display: "flex",
                       flexDirection: "column",
+                      width: "100%",
+                      height: "100%",
                     }}
                   >
                     <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
