@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.12",
     "@stripe/stripe-js": "^9.1.0",
     "@supabase/supabase-js": "^2.102.0",
     "@types/nodemailer": "^8.0.0",
@@ -16,6 +17,7 @@
     "nodemailer": "^8.0.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "resend": "^6.10.0",
     "stripe": "^22.0.0"
   },
   "engines": {

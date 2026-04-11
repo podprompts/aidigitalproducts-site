@@ -1,15 +1,18 @@
 "use client";
- 
+
 import { useEffect, useRef, useState } from "react";
- 
+
 interface Props {
   expiresAt: string;
   onExpire: () => void;
   productId: string;
+  productName?: string;
+  salePrice?: string;
+  wasPrice?: string;
 }
- 
+
 const RESET_SECONDS = 4 * 60 * 60;
- 
+
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -19,35 +22,42 @@ function formatTime(seconds: number) {
   }
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
- 
+
 function getInitialResetSeconds(expiresAt: string): number {
   const resetEnd = new Date(expiresAt).getTime() + RESET_SECONDS * 1000;
   return Math.max(0, Math.floor((resetEnd - Date.now()) / 1000));
 }
- 
-export default function CountdownTimer({ expiresAt, onExpire, productId }: Props) {
+
+export default function CountdownTimer({
+  expiresAt,
+  onExpire,
+  productId,
+  productName = "AI Digital Product",
+  salePrice = "",
+  wasPrice = "",
+}: Props) {
   const expiry = new Date(expiresAt).getTime();
- 
+
   const [secondsLeft, setSecondsLeft] = useState(() =>
     Math.max(0, Math.floor((expiry - Date.now()) / 1000))
   );
- 
+
   const alreadyExpired = expiry <= Date.now();
   const [expired, setExpired] = useState(alreadyExpired);
- 
+
   const [resetSeconds, setResetSeconds] = useState(() =>
     alreadyExpired ? getInitialResetSeconds(expiresAt) : RESET_SECONDS
   );
- 
+
   const [email, setEmail]           = useState("");
   const [submitted, setSubmitted]   = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [emailError, setEmailError] = useState("");
- 
+
   const onExpireRef      = useRef(onExpire);
   const resetIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   onExpireRef.current    = onExpire;
- 
+
   // Main sale countdown
   useEffect(() => {
     if (alreadyExpired) return;
@@ -66,12 +76,13 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
     intervalRef.id = setInterval(tick, 1000);
     return () => clearInterval(intervalRef.id);
   }, [expiry, alreadyExpired]);
- 
-  // 4-hour reset countdown — reloads the page when it hits zero
+
+  // 4-hour reset countdown
+  // When it hits zero: fire sale notification emails then reload the page
   useEffect(() => {
     if (!expired) return;
     if (resetIntervalRef.current) clearInterval(resetIntervalRef.current);
- 
+
     resetIntervalRef.current = setInterval(() => {
       setResetSeconds((s) => {
         if (s <= 1) {
@@ -79,29 +90,41 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
             clearInterval(resetIntervalRef.current);
             resetIntervalRef.current = null;
           }
-          // Try the API first; reload regardless so the sale phase restarts
-          fetch(`/api/timer?productId=${encodeURIComponent(productId)}`)
-            .then((r) => r.json())
-            .then(() => {
-              window.location.reload();
-            })
-            .catch(() => {
-              window.location.reload();
-            });
+
+          // Calculate the new expiresAt (30 min from now) for the email timestamp
+          const newExpiresAt = new Date(
+            Date.now() + 30 * 60 * 1000
+          ).toISOString();
+
+          // Fire notification emails to all subscribers, then reload regardless
+          fetch("/api/send-sale-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              productId,
+              productName,
+              salePrice,
+              wasPrice,
+              expiresAt: newExpiresAt,
+            }),
+          }).finally(() => {
+            window.location.reload();
+          });
+
           return 0;
         }
         return s - 1;
       });
     }, 1000);
- 
+
     return () => {
       if (resetIntervalRef.current) {
         clearInterval(resetIntervalRef.current);
         resetIntervalRef.current = null;
       }
     };
-  }, [expired, productId]);
- 
+  }, [expired, productId, productName, salePrice, wasPrice]);
+
   async function handleSubmit() {
     const trimmed = email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -124,7 +147,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
       setSubmitting(false);
     }
   }
- 
+
   // Still counting down
   if (!expired && secondsLeft > 0) {
     const isUrgent = secondsLeft <= 900;
@@ -144,7 +167,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
       </p>
     );
   }
- 
+
   // Sale ended state
   return (
     <div
@@ -180,7 +203,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
         />
         Sale ended
       </p>
- 
+
       {resetSeconds > 0 && (
         <div style={{ marginBottom: "20px" }}>
           <p
@@ -208,7 +231,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
           </p>
         </div>
       )}
- 
+
       {submitted ? (
         <p
           style={{
@@ -235,7 +258,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
           >
             Get notified when it drops
           </p>
- 
+
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <input
               type="email"
@@ -281,7 +304,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
               {submitting ? "Saving..." : "Notify me"}
             </button>
           </div>
- 
+
           {emailError && (
             <p
               style={{
@@ -294,7 +317,7 @@ export default function CountdownTimer({ expiresAt, onExpire, productId }: Props
               {emailError}
             </p>
           )}
- 
+
           <p
             style={{
               marginTop: "10px",
