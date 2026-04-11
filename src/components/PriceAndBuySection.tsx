@@ -106,16 +106,20 @@ export default function PriceAndBuySection({
               ${activePrice.toFixed(2)}
             </div>
  
-            {/* CountdownTimer stays mounted for the full sale + expired flow */}
-            {timerState.expiresAt ? (
+            {/* CountdownTimer stays mounted as long as expiresAt exists.
+                onExpire only flips saleActive — expiresAt is preserved so
+                the component can show its own expired UI. */}
+            {timerState.expiresAt && (
               <CountdownTimer
                 expiresAt={timerState.expiresAt}
                 onExpire={() =>
-                  setTimerState({ saleActive: false, expiresAt: null })
+                  setTimerState((prev) =>
+                    prev ? { ...prev, saleActive: false } : prev
+                  )
                 }
                 productId={productId}
               />
-            ) : null}
+            )}
           </>
         ) : (
           <div
