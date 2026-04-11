@@ -1,9 +1,9 @@
 "use client";
-
+ 
 import { useState, useEffect } from "react";
 import BuyButton from "@/components/BuyButton";
 import CountdownTimer from "@/components/CountdownTimer";
-
+ 
 interface Props {
   productId: string;
   productName: string;
@@ -17,12 +17,12 @@ interface Props {
   regularPriceId?: string;
   description: string;
 }
-
+ 
 interface TimerState {
   saleActive: boolean;
   expiresAt: string | null;
 }
-
+ 
 export default function PriceAndBuySection({
   productId,
   productName,
@@ -33,10 +33,10 @@ export default function PriceAndBuySection({
   description,
 }: Props) {
   const hasSale = !!(regularPrice && salePriceId && regularPriceId);
-
+ 
   // null = loading (server hasn't told us yet)
   const [timerState, setTimerState] = useState<TimerState | null>(null);
-
+ 
   useEffect(() => {
     if (!hasSale) {
       setTimerState({ saleActive: false, expiresAt: null });
@@ -55,12 +55,12 @@ export default function PriceAndBuySection({
         setTimerState({ saleActive: false, expiresAt: null });
       });
   }, [productId, hasSale]);
-
+ 
   const saleActive = timerState?.saleActive ?? false;
-
+ 
   const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
   const activePrice = hasSale && !saleActive ? regularPrice! : salePrice;
-
+ 
   return (
     <>
       {/* ── Price block ── */}
@@ -105,7 +105,9 @@ export default function PriceAndBuySection({
             >
               ${activePrice.toFixed(2)}
             </div>
-            {saleActive && timerState.expiresAt ? (
+ 
+            {/* CountdownTimer stays mounted for the full sale + expired flow */}
+            {timerState.expiresAt ? (
               <CountdownTimer
                 expiresAt={timerState.expiresAt}
                 onExpire={() =>
@@ -113,19 +115,6 @@ export default function PriceAndBuySection({
                 }
                 productId={productId}
               />
-            ) : !saleActive ? (
-              <p
-                style={{
-                  marginTop: "8px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: "var(--ink-faded)",
-                }}
-              >
-                Sale ended
-              </p>
             ) : null}
           </>
         ) : (
@@ -142,7 +131,7 @@ export default function PriceAndBuySection({
           </div>
         )}
       </div>
-
+ 
       {/* ── Description ── */}
       <p
         style={{
@@ -155,7 +144,7 @@ export default function PriceAndBuySection({
       >
         {description}
       </p>
-
+ 
       {/* ── Buy button ── */}
       <div
         style={{
