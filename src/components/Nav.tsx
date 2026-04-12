@@ -232,8 +232,8 @@ export default function Nav() {
           ×
         </button>
 
-        {/* Mobile search */}
-        <div style={{ position: "relative", width: "100%", marginBottom: "24px" }}>
+        {/* Mobile search — padded so it doesn't touch the screen edges */}
+        <div style={{ position: "relative", width: "100%", marginBottom: "24px", padding: "0 24px", boxSizing: "border-box" }}>
           <div style={{ position: "relative" }}>
             <input
               className="nav-search"
@@ -262,14 +262,14 @@ export default function Nav() {
                 <div className="search-dropdown-status">No products found</div>
               )}
               {!searching && results.map((r) => (
-  <button
-    key={r.id}
-    role="option"
-    type="button"
-    className="search-result-item"
-    onMouseDown={(e) => { e.preventDefault(); handleResultClick(r.slug); close(); }}
-    onTouchStart={(e) => { e.preventDefault(); handleResultClick(r.slug); close(); }}
-  >
+                <button
+                  key={r.id}
+                  role="option"
+                  type="button"
+                  className="search-result-item"
+                  onMouseDown={(e) => { e.preventDefault(); handleResultClick(r.slug); close(); }}
+                  onTouchStart={(e) => { e.preventDefault(); handleResultClick(r.slug); close(); }}
+                >
                   <span className="search-result-meta">{r.category}</span>
                   <span className="search-result-name">{r.name}</span>
                   <span className="search-result-price">${(r.sale_price_cents / 100).toFixed(2)}</span>
