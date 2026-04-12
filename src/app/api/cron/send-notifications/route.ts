@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import SaleNotification from "@/emails/SaleNotification";
+import { render } from "@react-email/components";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -109,13 +110,13 @@ export async function GET(req: NextRequest) {
             from: "AI Digital Products <deals@aidigitalproducts.com>",
             to: signup.email,
             subject: "🔥 Your deal is LIVE — 30 minutes only",
-            react: SaleNotification({
-              productName,
-              productUrl: "https://aidigitalproducts.com/products",
-              expiresAt,
-              salePrice,
-              wasPrice,
-            }),
+            html: await render(SaleNotification({
+            productName,
+            productUrl: "https://aidigitalproducts.com/products",
+            expiresAt,
+            salePrice,
+            wasPrice,
+             })),
           });
 
           console.log(`[cron] Resend result for ${signup.email}:`, JSON.stringify(result));
