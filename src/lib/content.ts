@@ -60,10 +60,10 @@ export const products: Product[] = [
 ];
 
 export const stats: Stat[] = [
-  { num: "7",   label: "Categories"   },
-  { num: "3",   label: "Tiers"        },
-  { num: "$9",  label: "Starting At"  },
-  { num: "0%",  label: "Listing Fee"  },
+  { num: "10",       label: "Categories"      },
+  { num: "3",        label: "Tiers"           },
+  { num: "$49",      label: "Most Popular"    },
+  { num: "Instant",  label: "Download"        },
 ];
 
 export const pricingTiers: PricingTier[] = [
