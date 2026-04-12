@@ -17,7 +17,7 @@ const howItWorks = [
   },
   {
     num: "02",
-    heading: "A % Per Sale",
+    heading: "30 % Per Sale",
     body: "We only earn when you earn. One flat rate on every transaction.",
   },
   {
