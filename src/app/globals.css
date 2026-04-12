@@ -205,7 +205,7 @@ body {
 
 /* ── Inner page hero ────────────────────────────────────────────────────────── */
 .page-hero {
-  padding: 100px 24px clamp(60px, 8vw, 80px);
+  padding: 90px 24px clamp(60px, 8vw, 80px);
   text-align: center;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -743,4 +743,17 @@ body {
   font-weight: 700;
   color: var(--ink);
   flex-shrink: 0;
+}
+/* ── Gallery dots — mobile only ─────────────────────────────────────────────── */
+.gallery-dots-mobile {
+  display: none;
+}
+@media (max-width: 900px) {
+  .gallery-dots-mobile {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 10px;
+    width: 100%;
+  }
 }

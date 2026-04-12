@@ -18,7 +18,6 @@ export default function ProductGallery({ images, alt }: Props) {
   const [fading, setFading]           = useState(false);
   const [mainHovered, setMainHovered] = useState(false);
  
-  // Touch swipe state
   const touchStartX = useRef<number | null>(null);
  
   function select(idx: number) {
@@ -39,18 +38,13 @@ export default function ProductGallery({ images, alt }: Props) {
     const diff = touchStartX.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 40) {
       if (diff > 0) {
-        // swipe left → next
         select((activeIdx + 1) % images.length);
       } else {
-        // swipe right → prev
         select((activeIdx - 1 + images.length) % images.length);
       }
     }
     touchStartX.current = null;
   }
- 
-  const current    = images[activeIdx] ?? null;
-  const showThumbs = images.length > 1;
  
   const squareContainer: React.CSSProperties = {
     width: "100%",
@@ -62,26 +56,19 @@ export default function ProductGallery({ images, alt }: Props) {
     alignSelf: "start",
   };
  
-  // Empty — no images at all
   if (images.length === 0) {
     return (
       <div style={{ ...squareContainer, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span
-          style={{
-            fontSize: "11px",
-            fontWeight: 700,
-            color: "var(--ink-mute)",
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-          }}
-        >
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
           Preview
         </span>
       </div>
     );
   }
  
-  // Single image — no thumbnail strip
+  const current    = images[activeIdx] ?? null;
+  const showThumbs = images.length > 1;
+ 
   if (!showThumbs) {
     return (
       <div
@@ -106,7 +93,6 @@ export default function ProductGallery({ images, alt }: Props) {
     );
   }
  
-  // Full gallery — swipeable main image + scrollable thumbnail strip
   return (
     <div
       className="gallery"
@@ -114,45 +100,18 @@ export default function ProductGallery({ images, alt }: Props) {
         width: "100%",
         flexShrink: 0,
         alignSelf: "start",
-        minWidth: 0,        // prevent flex child from overflowing parent
-        overflow: "hidden", // contain everything inside
+        minWidth: 0,
+        overflow: "hidden",
       }}
     >
-      {/* Thumbnail strip — horizontally scrollable, never expands parent */}
-      <div
-        className="gallery-thumbs"
-        style={{
-          // Mobile: horizontal scroll contained within parent width
-          overscrollBehaviorX: "contain",
-        }}
-      >
-        {images.map((img, i) => (
-          <button
-            key={i}
-            className={`gallery-thumb${i === activeIdx ? " gallery-thumb-active" : ""}`}
-            onClick={() => select(i)}
-            aria-label={`View image ${i + 1}`}
-            style={{ flexShrink: 0 }} // prevent thumbnails from squishing
-          >
-            <Image
-              src={img.url}
-              alt={img.alt ?? alt}
-              fill
-              sizes="80px"
-              style={{ objectFit: "cover" }}
-            />
-          </button>
-        ))}
-      </div>
- 
-      {/* Main image — swipeable on touch */}
+      {/* Main image — swipe on mobile, hover zoom on desktop */}
       <div
         className="gallery-main"
         style={{
           opacity: fading ? 0 : 1,
           transition: "opacity 0.15s ease",
           minWidth: 0,
-          touchAction: "pan-y", // allow vertical scroll, capture horizontal for swipe
+          touchAction: "pan-y",
         }}
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
@@ -174,17 +133,37 @@ export default function ProductGallery({ images, alt }: Props) {
         )}
       </div>
  
-      {/* Dot indicators — mobile only */}
+      {/* Thumbnail strip — vertical on desktop, horizontal scroll on mobile */}
+      <div
+        className="gallery-thumbs"
+        style={{ overscrollBehaviorX: "contain" }}
+      >
+        {images.map((img, i) => (
+          <button
+            key={i}
+            className={`gallery-thumb${i === activeIdx ? " gallery-thumb-active" : ""}`}
+            onClick={() => select(i)}
+            aria-label={`View image ${i + 1}`}
+            style={{ flexShrink: 0 }}
+          >
+            <Image
+              src={img.url}
+              alt={img.alt ?? alt}
+              fill
+              sizes="80px"
+              style={{ objectFit: "cover" }}
+            />
+          </button>
+        ))}
+      </div>
+ 
+      {/* Dot indicators — mobile only, sits below thumbnail strip */}
       {images.length > 1 && (
         <div
           style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "6px",
-            paddingTop: "12px",
-            width: "100%",
+            display: "none", // hidden on desktop via inline, shown on mobile via CSS class
           }}
-          className="gallery-dots"
+          className="gallery-dots-mobile"
         >
           {images.map((_, i) => (
             <button
