@@ -69,7 +69,7 @@ export const stats: Stat[] = [
 export const pricingTiers: PricingTier[] = [
   {
     tier: "Starter",
-    amount: "$9 - $197",
+    amount: "$27–$197",
     period: "/once",
     desc: "Entry-level templates and lightweight automations.",
     features: [
@@ -93,7 +93,7 @@ export const pricingTiers: PricingTier[] = [
       "Setup walkthroughs",
       "Email support",
     ],
-    btnLabel: "Contact Adrien",
+    btnLabel: "Contact Us",
     btnHref: "/contact",
     amountSize: "36px",
   },
@@ -108,7 +108,7 @@ export const pricingTiers: PricingTier[] = [
       "Priority support",
       "Lifetime updates",
     ],
-    btnLabel: "Contact Adrien",
+    btnLabel: "Contact Us",
     btnHref: "/contact",
     amountSize: "36px",
   },
