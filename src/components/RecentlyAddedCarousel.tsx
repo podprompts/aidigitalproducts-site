@@ -1,25 +1,22 @@
 "use client";
 
-
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
 export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
-  const [PRODUCTS, setProducts] = useState(() =>
-  (products ?? mockProducts).slice(0, 6)
-);
+  // Sort by whichever is latest — updatedAt or createdAt — then take 6.
+  // Mock products (no dates) naturally fall to the bottom.
+  const PRODUCTS = [...(products ?? mockProducts)]
+    .sort((a, b) => {
+      const aDate = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
+      const bDate = new Date(b.updatedAt ?? b.createdAt ?? 0).getTime();
+      return bDate - aDate;
+    })
+    .slice(0, 6);
 
-useEffect(() => {
-  const list = [...(products ?? mockProducts)];
-  for (let i = list.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [list[i], list[j]] = [list[j], list[i]];
-  }
-  setProducts(list.slice(0, 6));
-}, [products]);
   // Tripled so the infinite-loop jump is always seamless in both directions.
   const tripled = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
 

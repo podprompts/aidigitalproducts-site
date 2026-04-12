@@ -16,6 +16,10 @@ export interface Product {
   thumbnailUrl?: string;
   /** Feature bullet list shown in the "What's included" section */
   features?: string[];
+  /** ISO timestamp — when the product was first created */
+  createdAt?: string;
+  /** ISO timestamp — when the product was last updated */
+  updatedAt?: string;
 }
 
 export interface Category {

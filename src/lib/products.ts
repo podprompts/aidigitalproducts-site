@@ -5,7 +5,7 @@ import { mockProducts, mockCategories, type Product } from "@/lib/mock-data";
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, description, thumbnail_url, is_active")
+    .select("id, name, slug, category, sale_price_cents, description, thumbnail_url, is_active, created_at, updated_at")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
@@ -21,6 +21,8 @@ async function getSupabaseProducts(): Promise<Product[]> {
     seller: "AI Digital Products",
     thumbnailUrl: p.thumbnail_url ?? undefined,
     priceId: undefined,
+    createdAt: p.created_at ?? undefined,
+    updatedAt: p.updated_at ?? undefined,
   }));
 }
 
