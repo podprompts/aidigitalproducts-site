@@ -1,23 +1,26 @@
 "use client";
-
-import React, { useState } from "react";
+ 
+import React, { useState, useRef } from "react";
 import Image from "next/image";
-
+ 
 export interface GalleryImage {
   url: string;
   alt?: string;
 }
-
+ 
 interface Props {
   images: GalleryImage[];
   alt: string;
 }
-
+ 
 export default function ProductGallery({ images, alt }: Props) {
   const [activeIdx, setActiveIdx]     = useState(0);
   const [fading, setFading]           = useState(false);
   const [mainHovered, setMainHovered] = useState(false);
-
+ 
+  // Touch swipe state
+  const touchStartX = useRef<number | null>(null);
+ 
   function select(idx: number) {
     if (idx === activeIdx || fading) return;
     setFading(true);
@@ -26,10 +29,29 @@ export default function ProductGallery({ images, alt }: Props) {
       setFading(false);
     }, 150);
   }
-
+ 
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+ 
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        // swipe left → next
+        select((activeIdx + 1) % images.length);
+      } else {
+        // swipe right → prev
+        select((activeIdx - 1 + images.length) % images.length);
+      }
+    }
+    touchStartX.current = null;
+  }
+ 
   const current    = images[activeIdx] ?? null;
   const showThumbs = images.length > 1;
-
+ 
   const squareContainer: React.CSSProperties = {
     width: "100%",
     aspectRatio: "1 / 1",
@@ -39,7 +61,7 @@ export default function ProductGallery({ images, alt }: Props) {
     flexShrink: 0,
     alignSelf: "start",
   };
-
+ 
   // Empty — no images at all
   if (images.length === 0) {
     return (
@@ -58,7 +80,7 @@ export default function ProductGallery({ images, alt }: Props) {
       </div>
     );
   }
-
+ 
   // Single image — no thumbnail strip
   if (!showThumbs) {
     return (
@@ -66,6 +88,8 @@ export default function ProductGallery({ images, alt }: Props) {
         style={squareContainer}
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <Image
           src={current!.url}
@@ -81,21 +105,34 @@ export default function ProductGallery({ images, alt }: Props) {
       </div>
     );
   }
-
-  // Full gallery — thumbnail strip + main image
+ 
+  // Full gallery — swipeable main image + scrollable thumbnail strip
   return (
     <div
       className="gallery"
-      style={{ width: "100%", flexShrink: 0, alignSelf: "start" }}
+      style={{
+        width: "100%",
+        flexShrink: 0,
+        alignSelf: "start",
+        minWidth: 0,        // prevent flex child from overflowing parent
+        overflow: "hidden", // contain everything inside
+      }}
     >
-      {/* Thumbnail strip */}
-      <div className="gallery-thumbs">
+      {/* Thumbnail strip — horizontally scrollable, never expands parent */}
+      <div
+        className="gallery-thumbs"
+        style={{
+          // Mobile: horizontal scroll contained within parent width
+          overscrollBehaviorX: "contain",
+        }}
+      >
         {images.map((img, i) => (
           <button
             key={i}
             className={`gallery-thumb${i === activeIdx ? " gallery-thumb-active" : ""}`}
             onClick={() => select(i)}
             aria-label={`View image ${i + 1}`}
+            style={{ flexShrink: 0 }} // prevent thumbnails from squishing
           >
             <Image
               src={img.url}
@@ -107,16 +144,20 @@ export default function ProductGallery({ images, alt }: Props) {
           </button>
         ))}
       </div>
-
-      {/* Main image */}
+ 
+      {/* Main image — swipeable on touch */}
       <div
         className="gallery-main"
         style={{
           opacity: fading ? 0 : 1,
           transition: "opacity 0.15s ease",
+          minWidth: 0,
+          touchAction: "pan-y", // allow vertical scroll, capture horizontal for swipe
         }}
         onMouseEnter={() => setMainHovered(true)}
         onMouseLeave={() => setMainHovered(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {current && (
           <Image
@@ -132,6 +173,39 @@ export default function ProductGallery({ images, alt }: Props) {
           />
         )}
       </div>
+ 
+      {/* Dot indicators — mobile only */}
+      {images.length > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "6px",
+            paddingTop: "12px",
+            width: "100%",
+          }}
+          className="gallery-dots"
+        >
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => select(i)}
+              aria-label={`Go to image ${i + 1}`}
+              style={{
+                width: i === activeIdx ? "20px" : "6px",
+                height: "6px",
+                borderRadius: "980px",
+                background: i === activeIdx ? "var(--ink)" : "var(--ink-soft)",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                transition: "all 0.25s ease",
+                flexShrink: 0,
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
