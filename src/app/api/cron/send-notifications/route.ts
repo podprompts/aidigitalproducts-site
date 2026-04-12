@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
     // ── 3. Fetch product details ──────────────────────────────────────────────
     const { data: products, error: productsError } = await supabaseAdmin
       .from("products")
-      .select("id, name, sale_price_cents, regular_price_cents")
+      .select("id, name, slug, sale_price_cents, regular_price_cents")
       .in("id", activeProductIds);
 
     if (productsError) {
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
             subject: "🔥 Your deal is LIVE — 30 minutes only",
             html: await render(SaleNotification({
             productName,
-            productUrl: "https://aidigitalproducts.com/products",
+            productUrl: `https://aidigitalproducts.com/products/${product?.slug ?? ""}`,
             expiresAt,
             salePrice,
             wasPrice,
