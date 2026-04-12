@@ -4,6 +4,7 @@ import BackToTop from "@/components/BackToTop";
 import CookieBanner from "@/components/CookieBanner";
 import PageTransition from "@/components/PageTransition";
 import "./globals.css";
+import EmailPopup from "@/components/EmailPopup";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -57,6 +58,7 @@ export default function RootLayout({
         <PageTransition>{children}</PageTransition>
         <BackToTop />
         <CookieBanner />
+        <EmailPopup />
       </body>
     </html>
   );
