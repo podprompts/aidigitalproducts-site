@@ -62,7 +62,7 @@ export const products: Product[] = [
 export const stats: Stat[] = [
   { num: "10",       label: "Categories"      },
   { num: "3",        label: "Tiers"           },
-  { num: "$49",      label: "Most Popular"    },
+  { num: "$249",      label: "Most Popular"    },
   { num: "Instant",  label: "Download"        },
 ];
 
