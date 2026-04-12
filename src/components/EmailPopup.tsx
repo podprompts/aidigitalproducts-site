@@ -10,9 +10,13 @@ export default function EmailPopup() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 10000);
-    return () => clearTimeout(timer);
-  }, []);
+  const timer = setTimeout(() => {
+    if (!localStorage.getItem("popup_subscribed")) {
+      setVisible(true);
+    }
+  }, 10000);
+  return () => clearTimeout(timer);
+}, []);
 
   useEffect(() => {
     if (visible && inputRef.current) inputRef.current.focus();
@@ -46,6 +50,7 @@ export default function EmailPopup() {
         return;
       }
       setStatus("success");
+      localStorage.setItem("popup_subscribed", "true"); 
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please try again.");
