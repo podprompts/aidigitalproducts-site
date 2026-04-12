@@ -118,6 +118,7 @@ function Lightbox({
           color: "#fff",
           fontSize: "20px",
           lineHeight: 1,
+          paddingBottom: "2px",
           transition: "background 0.2s",
           zIndex: 10,
         }}
