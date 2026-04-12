@@ -10,13 +10,13 @@ export default function EmailPopup() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    if (!localStorage.getItem("popup_subscribed")) {
-      setVisible(true);
-    }
-  }, 10000);
-  return () => clearTimeout(timer);
-}, []);
+    const timer = setTimeout(() => {
+      if (!localStorage.getItem("popup_subscribed")) {
+        setVisible(true);
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (visible && inputRef.current) inputRef.current.focus();
@@ -50,7 +50,7 @@ export default function EmailPopup() {
         return;
       }
       setStatus("success");
-      localStorage.setItem("popup_subscribed", "true"); 
+      localStorage.setItem("popup_subscribed", "true");
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please try again.");
@@ -146,19 +146,21 @@ export default function EmailPopup() {
             </div>
           ) : (
             <>
-              {/* Early access label — emoji gets its own span to stay bright */}
-              <p
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "var(--ink-mute)",
-                  marginBottom: "16px",
-                }}
-              >
-                <span style={{ filter: "none", opacity: 1 }}>🔥</span>{" "}Early access
-              </p>
+              {/* Early access label — emoji isolated so parent color doesn't mute it */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "16px" }}>
+                <span style={{ fontSize: "14px", lineHeight: 1 }}>🔥</span>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "var(--ink-mute)",
+                  }}
+                >
+                  Early access
+                </span>
+              </div>
 
               <h2
                 className="display"

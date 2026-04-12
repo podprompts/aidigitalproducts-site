@@ -119,6 +119,7 @@ function Lightbox({
           fontSize: "20px",
           lineHeight: 1,
           paddingBottom: "2px",
+          transform: "translateY(1px)",
           transition: "background 0.2s",
           zIndex: 10,
         }}
