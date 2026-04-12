@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const ITEMS = ["1,247 Products", "6 Categories", "Updated Daily", "Trusted Worldwide"];
+const ITEMS = ["Instant Download", "Commercial License Included", "New Products Daily", "AIDigitalProducts.com"];
 const tripled = [...ITEMS, ...ITEMS, ...ITEMS];
 
 export default function StatsCarousel() {
