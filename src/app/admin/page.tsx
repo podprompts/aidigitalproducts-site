@@ -82,6 +82,7 @@ function DashboardContent() {
             { label: "View Orders",                href: "/admin/orders",        desc: "Review purchase history" },
             { label: "Newsletter Subscribers",     href: "/admin/subscribers",   desc: "Manage email subscribers" },
             { label: "Contact Submissions",        href: "/admin/contacts",      desc: "Review incoming messages" },
+            { label: "Seller Applications",        href: "/admin/seller-applications", desc: "Review seller waitlist submissions" },
           ].map((item) => (
             <Link
               key={item.href}
