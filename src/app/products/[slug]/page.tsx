@@ -563,3 +563,5 @@ export default async function ProductDetailPage({ params }: Props) {
         productName={product.title}
       />
     </>
+    );
+}
