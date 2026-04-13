@@ -625,6 +625,22 @@ body {
     margin-top: 3px;
     margin-bottom: 2px;
   }
+
+  /* ── Mobile related cards: full-width image + compact text block ── */
+  .related-grid .card {
+    padding: 0 0 20px 0 !important; /* override inline padding so image bleeds edge-to-edge */
+  }
+  .related-grid .card > :first-child {
+    width: 100%;                    /* ProductThumbnail fills full card width */
+    margin-bottom: 0;
+  }
+  .related-grid .card > :not(:first-child) {
+    padding-left: 20px;             /* restore side padding for text only */
+    padding-right: 20px;
+  }
+  .related-grid .card > :nth-child(2) {
+    margin-top: 14px;               /* breathing room between image and text */
+  }
 }
 
 /* ── Product Gallery ────────────────────────────────────────────────────────── */
