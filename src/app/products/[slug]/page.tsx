@@ -50,7 +50,7 @@ export default async function ProductDetailPage({ params }: Props) {
   if (!product) {
     const { data: dbProduct } = await supabaseAdmin
       .from("products")
-      .select("id, name, slug, category, sale_price_cents, description, is_active")
+      .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active")
       .eq("slug", slug)
       .eq("is_active", true)
       .single();
@@ -72,14 +72,16 @@ export default async function ProductDetailPage({ params }: Props) {
     }
  
     const shaped = {
-      id: dbProduct!.id,
-      slug: dbProduct!.slug,
-      title: dbProduct!.name,
-      category: dbProduct!.category ?? "Prompt Packs",
-      price: (dbProduct!.sale_price_cents ?? 0) / 100,
-      description: dbProduct!.description ?? "",
+      id: dbProduct.id,
+      slug: dbProduct.slug,
+      title: dbProduct.name,
+      category: dbProduct.category ?? "Prompt Packs",
+      price: (dbProduct.sale_price_cents ?? 0) / 100,
+      regularPrice: dbProduct.regular_price_cents ? dbProduct.regular_price_cents / 100 : undefined,
+      description: dbProduct.description ?? "",
       seller: "AI Digital Products",
-      priceId: null,
+      priceId: dbProduct.sale_stripe_price_id ?? null,
+      regularPriceId: dbProduct.regular_stripe_price_id ?? null,
       thumbnailUrl: null,
     };
     // @ts-ignore
@@ -140,7 +142,6 @@ export default async function ProductDetailPage({ params }: Props) {
     <>
       <Nav />
       <main style={{ paddingTop: "clamp(60px, 10vw, 100px)", overflowX: "hidden" }}>
-        {/* Breadcrumb — wraps on mobile to prevent horizontal overflow */}
         <div
           style={{
             maxWidth: "1200px",
@@ -179,7 +180,6 @@ export default async function ProductDetailPage({ params }: Props) {
           </span>
         </div>
  
-        {/* Two-column detail */}
         <section
           style={{
             borderBottom: "1px solid var(--line-soft)",
@@ -189,10 +189,8 @@ export default async function ProductDetailPage({ params }: Props) {
         >
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div className="detail-grid">
-              {/* Left — gallery */}
               <ProductGallery images={galleryImages} alt={product.title} />
  
-              {/* Right — info */}
               <div
                 style={{
                   padding: "clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)",
@@ -293,11 +291,10 @@ export default async function ProductDetailPage({ params }: Props) {
                   <ProductAttributes attributes={attributes} />
                 )}
               </div>
-            </div>  {/* ← closes detail-grid */}
-          </div>    {/* ← closes maxWidth wrapper */}
+            </div>
+          </div>
         </section>
  
-        {/* About this product */}
         <section className="block">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -350,7 +347,6 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </section>
  
-        {/* How To Use */}
         <section className="block alt">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -419,7 +415,6 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </section>
  
-        {/* Seller */}
         <section className="block">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -460,7 +455,6 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </section>
  
-        {/* You might also like */}
         <section
           style={{
             padding: "clamp(80px, 12vw, 160px) 24px",
@@ -513,7 +507,6 @@ export default async function ProductDetailPage({ params }: Props) {
                     }}
                   >
                     <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
- 
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>
                         <div
@@ -548,7 +541,6 @@ export default async function ProductDetailPage({ params }: Props) {
                           }}
                         >
                           ${p.price}
-                          
                         </div>
                       </div>
                       <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
@@ -571,5 +563,3 @@ export default async function ProductDetailPage({ params }: Props) {
         productName={product.title}
       />
     </>
-  );
-}
