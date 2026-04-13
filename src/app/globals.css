@@ -495,13 +495,24 @@ body {
   flex-shrink: 0;
   scroll-snap-align: start;
   background: var(--bg);
-  padding: 48px 32px;
+  padding: 0 0 40px 0;
   display: flex;
   flex-direction: column;
   min-height: 320px;
   height: 100%;
   transition: background 0.3s;
   cursor: pointer;
+}
+.carousel-cell > :first-child {
+  width: 100%;
+  margin-bottom: 0;
+}
+.carousel-cell > :not(:first-child) {
+  padding-left: 32px;
+  padding-right: 32px;
+}
+.carousel-cell > :nth-child(2) {
+  margin-top: 24px;
 }
 .carousel-cell:hover { background: var(--bg-soft); }
 .carousel-fade-left,
@@ -541,6 +552,26 @@ body {
   border: 1px solid var(--ink);
   z-index: 1000;
   animation: slideUpIn 400ms ease 600ms both;
+}
+
+/* ── Desktop card image bleed — catalog + related grids ────────────────────── */
+.catalog-grid .card,
+.related-grid .card {
+  padding: 0 0 40px 0 !important;
+}
+.catalog-grid .card > :first-child,
+.related-grid .card > :first-child {
+  width: 100%;
+  margin-bottom: 0;
+}
+.catalog-grid .card > :not(:first-child),
+.related-grid .card > :not(:first-child) {
+  padding-left: 36px;
+  padding-right: 36px;
+}
+.catalog-grid .card > :nth-child(2),
+.related-grid .card > :nth-child(2) {
+  margin-top: 24px;
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────────── */
@@ -626,13 +657,9 @@ body {
     margin-bottom: 2px;
   }
 
-  /* ── Mobile related cards: full-width image + compact text block ── */
+  /* ── Mobile related cards: tighter padding on mobile ── */
   .related-grid .card {
     padding: 0 0 20px 0 !important;
-  }
-  .related-grid .card > :first-child {
-    width: 100%;
-    margin-bottom: 0;
   }
   .related-grid .card > :not(:first-child) {
     padding-left: 20px;
@@ -642,13 +669,9 @@ body {
     margin-top: 14px;
   }
 
-  /* ── Mobile catalog cards (Marketplace + Category pages): same treatment ── */
+  /* ── Mobile catalog cards (Marketplace + Category pages): tighter padding ── */
   .catalog-grid .card {
     padding: 0 0 20px 0 !important;
-  }
-  .catalog-grid .card > :first-child {
-    width: 100%;
-    margin-bottom: 0;
   }
   .catalog-grid .card > :not(:first-child) {
     padding-left: 20px;
