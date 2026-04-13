@@ -1,11 +1,11 @@
 "use client";
-
+ 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin, adminHeaders } from "@/app/admin/AdminContext";
 import ImageUploader, { type UIImage } from "./ImageUploader";
 import { mockCategories } from "@/lib/mock-data";
-
+ 
 export interface AdminProductData {
   id?: string;
   name: string;
@@ -24,20 +24,20 @@ export interface AdminProductData {
   download_file_url?: string;
   attributes?: Record<string, unknown>;
 }
-
+ 
 // ── Attribute state ───────────────────────────────────────────────────────────
-
+ 
 const WORKS_WITH_OPTIONS = [
   "Midjourney", "DALL-E 3", "Ideogram", "Stable Diffusion",
   "ChatGPT", "Claude", "GPT-4",
 ];
-
+ 
 const PREDEFINED_ATTR_KEYS = [
   "promptsIncluded","worksWith","license","format","lastUpdated",
   "version","instantDownload","support","difficultyLevel","builtWith",
   "requirements","aiModel",
 ];
-
+ 
 interface AttributeState {
   promptsIncluded: string;
   worksWith: string[];
@@ -53,11 +53,11 @@ interface AttributeState {
   aiModel: string;
   custom: { key: string; value: string }[];
 }
-
+ 
 function todayISO() {
   return new Date().toISOString().split("T")[0];
 }
-
+ 
 const DEFAULT_ATTRS: AttributeState = {
   promptsIncluded: "",
   worksWith:       [],
@@ -73,7 +73,7 @@ const DEFAULT_ATTRS: AttributeState = {
   aiModel:         "",
   custom:          [],
 };
-
+ 
 function attrsFromRecord(a: Record<string, unknown>): AttributeState {
   const custom = Object.entries(a)
     .filter(([k]) => !PREDEFINED_ATTR_KEYS.includes(k))
@@ -94,7 +94,7 @@ function attrsFromRecord(a: Record<string, unknown>): AttributeState {
     custom,
   };
 }
-
+ 
 function buildAttributesPayload(attrs: AttributeState): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   if (attrs.promptsIncluded)            result.promptsIncluded = Number(attrs.promptsIncluded);
@@ -114,23 +114,23 @@ function buildAttributesPayload(attrs: AttributeState): Record<string, unknown> 
   }
   return result;
 }
-
+ 
 const EMPTY: AdminProductData = {
   name: "", slug: "", description: "", category: mockCategories[0]?.name ?? "",
   price: "", regular_price: "", sale_stripe_price_id: "", regular_stripe_price_id: "",
   seller: "AI Digital Products", features: "",
   status: "active", is_featured: false,
 };
-
+ 
 interface Props {
   initial?: Partial<AdminProductData>;
   initialImages?: UIImage[];
 }
-
+ 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
-
+ 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -141,7 +141,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-
+ 
 const inputStyle: React.CSSProperties = {
   background: "transparent",
   border: "1px solid var(--ink-soft)",
@@ -154,11 +154,11 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   borderRadius: "2px",
 };
-
+ 
 export default function ProductForm({ initial = {}, initialImages = [] }: Props) {
   const { token } = useAdmin();
   const router    = useRouter();
-
+ 
   const [form,         setForm]         = useState<AdminProductData>({ ...EMPTY, ...initial });
   const [images,       setImages]       = useState<UIImage[]>(initialImages);
   const [downloadFile, setDownloadFile] = useState<File | null>(null);
@@ -173,19 +173,19 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
       : DEFAULT_ATTRS
   );
   const [showAttrs,    setShowAttrs]    = useState(false);
-
+ 
   const isEdit = !!initial.id;
-
+ 
   function set(key: keyof AdminProductData, value: unknown) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
-
+ 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const name = e.target.value;
     set("name", name);
     if (!slugManual) set("slug", slugify(name));
   }
-
+ 
   async function uploadNewImages(productId: string): Promise<UIImage[]> {
     const result: UIImage[] = [];
     for (const img of images) {
@@ -210,7 +210,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     }
     return result;
   }
-
+ 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -231,7 +231,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         is_featured:             form.is_featured,
         attributes:              buildAttributesPayload(attrs),
       };
-
+ 
       const productRes = await fetch(
         isEdit ? `/api/admin/products/${initial.id}` : "/api/admin/products",
         {
@@ -246,12 +246,12 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
       }
       const { product } = await productRes.json();
       const productId: string = product.id;
-
+ 
       // 2 — Upload new images
       setUploading(true);
       const finalImages = await uploadNewImages(productId);
       setUploading(false);
-
+ 
       // 3 — Sync product_images table
       if (finalImages.length > 0) {
         // Delete removed images (images that were in initialImages but not in finalImages)
@@ -265,7 +265,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             })
           )
         );
-
+ 
         // Update display_order + is_primary for existing images
         const existingToUpdate = finalImages.filter(i => i.id);
         if (existingToUpdate.length > 0) {
@@ -281,7 +281,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             }),
           });
         }
-
+ 
         // Insert new image rows into product_images via a dedicated endpoint
         for (const img of finalImages.filter(i => !i.id)) {
           await fetch("/api/admin/images/insert", {
@@ -295,7 +295,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             }),
           });
         }
-
+ 
         // Update thumbnail_url on product to the primary (or first) image
         const primary = finalImages.find(i => i.is_primary) ?? finalImages[0];
         if (primary) {
@@ -306,7 +306,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           });
         }
       }
-
+ 
       // Upload download file if one was selected
       if (downloadFile) {
         const fd = new FormData();
@@ -322,7 +322,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           throw new Error(err.error ?? "File upload failed");
         }
       }
-
+ 
       setToast({ msg: isEdit ? "Product updated!" : "Product created!", ok: true });
       setTimeout(() => router.push("/admin/products"), 1200);
     } catch (err) {
@@ -332,10 +332,10 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
       setUploading(false);
     }
   }
-
+ 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0", maxWidth: "860px" }}>
-
+ 
       {/* Toast — fixed overlay so it's visible regardless of scroll position */}
       {toast && (
         <div
@@ -363,13 +363,13 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           {toast.msg}
         </div>
       )}
-
+ 
       {/* Two-column layout */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-
+ 
         {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-
+ 
           <Field label="Product Name *">
             <input
               style={inputStyle}
@@ -379,17 +379,17 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               required
             />
           </Field>
-
+ 
           <Field label="Slug *">
             <input
               style={inputStyle}
               value={form.slug}
-              onChange={(e) => { setSlugManual(true); set("slug", e.target.value); }}
+              onChange={(e) => { setSlugManual(true); set("slug", slugify(e.target.value)); }}
               placeholder="e.g. ultimate-prompt-pack"
               required
             />
           </Field>
-
+ 
           <Field label="Category *">
             <select
               style={{ ...inputStyle, appearance: "auto" }}
@@ -402,7 +402,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               ))}
             </select>
           </Field>
-
+ 
           <Field label="Seller">
             <input
               style={inputStyle}
@@ -411,7 +411,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               placeholder="Seller name"
             />
           </Field>
-
+ 
           <Field label="Status">
             <select
               style={{ ...inputStyle, appearance: "auto" }}
@@ -423,7 +423,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               <option value="archived">Archived</option>
             </select>
           </Field>
-
+ 
           <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
             <input
               type="checkbox"
@@ -433,12 +433,12 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             />
             <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)" }}>Featured product</span>
           </label>
-
+ 
         </div>
-
+ 
         {/* Right column */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-
+ 
           <Field label="Sale Price ($)">
             <input
               style={inputStyle}
@@ -450,7 +450,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               placeholder="e.g. 9.99"
             />
           </Field>
-
+ 
           <Field label="Regular Price ($) — optional">
             <input
               style={inputStyle}
@@ -462,7 +462,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               placeholder="e.g. 19.99"
             />
           </Field>
-
+ 
           <Field label="Stripe Sale Price ID">
             <input
               style={inputStyle}
@@ -471,7 +471,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               placeholder="price_xxx"
             />
           </Field>
-
+ 
           <Field label="Stripe Regular Price ID — optional">
             <input
               style={inputStyle}
@@ -480,13 +480,13 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               placeholder="price_xxx"
             />
           </Field>
-
+ 
         </div>
       </div>
-
+ 
       {/* Full-width fields */}
       <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "24px" }}>
-
+ 
         <Field label="Description *">
           <textarea
             style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
@@ -496,7 +496,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             required
           />
         </Field>
-
+ 
         <Field label="Features — one per line">
           <textarea
             style={{ ...inputStyle, minHeight: "120px", resize: "vertical", fontFamily: "monospace", fontSize: "13px" }}
@@ -505,7 +505,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             placeholder={"50 ready-to-use prompts\nInstant download\nCommercial use license"}
           />
         </Field>
-
+ 
         {/* Image upload */}
         <div>
           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "12px" }}>
@@ -513,7 +513,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           </div>
           <ImageUploader images={images} onChange={setImages} uploading={uploading} />
         </div>
-
+ 
         {/* Download file upload */}
         <div>
           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "12px" }}>
@@ -550,9 +550,9 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             Uploaded to private storage. Customers receive a secure signed URL after purchase.
           </div>
         </div>
-
+ 
       </div>
-
+ 
       {/* ── Attributes ─────────────────────────────────────────────────── */}
       <div style={{ marginTop: "32px", borderTop: "1px solid var(--line)", paddingTop: "24px" }}>
         <button
@@ -568,12 +568,12 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           <span style={{ fontSize: "14px", lineHeight: 1 }}>{showAttrs ? "▾" : "▸"}</span>
           Product Attributes
         </button>
-
+ 
         {showAttrs && (
           <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginTop: "20px" }}>
-
+ 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px" }}>
-
+ 
               <Field label="Prompts Included">
                 <input
                   style={inputStyle}
@@ -584,7 +584,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   placeholder="e.g. 50"
                 />
               </Field>
-
+ 
               <Field label="License">
                 <select
                   style={{ ...inputStyle, appearance: "auto" }}
@@ -597,7 +597,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   <option value="Extended Commercial">Extended Commercial</option>
                 </select>
               </Field>
-
+ 
               <Field label="Format">
                 <input
                   style={inputStyle}
@@ -606,7 +606,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   placeholder="e.g. PDF + TXT"
                 />
               </Field>
-
+ 
               <Field label="Version">
                 <input
                   style={inputStyle}
@@ -615,7 +615,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   placeholder="e.g. 1.0"
                 />
               </Field>
-
+ 
               <Field label="Last Updated">
                 <input
                   style={inputStyle}
@@ -624,7 +624,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   onChange={(e) => setAttrs((a) => ({ ...a, lastUpdated: e.target.value }))}
                 />
               </Field>
-
+ 
               <Field label="Instant Download">
                 <select
                   style={{ ...inputStyle, appearance: "auto" }}
@@ -636,7 +636,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   <option value="false">No</option>
                 </select>
               </Field>
-
+ 
               <Field label="Support">
                 <select
                   style={{ ...inputStyle, appearance: "auto" }}
@@ -649,7 +649,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   <option value="None">None</option>
                 </select>
               </Field>
-
+ 
               <Field label="Difficulty Level">
                 <select
                   style={{ ...inputStyle, appearance: "auto" }}
@@ -662,7 +662,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   <option value="Advanced">Advanced</option>
                 </select>
               </Field>
-
+ 
               <Field label="AI Model">
                 <input
                   style={inputStyle}
@@ -671,7 +671,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   placeholder="e.g. GPT-4, Claude"
                 />
               </Field>
-
+ 
               <Field label="Built With">
                 <input
                   style={inputStyle}
@@ -680,9 +680,9 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                   placeholder="e.g. Notion, Airtable"
                 />
               </Field>
-
+ 
             </div>
-
+ 
             <Field label="Requirements">
               <input
                 style={inputStyle}
@@ -691,7 +691,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                 placeholder="e.g. Node.js 18+, Python 3"
               />
             </Field>
-
+ 
             {/* Works With — checkboxes */}
             <div>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "10px" }}>
@@ -734,7 +734,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                 })}
               </div>
             </div>
-
+ 
             {/* Custom attributes */}
             <div>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "10px" }}>
@@ -786,11 +786,11 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                 </button>
               </div>
             </div>
-
+ 
           </div>
         )}
       </div>
-
+ 
       {/* Actions */}
       <div style={{ display: "flex", gap: "12px", marginTop: "32px", paddingTop: "24px", borderTop: "1px solid var(--line)" }}>
         <button
@@ -809,7 +809,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           Cancel
         </button>
       </div>
-
+ 
     </form>
   );
 }

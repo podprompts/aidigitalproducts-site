@@ -1,7 +1,7 @@
 import { getProducts } from "@/lib/products";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import StickyBuyBar from "@/components/StickyBuyBar";
@@ -55,7 +55,21 @@ export default async function ProductDetailPage({ params }: Props) {
       .eq("is_active", true)
       .single();
  
-    if (!dbProduct) notFound();
+    if (!dbProduct) {
+      // Check if this slug was renamed — redirect to the new slug if found
+      const { data: redirectTarget } = await supabaseAdmin
+        .from("products")
+        .select("slug")
+        .eq("old_slug", slug)
+        .eq("is_active", true)
+        .single();
+ 
+      if (redirectTarget?.slug) {
+        redirect(`/products/${redirectTarget.slug}`);
+      }
+ 
+      notFound();
+    }
  
     const shaped = {
       id: dbProduct!.id,
