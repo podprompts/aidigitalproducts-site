@@ -628,18 +628,34 @@ body {
 
   /* ── Mobile related cards: full-width image + compact text block ── */
   .related-grid .card {
-    padding: 0 0 20px 0 !important; /* override inline padding so image bleeds edge-to-edge */
+    padding: 0 0 20px 0 !important;
   }
   .related-grid .card > :first-child {
-    width: 100%;                    /* ProductThumbnail fills full card width */
+    width: 100%;
     margin-bottom: 0;
   }
   .related-grid .card > :not(:first-child) {
-    padding-left: 20px;             /* restore side padding for text only */
+    padding-left: 20px;
     padding-right: 20px;
   }
   .related-grid .card > :nth-child(2) {
-    margin-top: 14px;               /* breathing room between image and text */
+    margin-top: 14px;
+  }
+
+  /* ── Mobile catalog cards (Marketplace + Category pages): same treatment ── */
+  .catalog-grid .card {
+    padding: 0 0 20px 0 !important;
+  }
+  .catalog-grid .card > :first-child {
+    width: 100%;
+    margin-bottom: 0;
+  }
+  .catalog-grid .card > :not(:first-child) {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .catalog-grid .card > :nth-child(2) {
+    margin-top: 14px;
   }
 }
 
