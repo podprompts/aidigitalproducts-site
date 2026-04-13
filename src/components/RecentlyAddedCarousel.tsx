@@ -1,11 +1,11 @@
 "use client";
-
-import { useRef } from "react";
+ 
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
-
+ 
 export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
   // Sort by whichever is latest — updatedAt or createdAt — then take 6.
   // Mock products (no dates) naturally fall to the bottom.
@@ -16,13 +16,22 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
       return bDate - aDate;
     })
     .slice(0, 6);
-
+ 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 600);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+ 
   // Tripled so the infinite-loop jump is always seamless in both directions.
-  const tripled = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
-
+  // On mobile we just show the original 6 — no infinite loop needed.
+  const items = isMobile ? PRODUCTS : [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
+ 
   const trackRef = useRef<HTMLDivElement>(null);
   const { didDragRef } = useInfiniteCarousel(trackRef, PRODUCTS.length);
-
+ 
   return (
     <div
       style={{ position: "relative", overflow: "hidden", marginTop: "64px" }}
@@ -43,7 +52,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
           scrollSnapType: "none", // snap handled in JS for infinite-loop compatibility
         }}
       >
-        {tripled.map((product, i) => (
+        {items.map((product, i) => (
           <Link
             key={i}
             href={`/products/${product.slug}`}
@@ -52,7 +61,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
           >
             <div className="carousel-cell">
               <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
-
+ 
               <div
                 style={{
                   fontSize: "11px",
@@ -97,7 +106,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
               >
                 ${product.price}
               </div>
-
+ 
               <span
                 className="carousel-arrow"
                 style={{
@@ -117,8 +126,8 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
           </Link>
         ))}
       </div>
-
-      {/* Right-edge fade hints at more content */}
+ 
+      {/* Right-edge fade hints at more content — hidden on mobile via CSS */}
       <div className="carousel-fade-right" />
     </div>
   );

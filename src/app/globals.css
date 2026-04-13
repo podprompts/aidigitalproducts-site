@@ -583,6 +583,23 @@ body {
   .hero-buttons .btn          { width: 100%; }
   .link-row                   { flex-direction: column; gap: 16px; }
   .related-grid               { grid-template-columns: 1fr; }
+
+  /* ── Carousels → vertical stack on mobile ── */
+  .carousel-track {
+    flex-direction: column;
+    overflow-x: hidden;
+    background: none;
+    border-left: none;
+    border-right: none;
+  }
+  .carousel-cell {
+    width: 100%;
+    min-height: unset;
+    flex-shrink: unset;
+  }
+  .carousel-fade-left,
+  .carousel-fade-right  { display: none; }
+  .carousel-wrap        { margin-top: 32px; }
 }
 
 /* ── Product Gallery ────────────────────────────────────────────────────────── */

@@ -1,27 +1,37 @@
 "use client";
-
+ 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
-
+ 
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [featured, setFeatured] = useState(() => (products ?? []).slice(0, 6));
-
-useEffect(() => {
-  const list = [...(products ?? [])];
-  for (let i = list.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [list[i], list[j]] = [list[j], list[i]];
-  }
-  setFeatured(list.slice(0, 6));
-}, [products]);
-  const tripled = [...featured, ...featured, ...featured];
-
+ 
+  useEffect(() => {
+    const list = [...(products ?? [])];
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    setFeatured(list.slice(0, 6));
+  }, [products]);
+ 
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 600);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+ 
+  // On mobile just show the 6 featured products — no infinite loop needed.
+  const items = isMobile ? featured : [...featured, ...featured, ...featured];
+ 
   const trackRef = useRef<HTMLDivElement>(null);
   const { didDragRef } = useInfiniteCarousel(trackRef, featured.length);
-
+ 
   return (
     <section className="block" id="products">
       {/* Heading — constrained */}
@@ -38,7 +48,7 @@ useEffect(() => {
         >
           — Marketplace —
         </div>
-
+ 
         <h2
           className="display"
           style={{
@@ -53,7 +63,7 @@ useEffect(() => {
           <br />
           <span style={{ color: "var(--ink-mute)" }}>All in one place.</span>
         </h2>
-
+ 
         <p
           style={{
             marginTop: "28px",
@@ -69,7 +79,7 @@ useEffect(() => {
           quality, ready for deployment.
         </p>
       </div>
-
+ 
       {/* Carousel — full width, extends past viewport edge */}
       <div className="carousel-wrap">
         <div className="carousel-fade-left" />
@@ -89,7 +99,7 @@ useEffect(() => {
             // Double-click (detail >= 2) falls through → Link navigates
           }}
         >
-          {tripled.map((product, i) => (
+          {items.map((product, i) => (
             <Link
               key={i}
               href={`/products/${product.slug}`}
@@ -99,7 +109,7 @@ useEffect(() => {
               <div className="carousel-cell">
                 {/* Thumbnail */}
                 <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
-
+ 
                 {/* Meta */}
                 <div
                   style={{
@@ -145,7 +155,7 @@ useEffect(() => {
                 >
                   ${product.price}
                 </div>
-
+ 
                 <span
                   style={{
                     marginTop: "auto",
@@ -167,7 +177,7 @@ useEffect(() => {
         </div>
         <div className="carousel-fade-right" />
       </div>
-
+ 
       <div
         className="link-row"
         style={{ display: "flex", justifyContent: "center", gap: "32px", marginTop: "36px", flexWrap: "wrap" }}
