@@ -13,10 +13,27 @@ interface StickyBuyBarProps {
 export default function StickyBuyBar({ price, priceId, productId, productName }: StickyBuyBarProps) {
   const [visible, setVisible] = useState(false);
 
+  // Start with the static props passed from the server page.
+  // PriceAndBuySection will broadcast the real active price once
+  // the timer resolves, and we update from there.
+  const [activePrice, setActivePrice] = useState(price);
+  const [activePriceId, setActivePriceId] = useState(priceId);
+
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 400);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Listen for price changes broadcast by PriceAndBuySection
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { price: newPrice, priceId: newPriceId } = (e as CustomEvent).detail;
+      setActivePrice(newPrice);
+      setActivePriceId(newPriceId);
+    };
+    window.addEventListener("activePriceChange", handler);
+    return () => window.removeEventListener("activePriceChange", handler);
   }, []);
 
   return (
@@ -29,15 +46,15 @@ export default function StickyBuyBar({ price, priceId, productId, productName }:
           color: "var(--ink)",
         }}
       >
-        ${price}
+        ${activePrice.toFixed(2)}
       </span>
 
-      {priceId ? (
+      {activePriceId ? (
         <BuyButton
-          priceId={priceId}
+          priceId={activePriceId}
           productId={productId}
           productName={productName}
-          productPrice={price}
+          productPrice={activePrice}
           label="Buy Now"
           className="btn btn-primary"
         />

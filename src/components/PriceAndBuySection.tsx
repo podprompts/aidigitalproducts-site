@@ -22,6 +22,13 @@ interface TimerState {
   saleActive: boolean;
   expiresAt: string | null;
 }
+
+// Broadcast the currently active price + priceId to any listeners (e.g. StickyBuyBar)
+function broadcastPrice(price: number, priceId: string | undefined) {
+  window.dispatchEvent(
+    new CustomEvent("activePriceChange", { detail: { price, priceId } })
+  );
+}
  
 export default function PriceAndBuySection({
   productId,
@@ -57,9 +64,14 @@ export default function PriceAndBuySection({
   }, [productId, hasSale]);
  
   const saleActive = timerState?.saleActive ?? false;
- 
   const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
   const activePrice = hasSale && !saleActive ? regularPrice! : salePrice;
+
+  // Whenever the active price resolves or changes, broadcast it to StickyBuyBar
+  useEffect(() => {
+    if (timerState === null) return; // still loading — don't broadcast yet
+    broadcastPrice(activePrice, activePriceId);
+  }, [activePrice, activePriceId, timerState]);
  
   return (
     <>
@@ -110,19 +122,19 @@ export default function PriceAndBuySection({
                 onExpire only flips saleActive — expiresAt is preserved so
                 the component can show its own expired UI. */}
             {timerState.expiresAt && (
-  <CountdownTimer
-    expiresAt={timerState.expiresAt}
-    onExpire={() =>
-      setTimerState((prev) =>
-        prev ? { ...prev, saleActive: false } : prev
-      )
-    }
-    productId={productId}
-    productName={productName}
-    salePrice={`$${salePrice.toFixed(2)}`}
-    wasPrice={regularPrice ? `$${regularPrice.toFixed(2)}` : ""}
-  />
-)}
+              <CountdownTimer
+                expiresAt={timerState.expiresAt}
+                onExpire={() =>
+                  setTimerState((prev) =>
+                    prev ? { ...prev, saleActive: false } : prev
+                  )
+                }
+                productId={productId}
+                productName={productName}
+                salePrice={`$${salePrice.toFixed(2)}`}
+                wasPrice={regularPrice ? `$${regularPrice.toFixed(2)}` : ""}
+              />
+            )}
           </>
         ) : (
           <div
