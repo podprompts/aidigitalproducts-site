@@ -52,7 +52,7 @@ export default function UrgencyBar({ productId, salePrice, regularPrice, saleAct
     >
       <div style={{ fontSize: "14px", fontWeight: 700, lineHeight: 1.4 }}>
         <span style={{ color: "#dc2626" }}>Only {stock} left</span>
-        <span style={{ color: "#6b7280" }}> · in </span>
+        <span style={{ color: "#d97706" }}> · in </span>
         <span style={{ color: "#d97706" }}>{cart} cart{cart !== 1 ? "s" : ""}</span>
       </div>
       {discountPct && (

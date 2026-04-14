@@ -47,7 +47,7 @@ export default function ViewingBadge({ productId }: { productId: string }) {
         }}
       >
         <span style={{ filter: "grayscale(1)", color: "#9ca3af" }}>⬇</span>
-        <span>Digital download</span>
+        <span>Instant Download</span>
       </div>
       <div
         style={{
