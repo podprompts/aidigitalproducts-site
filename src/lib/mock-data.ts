@@ -44,27 +44,7 @@ export interface BlogPost {
 // ─── Real products (live in Supabase + Stripe) ───────────────────────────────
  
 export const mockProducts: Product[] = [
-  {
-    id: "4fbcfb3a-2324-4fc7-aaa1-a2263bd45338",
-    slug: "ultimate-prompt-pack-bundle",
-    title: "Ultimate All 3 Prompt Packs Bundle",
-    category: "Prompt Packs",
-    price: 24.95,
-    seller: "AI Digital Products",
-    description:
-      "Get the complete collection: Outdoors & Adventure, Blue Collar Trades, and Pet & Animal Lovers — all 150 prompts in one bundle. The ultimate starter kit for print-on-demand sellers who want to dominate multiple niches.",
-    priceId: "price_1TJYCnEU074NZnN8EbBXZw7s",
-    regularPrice: 34.95,
-    regularPriceId: "price_1TJaP8EU074NZnN8lQsQ2vVl",
-    features: [
-      "150 AI prompts (all 3 packs)",
-      "3 profitable niches covered",
-      "Works with Midjourney, DALL-E, Ideogram",
-      "Commercial use license",
-      "Instant download",
-      "Save $5 vs buying separately",
-    ],
-  },
+  
   {
     id: "df07e7f7-8bde-4b74-9206-b03a16a31351",
     slug: "outdoors-adventure-prompt-pack",
