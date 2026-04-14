@@ -41,7 +41,7 @@ export default function ViewingBadge({ productId }: { productId: string }) {
           display: "flex",
           alignItems: "center",
           gap: "5px",
-          fontSize: "12px",
+          fontSize: "14px",
           fontWeight: 600,
           color: "#9ca3af",
         }}
@@ -54,7 +54,7 @@ export default function ViewingBadge({ productId }: { productId: string }) {
           display: "flex",
           alignItems: "center",
           gap: "5px",
-          fontSize: "12px",
+          fontSize: "14px",
           fontWeight: 700,
         }}
       >
