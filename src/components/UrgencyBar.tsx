@@ -20,8 +20,8 @@ export default function UrgencyBar({ productId, salePrice, regularPrice, saleAct
     const storedStock = sessionStorage.getItem(stockKey);
     const storedCart  = sessionStorage.getItem(cartKey);
 
-    const s = storedStock ? parseInt(storedStock, 10) : Math.floor(Math.random() * 10) + 1; // 1–10
-    const c = storedCart  ? parseInt(storedCart,  10) : Math.floor(Math.random() * 25) + 1; // 1–25
+    const s = storedStock ? parseInt(storedStock, 10) : Math.floor(Math.random() * 10) + 1;
+    const c = storedCart  ? parseInt(storedCart,  10) : Math.floor(Math.random() * 25) + 1;
 
     if (!storedStock) sessionStorage.setItem(stockKey, String(s));
     if (!storedCart)  sessionStorage.setItem(cartKey,  String(c));
@@ -50,13 +50,13 @@ export default function UrgencyBar({ productId, salePrice, regularPrice, saleAct
         gap: "6px",
       }}
     >
-      <div style={{ fontSize: "13px", fontWeight: 700, lineHeight: 1.4 }}>
+      <div style={{ fontSize: "14px", fontWeight: 700, lineHeight: 1.4 }}>
         <span style={{ color: "#dc2626" }}>Only {stock} left</span>
         <span style={{ color: "#6b7280" }}> · in </span>
         <span style={{ color: "#d97706" }}>{cart} cart{cart !== 1 ? "s" : ""}</span>
       </div>
       {discountPct && (
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#16a34a" }}>
+        <div style={{ fontSize: "14px", fontWeight: 700, color: "#16a34a" }}>
           {discountPct}% off · Limited time sale
         </div>
       )}
