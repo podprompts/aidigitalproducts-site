@@ -49,7 +49,7 @@ export default function CategoriesPage() {
         {/* Categories grid */}
         <section style={{ padding: "0 24px clamp(80px, 12vw, 160px)" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div className="catalog-grid">
+            <div className="catalog-grid category-grid">
               {mockCategories.map((cat, i) => {
                 const count = mockProducts.filter((p) => p.category === cat.name).length;
                 return (
@@ -61,7 +61,6 @@ export default function CategoriesPage() {
                     <div
                       className="card"
                       style={{
-                        padding: "56px 36px",
                         minHeight: "260px",
                         display: "flex",
                         flexDirection: "column",

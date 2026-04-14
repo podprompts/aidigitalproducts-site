@@ -1,16 +1,16 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mockProducts, mockCategories, type Product } from "@/lib/mock-data";
- 
+
 /** Fetch all active products from Supabase and shape them as Product */
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, thumbnail_url, is_active, created_at, updated_at")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, thumbnail_url, video_url, is_active, created_at, updated_at")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
- 
+
   if (error || !data) return [];
- 
+
   return data.map((p) => ({
     id: p.id,
     slug: p.slug,
@@ -21,41 +21,48 @@ async function getSupabaseProducts(): Promise<Product[]> {
     description: p.description ?? "",
     seller: "AI Digital Products",
     thumbnailUrl: p.thumbnail_url ?? undefined,
+    videoUrl: p.video_url ?? undefined,
     priceId: p.sale_stripe_price_id ?? undefined,
     regularPriceId: p.regular_stripe_price_id ?? undefined,
     createdAt: p.created_at ?? undefined,
     updatedAt: p.updated_at ?? undefined,
   }));
 }
- 
+
 /** All products — Supabase first, then mock fill-ins, deduped by slug */
 export async function getProducts(): Promise<Product[]> {
   const { data: thumbData } = await supabaseAdmin
     .from("products")
-    .select("slug, thumbnail_url");
- 
+    .select("slug, thumbnail_url, video_url");
+
   const thumbMap = Object.fromEntries(
     (thumbData ?? []).map((p) => [p.slug, p.thumbnail_url as string | null])
   );
- 
+
+  const videoMap = Object.fromEntries(
+    (thumbData ?? []).map((p) => [p.slug, p.video_url as string | null])
+  );
+
   const supabaseProducts = await getSupabaseProducts();
   const supabaseSlugs = new Set(supabaseProducts.map((p) => p.slug));
- 
+
   const mockFillIns = mockProducts
     .filter((p) => !supabaseSlugs.has(p.slug))
     .map((p) => ({
       ...p,
       thumbnailUrl: thumbMap[p.slug] ?? p.thumbnailUrl ?? undefined,
+      videoUrl: videoMap[p.slug] ?? p.videoUrl ?? undefined,
     }));
- 
+
   const mergedSupabase = supabaseProducts.map((p) => ({
     ...p,
     thumbnailUrl: p.thumbnailUrl ?? thumbMap[p.slug] ?? undefined,
+    videoUrl: p.videoUrl ?? videoMap[p.slug] ?? undefined,
   }));
- 
+
   return [...mergedSupabase, ...mockFillIns];
 }
- 
+
 /** Products filtered to a single category (matched by category slug). */
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const category = mockCategories.find((c) => c.slug === categorySlug);
@@ -63,7 +70,7 @@ export async function getProductsByCategory(categorySlug: string): Promise<Produ
   const all = await getProducts();
   return all.filter((p) => p.category === category.name);
 }
- 
+
 /** Category names list (derived from mock-data, no DB call needed). */
 export function getCategoryNames(): string[] {
   return mockCategories.map((c) => c.name);

@@ -21,6 +21,7 @@ export interface AdminProductData {
   status: "active" | "coming_soon" | "archived";
   is_featured: boolean;
   thumbnail_url?: string;
+  video_url?: string;
   download_file_url?: string;
   attributes?: Record<string, unknown>;
 }
@@ -120,6 +121,7 @@ const EMPTY: AdminProductData = {
   price: "", regular_price: "", sale_stripe_price_id: "", regular_stripe_price_id: "",
   seller: "AI Digital Products", features: "",
   status: "active", is_featured: false,
+  video_url: "",
 };
  
 interface Props {
@@ -190,7 +192,6 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     const result: UIImage[] = [];
     for (const img of images) {
       if (!img.file) {
-        // Existing image — keep as-is
         result.push(img);
         continue;
       }
@@ -230,6 +231,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         is_active:               form.status === "active",
         is_featured:             form.is_featured,
         attributes:              buildAttributesPayload(attrs),
+        video_url:               form.video_url || null,
       };
  
       const productRes = await fetch(
@@ -254,7 +256,6 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
  
       // 3 — Sync product_images table
       if (finalImages.length > 0) {
-        // Delete removed images (images that were in initialImages but not in finalImages)
         const finalIds = new Set(finalImages.filter(i => i.id).map(i => i.id!));
         const removed  = initialImages.filter(i => i.id && !finalIds.has(i.id));
         await Promise.all(
@@ -266,7 +267,6 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           )
         );
  
-        // Update display_order + is_primary for existing images
         const existingToUpdate = finalImages.filter(i => i.id);
         if (existingToUpdate.length > 0) {
           await fetch("/api/admin/images/reorder", {
@@ -282,7 +282,6 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           });
         }
  
-        // Insert new image rows into product_images via a dedicated endpoint
         for (const img of finalImages.filter(i => !i.id)) {
           await fetch("/api/admin/images/insert", {
             method: "POST",
@@ -296,7 +295,6 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           });
         }
  
-        // Update thumbnail_url on product to the primary (or first) image
         const primary = finalImages.find(i => i.is_primary) ?? finalImages[0];
         if (primary) {
           await fetch(`/api/admin/products/${productId}`, {
@@ -307,7 +305,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         }
       }
  
-      // Upload download file if one was selected
+      // 4 — Upload download file if one was selected
       if (downloadFile) {
         const fd = new FormData();
         fd.append("file", downloadFile);
@@ -336,7 +334,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0", maxWidth: "860px" }}>
  
-      {/* Toast — fixed overlay so it's visible regardless of scroll position */}
+      {/* Toast */}
       {toast && (
         <div
           style={{
@@ -550,6 +548,19 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             Uploaded to private storage. Customers receive a secure signed URL after purchase.
           </div>
         </div>
+ 
+        {/* Video URL */}
+        <Field label="Video URL — optional (.mp4)">
+          <input
+            style={inputStyle}
+            value={form.video_url ?? ""}
+            onChange={(e) => set("video_url", e.target.value)}
+            placeholder="https://your-bucket.supabase.co/storage/v1/object/public/…/demo.mp4"
+          />
+          <div style={{ fontSize: "11px", color: "var(--ink-mute)", marginTop: "4px" }}>
+            Used for hover-to-play preview on product cards. Must be a public .mp4 URL.
+          </div>
+        </Field>
  
       </div>
  

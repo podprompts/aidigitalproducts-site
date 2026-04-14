@@ -14,6 +14,8 @@ export interface Product {
   regularPriceId?: string;
   /** Thumbnail image URL — Supabase Storage or any allowed remote */
   thumbnailUrl?: string;
+  /** Preview video URL — mp4, plays silently on card hover */
+  videoUrl?: string;
   /** Feature bullet list shown in the "What's included" section */
   features?: string[];
   /** ISO timestamp — when the product was first created */
