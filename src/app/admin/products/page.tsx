@@ -1,11 +1,11 @@
 "use client";
-
+ 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import AdminShell from "../AdminShell";
 import { useAdmin, adminHeaders } from "../AdminContext";
-
+ 
 interface Product {
   id: string;
   name: string;
@@ -16,9 +16,11 @@ interface Product {
   thumbnail_url: string | null;
   created_at: string;
 }
-
+ 
 type Filter = "all" | "active" | "coming_soon" | "archived";
-
+ 
+const PAGE_SIZE = 14;
+ 
 function ProductsTable() {
   const { token } = useAdmin();
   const [products,  setProducts]  = useState<Product[]>([]);
@@ -27,7 +29,8 @@ function ProductsTable() {
   const [search,    setSearch]    = useState("");
   const [deleting,  setDeleting]  = useState<string | null>(null);
   const [toast,     setToast]     = useState<string | null>(null);
-
+  const [page,      setPage]      = useState(1);
+ 
   useEffect(() => {
     fetch("/api/admin/products", { headers: adminHeaders(token) })
       .then((r) => r.json())
@@ -35,7 +38,10 @@ function ProductsTable() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [token]);
-
+ 
+  // Reset to page 1 whenever filter or search changes
+  useEffect(() => { setPage(1); }, [filter, search]);
+ 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
     setDeleting(id);
@@ -54,11 +60,14 @@ function ProductsTable() {
       setDeleting(null);
     }
   }
-
-  const displayed = products
+ 
+  const filtered = products
     .filter((p) => filter === "all" || (p.status ?? "active") === filter)
     .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()));
-
+ 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const displayed  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+ 
   const statusBadge = (s: string | null) => {
     const label = s === "coming_soon" ? "Coming Soon" : s === "archived" ? "Archived" : "Active";
     const color = s === "archived" ? "#6b7280" : s === "coming_soon" ? "#d97706" : "#16a34a";
@@ -68,23 +77,23 @@ function ProductsTable() {
       </span>
     );
   };
-
+ 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-
+ 
       {/* Toast */}
       {toast && (
         <div style={{ padding: "10px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", fontSize: "13px", fontWeight: 600, borderRadius: "2px" }}>
           {toast}
         </div>
       )}
-
+ 
       {/* Toolbar */}
       <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
         <Link href="/admin/products/new" className="btn btn-primary btn-sm">
           + Add New Product
         </Link>
-
+ 
         {/* Search */}
         <input
           type="search"
@@ -103,7 +112,7 @@ function ProductsTable() {
             borderRadius: "2px",
           }}
         />
-
+ 
         {/* Filter pills */}
         <div style={{ display: "flex", gap: "6px" }}>
           {(["all", "active", "coming_soon", "archived"] as Filter[]).map((f) => (
@@ -128,12 +137,19 @@ function ProductsTable() {
           ))}
         </div>
       </div>
-
-      {/* Count */}
-      <div style={{ fontSize: "12px", color: "var(--ink-mute)", fontWeight: 600 }}>
-        {loading ? "Loading…" : `${displayed.length} product${displayed.length !== 1 ? "s" : ""}`}
+ 
+      {/* Count + pagination info */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+        <div style={{ fontSize: "12px", color: "var(--ink-mute)", fontWeight: 600 }}>
+          {loading ? "Loading…" : `${filtered.length} product${filtered.length !== 1 ? "s" : ""}`}
+        </div>
+        {!loading && totalPages > 1 && (
+          <div style={{ fontSize: "12px", color: "var(--ink-mute)", fontWeight: 600 }}>
+            Page {page} of {totalPages}
+          </div>
+        )}
       </div>
-
+ 
       {/* Table */}
       <div style={{ border: "1px solid var(--line)", overflow: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -229,10 +245,77 @@ function ProductsTable() {
           </tbody>
         </table>
       </div>
+ 
+      {/* Pagination controls */}
+      {!loading && totalPages > 1 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", paddingTop: "8px" }}>
+          <button
+            onClick={() => setPage(1)}
+            disabled={page === 1}
+            style={pagerBtn(page === 1)}
+          >
+            «
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            style={pagerBtn(page === 1)}
+          >
+            ‹ Prev
+          </button>
+ 
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+            <button
+              key={n}
+              onClick={() => setPage(n)}
+              style={{
+                ...pagerBtn(false),
+                background: n === page ? "var(--ink)" : "transparent",
+                color: n === page ? "var(--bg)" : "var(--ink)",
+                border: `1px solid ${n === page ? "var(--ink)" : "var(--ink-soft)"}`,
+                minWidth: "32px",
+              }}
+            >
+              {n}
+            </button>
+          ))}
+ 
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            style={pagerBtn(page === totalPages)}
+          >
+            Next ›
+          </button>
+          <button
+            onClick={() => setPage(totalPages)}
+            disabled={page === totalPages}
+            style={pagerBtn(page === totalPages)}
+          >
+            »
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-
+ 
+function pagerBtn(disabled: boolean): React.CSSProperties {
+  return {
+    padding: "6px 12px",
+    fontSize: "12px",
+    fontWeight: 600,
+    border: "1px solid var(--ink-soft)",
+    background: "transparent",
+    color: disabled ? "var(--ink-mute)" : "var(--ink)",
+    cursor: disabled ? "default" : "pointer",
+    fontFamily: "inherit",
+    borderRadius: "2px",
+    opacity: disabled ? 0.4 : 1,
+    transition: "all 0.15s",
+  };
+}
+ 
 export default function AdminProductsPage() {
   return (
     <AdminShell title="Products">
