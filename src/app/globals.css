@@ -48,7 +48,7 @@ body {
   align-items: center;
   white-space: nowrap;
   width: max-content;
-  animation: tickerScroll 120s linear infinite;
+  animation: tickerScroll 60s linear infinite;
 }
 .ticker-bar:hover .ticker-track,
 .ticker-bar.paused .ticker-track {
@@ -88,7 +88,7 @@ body {
   to   { transform: translateX(-50%); }
 }
 @media (max-width: 600px) {
-  .ticker-track { animation-duration: 90s; font-size: 11px; }
+  .ticker-track { animation-duration: 45s; font-size: 11px; }
 }
 
 /* ── Nav ───────────────────────────────────────────────────────────────────── */
