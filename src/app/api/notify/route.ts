@@ -18,9 +18,10 @@ export async function POST(req: NextRequest) {
       {
         email: email.toLowerCase().trim(),
         product_id: productId,
-        deals_list: true, // pre-checked consent to future deal emails
+        deals_list: true,
+        notified_at: null,
       },
-      { onConflict: "email,product_id", ignoreDuplicates: true }
+      { onConflict: "email,product_id" }
     );
 
     if (error) throw error;
