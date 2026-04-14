@@ -54,7 +54,11 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
             draggable={false}
           >
             <div className="carousel-cell">
-              <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
+              <ProductThumbnail
+                url={product.thumbnailUrl}
+                videoUrl={product.videoUrl}
+                alt={product.title}
+              />
 
               <div
                 style={{
