@@ -854,3 +854,13 @@ body {
     width: 100%;
   }
 }
+/* ── Category grid cards — text-only, restore padding ────────────────────── */
+.category-grid .card {
+  padding: 56px 36px !important;
+}
+@media (max-width: 600px) {
+  .category-grid .card {
+    padding: 32px 24px !important;
+  }
+}
+ 
