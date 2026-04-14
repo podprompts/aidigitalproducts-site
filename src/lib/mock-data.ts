@@ -21,15 +21,15 @@ export interface Product {
   /** ISO timestamp — when the product was last updated */
   updatedAt?: string;
 }
-
+ 
 export interface Category {
   id: string;
   slug: string;
   name: string;
 }
-
+ 
 export type TrendingSearch = string;
-
+ 
 export interface BlogPost {
   id: string;
   slug: string;
@@ -38,9 +38,9 @@ export interface BlogPost {
   excerpt: string;
   date: string;
 }
-
+ 
 // ─── Real products (live in Supabase + Stripe) ───────────────────────────────
-
+ 
 export const mockProducts: Product[] = [
   {
     id: "4fbcfb3a-2324-4fc7-aaa1-a2263bd45338",
@@ -123,131 +123,8 @@ export const mockProducts: Product[] = [
       "Instant download",
     ],
   },
-
-  // ─── Coming-soon mock products (no priceId) ────────────────────────────────
-
-  {
-    id: "5",
-    slug: "support-chatbot-starter",
-    title: "Support Chatbot Starter",
-    category: "Chatbots",
-    price: 97,
-    seller: "Studio Meridian",
-    description:
-      "A pre-built customer support chatbot trained on common support patterns. Deploy to your website in an afternoon. Includes full configuration documentation and a walkthrough.",
-  },
-  {
-    id: "6",
-    slug: "faq-chatbot-kit",
-    title: "FAQ Chatbot Kit",
-    category: "Chatbots",
-    price: 47,
-    seller: "The Prompt Lab",
-    description:
-      "A lightweight FAQ bot designed for documentation sites and knowledge bases. Configured for accuracy over flair. Works out of the box with minimal setup.",
-  },
-  {
-    id: "7",
-    slug: "outbound-voice-agent",
-    title: "Outbound Voice Agent",
-    category: "Voice Agents",
-    price: 297,
-    seller: "Meridian Voice",
-    description:
-      "An outbound calling agent that handles appointment confirmations, follow-ups, and reminders at scale. Sounds natural. Logs every call automatically.",
-  },
-  {
-    id: "8",
-    slug: "receptionist-agent-pack",
-    title: "Receptionist Agent Pack",
-    category: "Voice Agents",
-    price: 197,
-    seller: "Studio Meridian",
-    description:
-      "An inbound voice agent built for small businesses. Answers calls, captures leads, qualifies inquiries, and routes to the right person. No hold music required.",
-  },
-  {
-    id: "9",
-    slug: "invoice-automation-flow",
-    title: "Invoice Automation Flow",
-    category: "Automations",
-    price: 147,
-    seller: "Workflow Works",
-    description:
-      "Generates and delivers invoices automatically from your existing CRM data. Handles formatting, delivery, and follow-up reminders without manual input.",
-  },
-  {
-    id: "10",
-    slug: "crm-sync-workflow",
-    title: "CRM Sync Workflow",
-    category: "Automations",
-    price: 97,
-    seller: "Workflow Works",
-    description:
-      "Keeps two CRM systems in sync without manual exports or double entry. Built for teams running parallel tools during a migration or integration period.",
-  },
-  {
-    id: "11",
-    slug: "blog-engine-pro",
-    title: "Blog Engine Pro",
-    category: "Content Systems",
-    price: 127,
-    seller: "Content Stack",
-    description:
-      "A full blog production system: briefing, drafting, editing, and publishing on a consistent schedule. Configured for brand voice consistency across all output.",
-  },
-  {
-    id: "12",
-    slug: "social-media-scheduler",
-    title: "Social Media Scheduler",
-    category: "Content Systems",
-    price: 87,
-    seller: "Content Stack",
-    description:
-      "Generates and schedules posts across platforms from a single content brief. Handles format variations per platform. Built for teams running lean.",
-  },
-  {
-    id: "13",
-    slug: "lead-qualifier-pipeline",
-    title: "Lead Qualifier Pipeline",
-    category: "Lead Generation",
-    price: 177,
-    seller: "Growth Systems",
-    description:
-      "Scores and routes inbound leads based on fit criteria you define. Connects to your CRM. Removes the manual review step from early-stage qualification.",
-  },
-  {
-    id: "14",
-    slug: "cold-outreach-system",
-    title: "Cold Outreach System",
-    category: "Lead Generation",
-    price: 97,
-    seller: "Growth Systems",
-    description:
-      "A sequenced outreach system built for high reply rates. Handles research, personalization, and follow-up. Configured to stay out of spam folders.",
-  },
-  {
-    id: "15",
-    slug: "custom-gpt-starter-kit",
-    title: "Custom GPT Starter Kit",
-    category: "Custom AI Apps",
-    price: 497,
-    seller: "The Prompt Lab",
-    description:
-      "A structured starting point for building production-ready custom AI applications. Includes architecture patterns, prompt engineering guides, and deployment checklists.",
-  },
-  {
-    id: "16",
-    slug: "ai-saas-template",
-    title: "AI SaaS Template",
-    category: "Custom AI Apps",
-    price: 297,
-    seller: "Studio Meridian",
-    description:
-      "A full-stack template for launching an AI-powered SaaS product. Covers auth, usage metering, and the core AI integration layer. Documented and ready to extend.",
-  },
 ];
-
+ 
 export const mockCategories: Category[] = [
   { id: "1", slug: "prompt-packs",    name: "Prompt Packs"    },
   { id: "2", slug: "chatbots",        name: "Chatbots"        },
@@ -257,7 +134,7 @@ export const mockCategories: Category[] = [
   { id: "6", slug: "lead-generation", name: "Lead Generation" },
   { id: "7", slug: "custom-ai-apps",  name: "Custom AI Apps"  },
 ];
-
+ 
 export const mockBlogPosts: BlogPost[] = [
   {
     id: "1",
@@ -314,7 +191,7 @@ export const mockBlogPosts: BlogPost[] = [
     date: "2026-01-20",
   },
 ];
-
+ 
 export const mockTrendingSearches: TrendingSearch[] = [
   "prompt packs",
   "print on demand",
