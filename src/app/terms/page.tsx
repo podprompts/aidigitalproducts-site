@@ -10,25 +10,26 @@ export const metadata: Metadata = {
 };
 
 const toc = [
-  { id: "acceptance",       label: "1. Acceptance of Terms" },
-  { id: "platform",         label: "2. Platform Description" },
-  { id: "accounts",         label: "3. User Accounts & Eligibility" },
-  { id: "buyer-terms",      label: "4. Buyer Terms" },
-  { id: "seller-terms",     label: "5. Seller Terms" },
-  { id: "prohibited",       label: "6. Prohibited Uses" },
-  { id: "ip",               label: "7. Intellectual Property" },
-  { id: "payments",         label: "8. Payment Terms" },
-  { id: "dynamic-pricing",  label: "9. Dynamic Pricing Disclosure" },
-  { id: "disclaimers",      label: "10. Disclaimers" },
-  { id: "liability",        label: "11. Limitation of Liability" },
-  { id: "indemnification",  label: "12. Indemnification" },
-  { id: "disputes",         label: "13. Dispute Resolution" },
-  { id: "governing-law",    label: "14. Governing Law" },
-  { id: "termination",      label: "15. Termination" },
-  { id: "changes",          label: "16. Changes to Terms" },
-  { id: "severability",     label: "17. Severability" },
-  { id: "entire-agreement", label: "18. Entire Agreement" },
-  { id: "contact",          label: "19. Contact Information" },
+  { id: "acceptance",          label: "1. Acceptance of Terms" },
+  { id: "platform",            label: "2. Platform Description" },
+  { id: "accounts",            label: "3. User Accounts & Eligibility" },
+  { id: "buyer-terms",         label: "4. Buyer Terms" },
+  { id: "seller-terms",        label: "5. Seller Terms" },
+  { id: "prohibited",          label: "6. Prohibited Uses" },
+  { id: "ip",                  label: "7. Intellectual Property" },
+  { id: "payments",            label: "8. Payment Terms" },
+  { id: "dynamic-pricing",     label: "9. Dynamic Pricing Disclosure" },
+  { id: "simulated-activity",  label: "10. Simulated Activity Indicators" },
+  { id: "disclaimers",         label: "11. Disclaimers" },
+  { id: "liability",           label: "12. Limitation of Liability" },
+  { id: "indemnification",     label: "13. Indemnification" },
+  { id: "disputes",            label: "14. Dispute Resolution" },
+  { id: "governing-law",       label: "15. Governing Law" },
+  { id: "termination",         label: "16. Termination" },
+  { id: "changes",             label: "17. Changes to Terms" },
+  { id: "severability",        label: "18. Severability" },
+  { id: "entire-agreement",    label: "19. Entire Agreement" },
+  { id: "contact",             label: "20. Contact Information" },
 ];
 
 export default function TermsPage() {
@@ -452,8 +453,34 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 10 */}
-            <LegalSection id="disclaimers" number="10" title="Disclaimers">
+            {/* 10 — NEW */}
+            <LegalSection id="simulated-activity" number="10" title="Simulated Activity Indicators">
+              <p>
+                Certain product pages on the Platform may display activity indicators such as the
+                number of users currently viewing a product, items remaining in stock, or the number
+                of users who have added a product to their cart. These figures are estimates and
+                simulations intended to represent general marketplace activity and are not derived
+                from real-time inventory data, live session tracking, or actual user behavior at any
+                specific point in time.
+              </p>
+              <p>
+                These indicators are provided for illustrative purposes only and should not be
+                relied upon as precise or literal representations of actual user activity, current
+                demand, or physical stock availability. Because all products on this Platform are
+                delivered electronically, they are not subject to physical inventory constraints,
+                and no stock limitation implied by these indicators reflects a genuine supply
+                restriction.
+              </p>
+              <p>
+                The Company makes no representation that any displayed activity figure accurately
+                reflects the number of simultaneous visitors, units available, or carts containing
+                any given product at any moment. These displays do not constitute a guarantee of
+                scarcity, availability, or demand.
+              </p>
+            </LegalSection>
+
+            {/* 11 */}
+            <LegalSection id="disclaimers" number="11" title="Disclaimers">
               <p>
                 THE PLATFORM AND ALL PRODUCTS AVAILABLE THEREON ARE PROVIDED ON AN &quot;AS IS&quot; AND
                 &quot;AS AVAILABLE&quot; BASIS WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.
@@ -476,8 +503,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 11 */}
-            <LegalSection id="liability" number="11" title="Limitation of Liability">
+            {/* 12 */}
+            <LegalSection id="liability" number="12" title="Limitation of Liability">
               <p>
                 TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL HONNYDO LLC,
                 ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, OR AFFILIATES BE LIABLE FOR ANY
@@ -498,8 +525,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 12 */}
-            <LegalSection id="indemnification" number="12" title="Indemnification">
+            {/* 13 */}
+            <LegalSection id="indemnification" number="13" title="Indemnification">
               <p>
                 You agree to defend, indemnify, and hold harmless HONNYDO LLC and its officers,
                 directors, employees, contractors, agents, licensors, and suppliers from and against
@@ -517,8 +544,8 @@ export default function TermsPage() {
               </ul>
             </LegalSection>
 
-            {/* 13 */}
-            <LegalSection id="disputes" number="13" title="Dispute Resolution">
+            {/* 14 */}
+            <LegalSection id="disputes" number="14" title="Dispute Resolution">
               <SubHeading>Informal Resolution</SubHeading>
               <p>
                 Before initiating any formal dispute proceeding, you agree to contact us through
@@ -554,8 +581,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 14 */}
-            <LegalSection id="governing-law" number="14" title="Governing Law">
+            {/* 15 */}
+            <LegalSection id="governing-law" number="15" title="Governing Law">
               <p>
                 These Terms shall be governed by and construed in accordance with the laws of the{" "}
                 <strong>State of Arizona, USA</strong>, without regard to its conflict of law
@@ -565,8 +592,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 15 */}
-            <LegalSection id="termination" number="15" title="Termination">
+            {/* 16 */}
+            <LegalSection id="termination" number="16" title="Termination">
               <p>
                 We may terminate or suspend your access to the Platform immediately, without prior
                 notice or liability, for any reason whatsoever, including without limitation if you
@@ -587,8 +614,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 16 */}
-            <LegalSection id="changes" number="16" title="Changes to Terms">
+            {/* 17 */}
+            <LegalSection id="changes" number="17" title="Changes to Terms">
               <p>
                 We reserve the right to update or modify these Terms at any time at our sole
                 discretion. When we make material changes, we will update the &quot;Last Updated&quot; date
@@ -602,8 +629,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 17 */}
-            <LegalSection id="severability" number="17" title="Severability">
+            {/* 18 */}
+            <LegalSection id="severability" number="18" title="Severability">
               <p>
                 If any provision of these Terms is found by a court or arbitrator of competent
                 jurisdiction to be invalid, illegal, or unenforceable, that provision shall be
@@ -612,8 +639,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 18 */}
-            <LegalSection id="entire-agreement" number="18" title="Entire Agreement">
+            {/* 19 */}
+            <LegalSection id="entire-agreement" number="19" title="Entire Agreement">
               <p>
                 These Terms, together with our{" "}
                 <Link href="/privacy" style={{ color: "var(--ink)", fontWeight: 600 }}>
@@ -626,8 +653,8 @@ export default function TermsPage() {
               </p>
             </LegalSection>
 
-            {/* 19 */}
-            <LegalSection id="contact" number="19" title="Contact Information">
+            {/* 20 */}
+            <LegalSection id="contact" number="20" title="Contact Information">
               <p>If you have any questions about these Terms, please contact us:</p>
               <ContactBlock />
             </LegalSection>
