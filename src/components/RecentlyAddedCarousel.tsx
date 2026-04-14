@@ -1,14 +1,13 @@
 "use client";
- 
+
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
+import ViewingBadge from "@/components/ViewingBadge";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
- 
+
 export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
-  // Sort by whichever is latest — updatedAt or createdAt — then take 6.
-  // Mock products (no dates) naturally fall to the bottom.
   const PRODUCTS = [...(products ?? mockProducts)]
     .sort((a, b) => {
       const aDate = new Date(a.updatedAt ?? a.createdAt ?? 0).getTime();
@@ -16,7 +15,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
       return bDate - aDate;
     })
     .slice(0, 6);
- 
+
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 600);
@@ -24,23 +23,18 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
- 
-  // Tripled so the infinite-loop jump is always seamless in both directions.
-  // On mobile we just show the original 6 — no infinite loop needed.
+
   const items = isMobile ? PRODUCTS : [...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
- 
+
   const trackRef = useRef<HTMLDivElement>(null);
   const { didDragRef } = useInfiniteCarousel(trackRef, PRODUCTS.length);
- 
+
   return (
     <div
       style={{ position: "relative", overflow: "hidden", marginTop: "64px" }}
       onClickCapture={(e) => {
-        // Dragged >10px → swipe gesture, never navigate
         if (didDragRef.current) { e.stopPropagation(); return; }
-        // Single click → do nothing (double-click navigates)
         if (e.detail === 1) e.stopPropagation();
-        // Double-click (detail >= 2) falls through → Link navigates
       }}
     >
       <div
@@ -49,7 +43,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
         style={{
           cursor: "grab",
           userSelect: "none",
-          scrollSnapType: "none", // snap handled in JS for infinite-loop compatibility
+          scrollSnapType: "none",
         }}
       >
         {items.map((product, i) => (
@@ -61,7 +55,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
           >
             <div className="carousel-cell">
               <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
- 
+
               <div
                 style={{
                   fontSize: "11px",
@@ -106,7 +100,9 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
               >
                 ${product.price}
               </div>
- 
+
+              <ViewingBadge productId={product.id} />
+
               <span
                 className="carousel-arrow"
                 style={{
@@ -126,8 +122,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
           </Link>
         ))}
       </div>
- 
-      {/* Right-edge fade hints at more content — hidden on mobile via CSS */}
+
       <div className="carousel-fade-right" />
     </div>
   );

@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { mockCategories } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
+import ViewingBadge from "@/components/ViewingBadge";
 import { getProductsByCategory } from "@/lib/products";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -98,7 +99,6 @@ export default async function CategoryPage({ params }: Props) {
                         flexDirection: "column",
                       }}
                     >
-                      {/* Thumbnail */}
                       <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
 
                       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -147,6 +147,8 @@ export default async function CategoryPage({ params }: Props) {
                           >
                             ${product.price}
                           </div>
+
+                          <ViewingBadge productId={product.id} />
                         </div>
                         <span className="card-arrow">→</span>
                       </div>

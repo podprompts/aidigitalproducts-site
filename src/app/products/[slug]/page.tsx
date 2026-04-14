@@ -7,30 +7,31 @@ import Footer from "@/components/Footer";
 import StickyBuyBar from "@/components/StickyBuyBar";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import PriceAndBuySection from "@/components/PriceAndBuySection";
+import ViewingBadge from "@/components/ViewingBadge";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 import ViewTracker from "@/components/ViewTracker";
 import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
 import ProductAttributes from "@/components/ProductAttributes";
 import { supabaseAdmin } from "@/lib/supabase/server";
- 
+
 export const dynamicParams = true;
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ slug: string }> };
- 
+
 export async function generateStaticParams() {
   const { data } = await supabaseAdmin
     .from("products")
     .select("slug")
     .eq("is_active", true);
- 
+
   const supabaseSlugs = (data ?? []).map((p) => ({ slug: p.slug }));
   const mockSlugs = mockProducts.map((p) => ({ slug: p.slug }));
- 
+
   return [...supabaseSlugs, ...mockSlugs].filter(
     (p, i, arr) => arr.findIndex((x) => x.slug === p.slug) === i
   );
 }
- 
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = mockProducts.find((p) => p.slug === slug);
@@ -40,13 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: product.description,
   };
 }
- 
+
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
- 
-  // Try mockProducts first, then fall back to Supabase
+
   let product = mockProducts.find((p) => p.slug === slug);
- 
+
   if (!product) {
     const { data: dbProduct } = await supabaseAdmin
       .from("products")
@@ -54,23 +54,22 @@ export default async function ProductDetailPage({ params }: Props) {
       .eq("slug", slug)
       .eq("is_active", true)
       .single();
- 
+
     if (!dbProduct) {
-      // Check if this slug was renamed — redirect to the new slug if found
       const { data: redirectTarget } = await supabaseAdmin
         .from("products")
         .select("slug")
         .eq("old_slug", slug)
         .eq("is_active", true)
         .single();
- 
+
       if (redirectTarget?.slug) {
         redirect(`/products/${redirectTarget.slug}`);
       }
- 
+
       notFound();
     }
- 
+
     const shaped = {
       id: dbProduct.id,
       slug: dbProduct.slug,
@@ -87,23 +86,23 @@ export default async function ProductDetailPage({ params }: Props) {
     // @ts-ignore
     product = shaped;
   }
- 
+
   if (!product) notFound();
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
- 
+
   const allProducts = await getProducts();
   const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
- 
+
   const howToUseSteps = [
     "Download your prompt pack instantly after purchase",
     "Copy any prompt into Midjourney, DALL-E 3, or Ideogram",
     "Generate stunning designs ready for print-on-demand",
   ];
- 
+
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
- 
+
   const [{ data: dbProductData }] = await Promise.all([
     supabaseAdmin
       .from("products")
@@ -111,17 +110,17 @@ export default async function ProductDetailPage({ params }: Props) {
       .eq("slug", slug)
       .single(),
   ]);
- 
+
   const attributes     = (dbProductData?.attributes as Record<string, unknown> | null) ?? {};
   const dbProductId    = dbProductData?.id ?? product.id;
   const dbThumbnailUrl = (dbProductData?.thumbnail_url as string | null) ?? null;
- 
+
   const { data: dbImages } = await supabaseAdmin
     .from("product_images")
     .select("url, is_primary, display_order, alt_text")
     .eq("product_id", dbProductId)
     .order("display_order", { ascending: true });
- 
+
   let galleryImages: GalleryImage[];
   if (dbImages && dbImages.length > 0) {
     const sorted = [...dbImages].sort((a, b) => {
@@ -137,7 +136,7 @@ export default async function ProductDetailPage({ params }: Props) {
     const fallback = dbThumbnailUrl ?? product.thumbnailUrl ?? null;
     galleryImages = fallback ? [{ url: fallback, alt: product.title }] : [];
   }
- 
+
   return (
     <>
       <Nav />
@@ -179,7 +178,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {product.title}
           </span>
         </div>
- 
+
         <section
           style={{
             borderBottom: "1px solid var(--line-soft)",
@@ -190,7 +189,7 @@ export default async function ProductDetailPage({ params }: Props) {
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div className="detail-grid">
               <ProductGallery images={galleryImages} alt={product.title} />
- 
+
               <div
                 style={{
                   padding: "clamp(24px, 5vw, 48px) clamp(20px, 4vw, 40px)",
@@ -213,7 +212,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   {product.category}
                 </div>
- 
+
                 <h1
                   className="display"
                   style={{
@@ -226,7 +225,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   {product.title}
                 </h1>
- 
+
                 {isComingSoon ? (
                   <>
                     <div
@@ -272,7 +271,7 @@ export default async function ProductDetailPage({ params }: Props) {
                     description={product.description}
                   />
                 )}
- 
+
                 <div
                   style={{
                     marginTop: "32px",
@@ -286,7 +285,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 >
                   Sold by {product.seller}
                 </div>
- 
+
                 {Object.keys(attributes).length > 0 && (
                   <ProductAttributes attributes={attributes} />
                 )}
@@ -294,7 +293,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
           </div>
         </section>
- 
+
         <section className="block">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -346,7 +345,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </p>
           </div>
         </section>
- 
+
         <section className="block alt">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -414,7 +413,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </ol>
           </div>
         </section>
- 
+
         <section className="block">
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div
@@ -454,7 +453,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </p>
           </div>
         </section>
- 
+
         <section
           style={{
             padding: "clamp(80px, 12vw, 160px) 24px",
@@ -542,6 +541,8 @@ export default async function ProductDetailPage({ params }: Props) {
                         >
                           ${p.price}
                         </div>
+
+                        <ViewingBadge productId={p.id} />
                       </div>
                       <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
                     </div>
@@ -553,9 +554,9 @@ export default async function ProductDetailPage({ params }: Props) {
         </section>
       </main>
       <Footer />
- 
+
       <ViewTracker productId={product.id} />
- 
+
       <StickyBuyBar
         price={product.price}
         priceId={product.priceId}
@@ -563,5 +564,5 @@ export default async function ProductDetailPage({ params }: Props) {
         productName={product.title}
       />
     </>
-    );
+  );
 }

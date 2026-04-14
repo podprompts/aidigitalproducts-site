@@ -1,35 +1,31 @@
 "use client";
- 
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import BuyButton from "@/components/BuyButton";
 import CountdownTimer from "@/components/CountdownTimer";
- 
+import UrgencyBar from "@/components/UrgencyBar";
+
 interface Props {
   productId: string;
   productName: string;
-  /** The sale / current price in dollars */
   salePrice: number;
-  /** Stripe Price ID for the sale price */
   salePriceId?: string;
-  /** Regular price in dollars — if present, activates sale UI + timer */
   regularPrice?: number;
-  /** Stripe Price ID used after the timer expires */
   regularPriceId?: string;
   description: string;
 }
- 
+
 interface TimerState {
   saleActive: boolean;
   expiresAt: string | null;
 }
 
-// Broadcast the currently active price + priceId to any listeners (e.g. StickyBuyBar)
 function broadcastPrice(price: number, priceId: string | undefined) {
   window.dispatchEvent(
     new CustomEvent("activePriceChange", { detail: { price, priceId } })
   );
 }
- 
+
 export default function PriceAndBuySection({
   productId,
   productName,
@@ -40,10 +36,9 @@ export default function PriceAndBuySection({
   description,
 }: Props) {
   const hasSale = !!(regularPrice && salePriceId && regularPriceId);
- 
-  // null = loading (server hasn't told us yet)
+
   const [timerState, setTimerState] = useState<TimerState | null>(null);
- 
+
   useEffect(() => {
     if (!hasSale) {
       setTimerState({ saleActive: false, expiresAt: null });
@@ -58,27 +53,24 @@ export default function PriceAndBuySection({
         });
       })
       .catch(() => {
-        // On error, default to regular price (safer than falsely showing sale)
         setTimerState({ saleActive: false, expiresAt: null });
       });
   }, [productId, hasSale]);
- 
-  const saleActive = timerState?.saleActive ?? false;
-  const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
-  const activePrice = hasSale && !saleActive ? regularPrice! : salePrice;
 
-  // Whenever the active price resolves or changes, broadcast it to StickyBuyBar
+  const saleActive    = timerState?.saleActive ?? false;
+  const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
+  const activePrice   = hasSale && !saleActive ? regularPrice!  : salePrice;
+
   useEffect(() => {
-    if (timerState === null) return; // still loading — don't broadcast yet
+    if (timerState === null) return;
     broadcastPrice(activePrice, activePriceId);
   }, [activePrice, activePriceId, timerState]);
- 
+
   return (
     <>
       {/* ── Price block ── */}
       <div style={{ marginTop: "24px" }}>
         {timerState === null ? (
-          // Loading — avoid flashing wrong price
           <div
             style={{
               fontSize: "48px",
@@ -117,10 +109,7 @@ export default function PriceAndBuySection({
             >
               ${activePrice.toFixed(2)}
             </div>
- 
-            {/* CountdownTimer stays mounted as long as expiresAt exists.
-                onExpire only flips saleActive — expiresAt is preserved so
-                the component can show its own expired UI. */}
+
             {timerState.expiresAt && (
               <CountdownTimer
                 expiresAt={timerState.expiresAt}
@@ -150,7 +139,17 @@ export default function PriceAndBuySection({
           </div>
         )}
       </div>
- 
+
+      {/* ── Urgency bar — only on purchasable products ── */}
+      {timerState !== null && activePriceId && (
+        <UrgencyBar
+          productId={productId}
+          salePrice={salePrice}
+          regularPrice={regularPrice}
+          saleActive={saleActive}
+        />
+      )}
+
       {/* ── Description ── */}
       <p
         style={{
@@ -163,7 +162,7 @@ export default function PriceAndBuySection({
       >
         {description}
       </p>
- 
+
       {/* ── Buy button ── */}
       <div
         style={{

@@ -1,14 +1,15 @@
 "use client";
- 
+
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
+import ViewingBadge from "@/components/ViewingBadge";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
- 
+
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [featured, setFeatured] = useState(() => (products ?? []).slice(0, 6));
- 
+
   useEffect(() => {
     const list = [...(products ?? [])];
     for (let i = list.length - 1; i > 0; i--) {
@@ -17,7 +18,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     }
     setFeatured(list.slice(0, 6));
   }, [products]);
- 
+
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 600);
@@ -25,13 +26,12 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
- 
-  // On mobile just show the 6 featured products — no infinite loop needed.
+
   const items = isMobile ? featured : [...featured, ...featured, ...featured];
- 
+
   const trackRef = useRef<HTMLDivElement>(null);
   const { didDragRef } = useInfiniteCarousel(trackRef, featured.length);
- 
+
   return (
     <section className="block" id="products">
       {/* Heading — constrained */}
@@ -48,7 +48,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         >
           — Marketplace —
         </div>
- 
+
         <h2
           className="display"
           style={{
@@ -63,7 +63,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           <br />
           <span style={{ color: "var(--ink-mute)" }}>All in one place.</span>
         </h2>
- 
+
         <p
           style={{
             marginTop: "28px",
@@ -79,7 +79,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           quality, ready for deployment.
         </p>
       </div>
- 
+
       {/* Carousel — full width, extends past viewport edge */}
       <div className="carousel-wrap">
         <div className="carousel-fade-left" />
@@ -89,14 +89,11 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           style={{
             cursor: "grab",
             userSelect: "none",
-            scrollSnapType: "none", // snap handled in JS for infinite-loop compatibility
+            scrollSnapType: "none",
           }}
           onClickCapture={(e) => {
-            // Dragged >10px → swipe gesture, never navigate
             if (didDragRef.current) { e.stopPropagation(); return; }
-            // Single click → do nothing (double-click navigates)
             if (e.detail === 1) e.stopPropagation();
-            // Double-click (detail >= 2) falls through → Link navigates
           }}
         >
           {items.map((product, i) => (
@@ -107,10 +104,8 @@ export default function ProductGrid({ products }: { products: Product[] }) {
               draggable={false}
             >
               <div className="carousel-cell">
-                {/* Thumbnail */}
                 <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
- 
-                {/* Meta */}
+
                 <div
                   style={{
                     fontSize: "11px",
@@ -155,7 +150,9 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 >
                   ${product.price}
                 </div>
- 
+
+                <ViewingBadge productId={product.id} />
+
                 <span
                   style={{
                     marginTop: "auto",
@@ -177,7 +174,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         </div>
         <div className="carousel-fade-right" />
       </div>
- 
+
       <div
         className="link-row"
         style={{ display: "flex", justifyContent: "center", gap: "32px", marginTop: "36px", flexWrap: "wrap" }}

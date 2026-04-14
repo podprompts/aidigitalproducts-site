@@ -1,12 +1,13 @@
 "use client";
- 
+
 import { useState } from "react";
 import Link from "next/link";
 import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
- 
+import ViewingBadge from "@/components/ViewingBadge";
+
 const ALL = "All";
- 
+
 export default function ProductsClient({
   products,
   categoryNames,
@@ -16,10 +17,10 @@ export default function ProductsClient({
 }) {
   const categories = [ALL, ...categoryNames];
   const [active, setActive] = useState(ALL);
- 
+
   const displayed =
     active === ALL ? products : products.filter((p) => p.category === active);
- 
+
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
       {/* Category pills */}
@@ -66,7 +67,7 @@ export default function ProductsClient({
           );
         })}
       </div>
- 
+
       {/* Grid or empty state */}
       {displayed.length === 0 ? (
         <div style={{ padding: "120px 0", textAlign: "center" }}>
@@ -101,9 +102,8 @@ export default function ProductsClient({
                   height: "100%",
                 }}
               >
-                {/* Thumbnail */}
                 <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
- 
+
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
                     <div
@@ -150,6 +150,8 @@ export default function ProductsClient({
                     >
                       ${product.price}
                     </div>
+
+                    <ViewingBadge productId={product.id} />
                   </div>
                   <span className="card-arrow">→</span>
                 </div>
