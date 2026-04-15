@@ -12,6 +12,8 @@ import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import { getProducts } from "@/lib/products";
 
+export const dynamic = "force-dynamic";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // HOMEPAGE VIDEO
 // To change the video: replace the ID below with the new YouTube video ID.
