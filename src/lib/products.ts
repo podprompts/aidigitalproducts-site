@@ -33,8 +33,8 @@ async function getSupabaseProducts(): Promise<Product[]> {
 export async function getProducts(): Promise<Product[]> {
   const { data: thumbData } = await supabaseAdmin
     .from("products")
-    .select("slug, thumbnail_url, video_url");
-
+    .select("slug, thumbnail_url, video_url")
+    .eq("is_active", true); 
   const thumbMap = Object.fromEntries(
     (thumbData ?? []).map((p) => [p.slug, p.thumbnail_url as string | null])
   );
