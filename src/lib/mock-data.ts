@@ -115,6 +115,28 @@ export const mockProducts: Product[] = [
       "Instant download",
     ],
   },
+  {
+    id: "e2681b44-077c-4b2e-b531-4b206bf37bcd",
+    slug: "beacons-ai-playbook-monetization-guide-with-mrr-plr-71-page-editable-ebook",
+    title: "Beacons AI Playbook: Monetization Guide with MRR & PLR (71-Page Editable eBook)",
+    category: "Content Systems",
+    price: 9.99,
+    seller: "AI Digital Products",
+    description:
+      "A 71-page editable eBook and step-by-step guide to monetizing your content on the Beacons platform. Includes 2 bonus MRR & PLR products.",
+    priceId: "price_1TMoq4Rv2p2YlsIVgyBmLVcL",
+    regularPrice: 12.99,
+    regularPriceId: "price_1TMor8Rv2p2YlsIVWRXLp7p4",
+    isFavorite: false,
+    isNotAi: false,
+    features: [
+      "71-page editable eBook",
+      "Step-by-step Beacons monetization guide",
+      "2 bonus MRR & PLR products",
+      "Instant download",
+      "Commercial use license",
+    ],
+  },
 ];
 
 export const mockCategories: Category[] = [

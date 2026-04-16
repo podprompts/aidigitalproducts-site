@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
             .single();
 
           const siteUrl     = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
-          const downloadUrl = `${siteUrl}/api/download/${token}`;
+          const downloadUrl = `${siteUrl}/checkout/success?token=${token}`;
 
           sendOrderConfirmation({
             toEmail:     customerEmail,
