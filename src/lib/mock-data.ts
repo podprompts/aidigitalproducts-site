@@ -22,16 +22,20 @@ export interface Product {
   createdAt?: string;
   /** ISO timestamp — when the product was last updated */
   updatedAt?: string;
+  /** Admin-marked favorite — renders a thicker border on product cards */
+  isFavorite?: boolean;
+  /** Admin-marked as not an AI product */
+  isNotAi?: boolean;
 }
- 
+
 export interface Category {
   id: string;
   slug: string;
   name: string;
 }
- 
+
 export type TrendingSearch = string;
- 
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -40,9 +44,9 @@ export interface BlogPost {
   excerpt: string;
   date: string;
 }
- 
+
 // ─── Real products (live in Supabase + Stripe) ───────────────────────────────
- 
+
 export const mockProducts: Product[] = [
   
   {
@@ -57,6 +61,8 @@ export const mockProducts: Product[] = [
     priceId: "price_1TJYBlEU074NZnN830sEZ3MJ",
     regularPrice: 14.99,
     regularPriceId: "price_1TJaKSEU074NZnN8L4Kok9K5",
+    isFavorite: false,
+    isNotAi: false,
     features: [
       "50 ready-to-use AI prompts",
       "Outdoor & adventure niche",
@@ -77,6 +83,8 @@ export const mockProducts: Product[] = [
     priceId: "price_1TJYC7EU074NZnN8wDCCz4Cv",
     regularPrice: 14.99,
     regularPriceId: "price_1TJaLeEU074NZnN8jY2k2lky",
+    isFavorite: false,
+    isNotAi: false,
     features: [
       "50 ready-to-use AI prompts",
       "Blue collar & trades niche",
@@ -97,6 +105,8 @@ export const mockProducts: Product[] = [
     priceId: "price_1TJYCQEU074NZnN8ZNCqEl5H",
     regularPrice: 14.99,
     regularPriceId: "price_1TJaNQEU074NZnN8nAyxenCv",
+    isFavorite: false,
+    isNotAi: false,
     features: [
       "50 ready-to-use AI prompts",
       "Pet & animal lover niche",
@@ -106,7 +116,7 @@ export const mockProducts: Product[] = [
     ],
   },
 ];
- 
+
 export const mockCategories: Category[] = [
   { id: "1", slug: "prompt-packs",    name: "Prompt Packs"    },
   { id: "2", slug: "chatbots",        name: "Chatbots"        },
@@ -116,7 +126,7 @@ export const mockCategories: Category[] = [
   { id: "6", slug: "lead-generation", name: "Lead Generation" },
   { id: "7", slug: "custom-ai-apps",  name: "Custom AI Apps"  },
 ];
- 
+
 export const mockBlogPosts: BlogPost[] = [
   {
     id: "1",
@@ -173,7 +183,7 @@ export const mockBlogPosts: BlogPost[] = [
     date: "2026-01-20",
   },
 ];
- 
+
 export const mockTrendingSearches: TrendingSearch[] = [
   "prompt packs",
   "print on demand",

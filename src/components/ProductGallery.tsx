@@ -163,6 +163,7 @@ function Lightbox({
           src={current.url}
           alt={current.alt ?? alt}
           fill
+          unoptimized
           sizes="90vw"
           priority
           style={{
@@ -270,6 +271,7 @@ function Lightbox({
                 src={img.url}
                 alt={img.alt ?? alt}
                 fill
+                unoptimized
                 sizes="64px"
                 style={{ objectFit: "cover" }}
               />
@@ -363,6 +365,7 @@ export default function ProductGallery({ images, alt }: Props) {
             src={current!.url}
             alt={current!.alt ?? alt}
             fill
+            unoptimized
             sizes="(max-width: 900px) 100vw, 50vw"
             style={{
               objectFit: "contain",
@@ -413,6 +416,7 @@ export default function ProductGallery({ images, alt }: Props) {
                 src={img.url}
                 alt={img.alt ?? alt}
                 fill
+                unoptimized
                 sizes="80px"
                 style={{ objectFit: "cover" }}
               />
@@ -441,6 +445,7 @@ export default function ProductGallery({ images, alt }: Props) {
               src={current.url}
               alt={current.alt ?? alt}
               fill
+              unoptimized
               sizes="(max-width: 900px) 100vw, 45vw"
               style={{
                 objectFit: "contain",

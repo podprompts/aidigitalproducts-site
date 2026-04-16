@@ -72,6 +72,7 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
               alt={alt}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
+              unoptimized
               style={{ objectFit: "cover" }}
             />
           )
@@ -123,6 +124,7 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
             alt={alt}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            unoptimized
             style={{
               objectFit: "cover",
               transition: "opacity 0.3s",

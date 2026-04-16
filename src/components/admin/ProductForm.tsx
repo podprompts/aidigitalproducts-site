@@ -20,6 +20,8 @@ export interface AdminProductData {
   features: string;
   status: "active" | "coming_soon" | "archived";
   is_featured: boolean;
+  is_favorite: boolean;
+  is_not_ai: boolean;
   thumbnail_url?: string;
   video_url?: string;
   download_file_url?: string;
@@ -118,7 +120,7 @@ const EMPTY: AdminProductData = {
   name: "", slug: "", description: "", category: mockCategories[0]?.name ?? "",
   price: "", regular_price: "", sale_stripe_price_id: "", regular_stripe_price_id: "",
   seller: "AI Digital Products", features: "",
-  status: "active", is_featured: false,
+  status: "active", is_featured: false, is_favorite: false, is_not_ai: false,
   video_url: "",
 };
  
@@ -238,6 +240,8 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         regular_stripe_price_id: form.regular_stripe_price_id || null,
         is_active:               form.status === "active",
         is_featured:             form.is_featured,
+        is_favorite:             form.is_favorite,
+        is_not_ai:               form.is_not_ai,
         attributes:              buildAttributesPayload(attrs),
         // Preserve existing video_url if no new file selected
         video_url:               form.video_url || null,
@@ -387,6 +391,14 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
           <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
             <input type="checkbox" checked={form.is_featured} onChange={(e) => set("is_featured", e.target.checked)} style={{ width: "16px", height: "16px", cursor: "pointer" }} />
             <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)" }}>Featured product</span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.is_favorite} onChange={(e) => set("is_favorite", e.target.checked)} style={{ width: "16px", height: "16px", cursor: "pointer" }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)" }}>Favorite product</span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
+            <input type="checkbox" checked={form.is_not_ai} onChange={(e) => set("is_not_ai", e.target.checked)} style={{ width: "16px", height: "16px", cursor: "pointer" }} />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)" }}>Not an AI product</span>
           </label>
         </div>
 

@@ -40,6 +40,8 @@ function EditProductContent({ id }: { id: string }) {
           features:         Array.isArray(product.features) ? product.features.join("\n") : (product.features ?? ""),
           status:           product.status ?? "active",
           is_featured:      product.is_featured ?? false,
+          is_favorite:      product.is_favorite ?? false,
+          is_not_ai:        product.is_not_ai   ?? false,
           thumbnail_url:    product.thumbnail_url ?? "",
           video_url:        product.video_url ?? "",
           attributes:       (product.attributes as Record<string, unknown>) ?? {},

@@ -103,7 +103,13 @@ export default function ProductGrid({ products }: { products: Product[] }) {
               style={{ textDecoration: "none", display: "block", flexShrink: 0 }}
               draggable={false}
             >
-              <div className="carousel-cell">
+              <div
+                className="carousel-cell"
+                style={product.isFavorite ? {
+                  outline: "2.5px solid rgba(30, 30, 30, 0.55)",
+                  outlineOffset: "-2px",
+                } : undefined}
+              >
                 <ProductThumbnail
                   url={product.thumbnailUrl}
                   videoUrl={product.videoUrl}
