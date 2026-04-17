@@ -99,7 +99,7 @@ export default async function CategoryPage({ params }: Props) {
                         flexDirection: "column",
                       }}
                     >
-                      <ProductThumbnail url={product.thumbnailUrl} alt={product.title} />
+                      <ProductThumbnail url={product.thumbnailUrl} videoUrl={product.videoUrl} alt={product.title} />
 
                       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                         <div>
