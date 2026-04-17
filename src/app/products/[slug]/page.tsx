@@ -94,11 +94,53 @@ export default async function ProductDetailPage({ params }: Props) {
   const allProducts = await getProducts();
   const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
 
-  const howToUseSteps = [
-    "Download your prompt pack instantly after purchase",
-    "Copy any prompt into Midjourney, DALL-E 3, or Ideogram",
-    "Generate stunning designs ready for print-on-demand",
+  async function generateHowToUseSteps(productTitle: string): Promise<string[]> {
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY!,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 300,
+        messages: [
+          {
+            role: "user",
+            content: `You are writing 3 short "How To Use" steps for a digital product called: "${productTitle}".
+
+Rules:
+- Each step is one concise sentence (max 12 words)
+- Steps must be specific to this exact product type
+- Written in second person ("Download your...", "Open the...", "Use the...")
+- No fluff, no generic advice
+- Return ONLY a JSON array of 3 strings, nothing else
+
+Example format: ["Step one here", "Step two here", "Step three here"]`,
+          },
+        ],
+      }),
+      next: { revalidate: 86400 }, // cache for 24 hours
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text ?? "[]";
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed) && parsed.length === 3) return parsed;
+  } catch {
+    // fall through to defaults
+  }
+
+  return [
+    "Download your files instantly after purchase",
+    "Follow the included documentation to get started",
+    "Deploy or use your product right away",
   ];
+}
+
+const howToUseSteps = await generateHowToUseSteps(product.title);
 
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
