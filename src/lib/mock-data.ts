@@ -24,6 +24,8 @@ export interface Product {
   updatedAt?: string;
   /** Admin-marked favorite — renders a thicker border on product cards */
   isFavorite?: boolean;
+   /** Admin-marked as featured — highlights the product card */
+  isFeatured?: boolean;
   /** Admin-marked as not an AI product */
   isNotAi?: boolean;
 }
