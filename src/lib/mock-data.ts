@@ -24,7 +24,7 @@ export interface Product {
   updatedAt?: string;
   /** Admin-marked favorite — renders a thicker border on product cards */
   isFavorite?: boolean;
-   /** Admin-marked as featured — highlights the product card */
+  /** Admin-marked as featured — highlights the product card with an outline */
   isFeatured?: boolean;
   /** Admin-marked as not an AI product */
   isNotAi?: boolean;
@@ -64,6 +64,7 @@ export const mockProducts: Product[] = [
     regularPrice: 14.99,
     regularPriceId: "price_1TJaKSEU074NZnN8L4Kok9K5",
     isFavorite: false,
+    isFeatured: false,
     isNotAi: false,
     features: [
       "50 ready-to-use AI prompts",
@@ -86,6 +87,7 @@ export const mockProducts: Product[] = [
     regularPrice: 14.99,
     regularPriceId: "price_1TJaLeEU074NZnN8jY2k2lky",
     isFavorite: false,
+    isFeatured: false,
     isNotAi: false,
     features: [
       "50 ready-to-use AI prompts",
@@ -108,6 +110,7 @@ export const mockProducts: Product[] = [
     regularPrice: 14.99,
     regularPriceId: "price_1TJaNQEU074NZnN8nAyxenCv",
     isFavorite: false,
+    isFeatured: false,
     isNotAi: false,
     features: [
       "50 ready-to-use AI prompts",
@@ -130,6 +133,7 @@ export const mockProducts: Product[] = [
     regularPrice: 12.99,
     regularPriceId: "price_1TMor8Rv2p2YlsIVWRXLp7p4",
     isFavorite: false,
+    isFeatured: false,
     isNotAi: false,
     features: [
       "71-page editable eBook",
