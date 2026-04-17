@@ -1,6 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mockProducts, mockCategories, type Product } from "@/lib/mock-data";
 
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 /** Fetch all active products from Supabase and shape them as Product */
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
