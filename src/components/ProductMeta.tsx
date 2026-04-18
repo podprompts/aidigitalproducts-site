@@ -15,7 +15,7 @@ export default function ProductMeta({ rating, reviewCount, price, purchases }: P
     <div
       style={{
         display: "flex",
-        alignItems: "baseline",
+        alignItems: "center",
         gap: "6px",
         flexWrap: "wrap",
         marginTop: "4px",
@@ -26,7 +26,7 @@ export default function ProductMeta({ rating, reviewCount, price, purchases }: P
       {showRating && (
         <span
           style={{
-            fontSize: "11px",
+            fontSize: "13px",
             fontWeight: 700,
             color: "var(--ink-faded)",
             letterSpacing: "0.04em",
@@ -38,10 +38,10 @@ export default function ProductMeta({ rating, reviewCount, price, purchases }: P
 
       {/* Dot separator between rating and price */}
       {showRating && (
-        <span style={{ fontSize: "9px", color: "var(--ink-soft)", lineHeight: 1 }}>·</span>
+        <span style={{ fontSize: "11px", color: "var(--ink-soft)", lineHeight: 1 }}>·</span>
       )}
 
-      {/* Price — slightly larger than surrounding meta text */}
+      {/* Price */}
       <span
         style={{
           fontSize: "15px",
@@ -53,19 +53,14 @@ export default function ProductMeta({ rating, reviewCount, price, purchases }: P
         ${price.toFixed(2)}
       </span>
 
-      {/* Dot separator between price and purchase count */}
-      {showPurchases && (
-        <span style={{ fontSize: "9px", color: "var(--ink-soft)", lineHeight: 1 }}>·</span>
-      )}
-
-      {/* Purchase count in parentheses */}
+      {/* Purchase count in parentheses — same size as price */}
       {showPurchases && (
         <span
           style={{
-            fontSize: "11px",
-            fontWeight: 700,
+            fontSize: "15px",
+            fontWeight: 600,
             color: "var(--ink-faded)",
-            letterSpacing: "0.04em",
+            letterSpacing: "-0.01em",
           }}
         >
           ({purchases})
