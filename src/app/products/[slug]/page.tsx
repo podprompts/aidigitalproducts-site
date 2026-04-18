@@ -48,10 +48,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const mockMatch = mockProducts.find((p) => p.slug === slug);
 
-  // Always fetch live Supabase data to get purchases (and future rating/reviewCount)
+  // Always fetch live Supabase data to get purchases, flags (and future rating/reviewCount)
   const { data: dbProduct } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active, purchases")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active, purchases, is_favorite, is_featured, is_not_ai")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
@@ -60,10 +60,13 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (mockMatch && dbProduct) {
     // Merge: mock is source of truth for priceId/regularPriceId/features,
-    // Supabase is source of truth for purchases (and future rating/reviewCount)
+    // Supabase is source of truth for purchases, flags (and future rating/reviewCount)
     product = {
       ...mockMatch,
       purchases: dbProduct.purchases ?? 0,
+      isFavorite: dbProduct.is_favorite ?? false,
+      isFeatured: dbProduct.is_featured ?? false,
+      isNotAi: dbProduct.is_not_ai ?? false,
     };
   } else if (mockMatch) {
     product = { ...mockMatch, purchases: 0 };
@@ -81,6 +84,9 @@ export default async function ProductDetailPage({ params }: Props) {
       regularPriceId: dbProduct.regular_stripe_price_id ?? undefined,
       thumbnailUrl: undefined,
       purchases: dbProduct.purchases ?? 0,
+      isFavorite: dbProduct.is_favorite ?? false,
+      isFeatured: dbProduct.is_featured ?? false,
+      isNotAi: dbProduct.is_not_ai ?? false,
       rating: undefined,
       reviewCount: undefined,
     };
@@ -283,6 +289,54 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 >
                   {product.title}
                 </h1>
+
+                {/* Favorite + Human-Made pills on detail page */}
+                {(product.isFavorite || product.isNotAi) && (
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "16px" }}>
+                    {product.isFavorite && (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          background: "rgba(245, 243, 238, 0.93)",
+                          border: "1px solid rgba(0,0,0,0.10)",
+                          borderRadius: "4px",
+                          padding: "4px 8px",
+                        }}
+                      >
+                        <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
+                          <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
+                        </svg>
+                        <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#2a2a2a" }}>
+                          Favorite
+                        </span>
+                      </div>
+                    )}
+                    {product.isNotAi && (
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          background: "rgba(245, 243, 238, 0.93)",
+                          border: "1px solid rgba(0,0,0,0.10)",
+                          borderRadius: "4px",
+                          padding: "4px 8px",
+                        }}
+                      >
+                        <svg width="10" height="10" viewBox="0 0 10 10" style={{ display: "block", flexShrink: 0, fill: "none" }}>
+                          <path d="M2 8 Q5 1 8 8" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
+                          <path d="M3.5 9 Q5 3.5 6.5 9" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
+                          <circle cx="5" cy="9.2" r="0.6" style={{ fill: "#3a3a3a" }} />
+                        </svg>
+                        <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#2a2a2a" }}>
+                          Human-Made
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {isComingSoon ? (
                   <>
@@ -569,7 +623,6 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                         : {}),
                     }}
                   >
-                    {/* Thumbnail + badges */}
                     <div style={{ position: "relative" }}>
                       <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
 
@@ -594,15 +647,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                           <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
                             <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
                           </svg>
-                          <span
-                            style={{
-                              fontSize: "9px",
-                              fontWeight: 700,
-                              letterSpacing: "0.16em",
-                              textTransform: "uppercase",
-                              color: "#2a2a2a",
-                            }}
-                          >
+                          <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: "#2a2a2a" }}>
                             Favorite
                           </span>
                         </div>
@@ -631,15 +676,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                             <path d="M3.5 9 Q5 3.5 6.5 9" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
                             <circle cx="5" cy="9.2" r="0.6" style={{ fill: "#3a3a3a" }} />
                           </svg>
-                          <span
-                            style={{
-                              fontSize: "9px",
-                              fontWeight: 700,
-                              letterSpacing: "0.14em",
-                              textTransform: "uppercase",
-                              color: "#2a2a2a",
-                            }}
-                          >
+                          <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#2a2a2a" }}>
                             Human-Made
                           </span>
                         </div>
@@ -656,7 +693,6 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                         </div>
                         <div className="card-seller">Seller · {p.seller}</div>
 
-                        {/* ── Review / price / purchases meta row ── */}
                         <ProductMeta
                           rating={p.rating}
                           reviewCount={p.reviewCount}
