@@ -1,18 +1,42 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
-const ITEMS = ["Instant Download", "Commercial License Included", "New Products Daily", "AIDigitalProducts.com"];
-const tripled = [...ITEMS, ...ITEMS, ...ITEMS];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  display_order: number;
+}
+
+const ALL_PILL: Category = { id: "__all__", name: "All", slug: "", display_order: -1 };
 
 export default function StatsCarousel() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then(({ categories }) => {
+        setCategories(categories ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-    // Snap to the middle copy so we can scroll in both directions infinitely
+  // Pills = "All" first, then active categories ordered by display_order
+  const pills = [ALL_PILL, ...categories];
+  // Triple so user can scroll freely in both directions (same as original)
+  const tripled = [...pills, ...pills, ...pills];
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || pills.length === 0) return;
+
+    // Snap to the middle copy on mount
     const initScroll = () => {
       track.scrollLeft = track.scrollWidth / 3;
     };
@@ -28,14 +52,14 @@ export default function StatsCarousel() {
 
     const singleW = () => track.scrollWidth / 3;
 
-    /** Jump back into the middle copy when the user drifts into an outer copy */
+    /** Jump back into the middle copy when drifting into an outer copy */
     const loop = () => {
       const sw = singleW();
       if (track.scrollLeft < sw * 0.4) track.scrollLeft += sw;
       else if (track.scrollLeft > sw * 2.6) track.scrollLeft -= sw;
     };
 
-    /* ── Mouse ─────────────────────────────────────────── */
+    /* ── Mouse ───────────────────────────────────────────── */
     const onMouseDown = (e: MouseEvent) => {
       isDragging = true;
       startX = e.pageX;
@@ -64,7 +88,7 @@ export default function StatsCarousel() {
       momentum();
     };
 
-    /* ── Touch ─────────────────────────────────────────── */
+    /* ── Touch ───────────────────────────────────────────── */
     const onTouchStart = (e: TouchEvent) => {
       startX = e.touches[0].pageX;
       startScroll = track.scrollLeft;
@@ -84,7 +108,7 @@ export default function StatsCarousel() {
 
     const onTouchEnd = () => momentum();
 
-    /* ── Momentum ───────────────────────────────────────── */
+    /* ── Momentum ─────────────────────────────────────────── */
     const momentum = () => {
       const FRAME = 1000 / 60;
       const DECAY = 0.93;
@@ -114,56 +138,81 @@ export default function StatsCarousel() {
       track.removeEventListener("touchend", onTouchEnd);
       cancelAnimationFrame(momentumId);
     };
-  }, []);
+  // Re-run when categories load so scrollWidth is calculated against real content
+  }, [pills.length]);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          height: 56,
+          borderTop: "1px solid var(--line)",
+          borderBottom: "1px solid var(--line)",
+        }}
+      />
+    );
+  }
 
   return (
     <div
       style={{
-        height: "48px",
+        height: 56,
         borderTop: "1px solid var(--line)",
         borderBottom: "1px solid var(--line)",
         overflow: "hidden",
         position: "relative",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)",
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)",
       }}
     >
-      {/* Hide scrollbar cross-browser */}
       <style>{`
-        .stats-track { scrollbar-width: none; -ms-overflow-style: none; }
-        .stats-track::-webkit-scrollbar { display: none; }
+        .cat-track { scrollbar-width: none; -ms-overflow-style: none; }
+        .cat-track::-webkit-scrollbar { display: none; }
+        .cat-pill { transition: border-color 0.15s, color 0.15s, background 0.15s; }
+        .cat-pill:hover { border-color: var(--ink-faded) !important; color: var(--ink) !important; background: var(--bg-alt) !important; }
       `}</style>
 
       <div
         ref={trackRef}
-        className="stats-track"
+        className="cat-track"
         style={{
           height: "100%",
           overflowX: "scroll",
           overflowY: "hidden",
           display: "flex",
           alignItems: "center",
+          gap: 8,
           cursor: "grab",
           userSelect: "none",
+          padding: "0 24px",
         }}
       >
-        {tripled.map((item, i) => (
-          <span
-            key={i}
+        {tripled.map((pill, i) => (
+          <Link
+            key={`${pill.id}-${i}`}
+            href={pill.slug ? `/categories/${pill.slug}` : "/products"}
+            draggable={false}
+            className="cat-pill"
             style={{
               flexShrink: 0,
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
-              fontSize: "11px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.18em",
-              color: "var(--ink-faded)",
               whiteSpace: "nowrap",
-              paddingLeft: i === 0 ? "24px" : 0,
+              padding: "5px 14px",
+              borderRadius: 9999,
+              border: "1px solid var(--line)",
+              background: "var(--bg)",
+              color: "var(--ink-soft)",
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+              letterSpacing: "0.01em",
+              textDecoration: "none",
             }}
           >
-            {item}
-            <span style={{ margin: "0 20px", color: "var(--ink-soft)" }}>—</span>
-          </span>
+            {pill.name}
+          </Link>
         ))}
       </div>
     </div>
