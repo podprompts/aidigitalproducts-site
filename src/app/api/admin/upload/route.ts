@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
+
+const r2 = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+const BUCKET = process.env.R2_BUCKET_NAME!;
+const CDN    = process.env.R2_CDN_URL!; // e.g. https://cdn.allnaturalbox.com
 
 export async function POST(req: NextRequest) {
   if (!isAdminAuthed(req)) return unauthorized();
 
-  const formData  = await req.formData();
-  const file      = formData.get("file") as File | null;
-  const productId = formData.get("productId") as string | null;
-  const isPrimary = formData.get("isPrimary") === "true";
+  const formData     = await req.formData();
+  const file         = formData.get("file") as File | null;
+  const productId    = formData.get("productId") as string | null;
+  const isPrimary    = formData.get("isPrimary") === "true";
   const displayOrder = parseInt(formData.get("displayOrder") as string ?? "0", 10);
 
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -17,24 +30,20 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(bytes);
   const ext    = (file.name.split(".").pop() ?? "jpg").toLowerCase();
   const path   = productId
-    ? `${productId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    : `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    ? `product-images/${productId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    : `product-images/temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  const { error } = await supabaseAdmin.storage
-    .from("product-images")
-    .upload(path, buffer, { contentType: file.type, upsert: false });
+  await r2.send(new PutObjectCommand({
+    Bucket:      BUCKET,
+    Key:         path,
+    Body:        buffer,
+    ContentType: file.type,
+  }));
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const publicUrl = `${CDN}/${path}`;
 
-  const { data: urlData } = supabaseAdmin.storage
-    .from("product-images")
-    .getPublicUrl(path);
-
-  const publicUrl = urlData.publicUrl;
-
-  // ── NEW: write to DB ──────────────────────────────────────────────────────
+  // Write to DB
   if (productId) {
-    // Insert into product_images table
     await supabaseAdmin.from("product_images").insert({
       product_id:    productId,
       url:           publicUrl,
@@ -43,7 +52,6 @@ export async function POST(req: NextRequest) {
       storage_path:  path,
     });
 
-    // If primary, stamp thumbnail_url on the product row too
     if (isPrimary) {
       await supabaseAdmin
         .from("products")
@@ -51,7 +59,6 @@ export async function POST(req: NextRequest) {
         .eq("id", productId);
     }
   }
-  // ─────────────────────────────────────────────────────────────────────────
 
   return NextResponse.json({ url: publicUrl, path });
 }

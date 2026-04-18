@@ -45,17 +45,43 @@ function SuccessContent() {
 
         if (data.token) {
           // Step 2: fetch the file manifest from the download route
-          const manifestRes  = await fetch(`/api/download/${data.token}`);
-          const manifestData = await manifestRes.json();
+          const manifestRes = await fetch(`/api/download/${data.token}`);
 
-          if (manifestData.files) {
-            setManifest(manifestData);
+          // FIX: Check Content-Type before parsing as JSON.
+          // Legacy single-file products stream binary directly (no product_files rows),
+          // so the response is octet-stream, not JSON. Calling .json() on binary
+          // throws silently and causes infinite polling until the 15-attempt timeout.
+          const contentType = manifestRes.headers.get("content-type") ?? "";
+
+          if (contentType.includes("application/json")) {
+            const manifestData = await manifestRes.json();
+
+            if (manifestData.files) {
+              // Multi-file product: use the manifest as-is
+              setManifest(manifestData);
+            } else {
+              // JSON response but no files array — unexpected shape, treat as legacy
+              setManifest({
+                files: [{
+                  index:     0,
+                  // FIX: use a meaningful name with .zip extension instead of bare "Download"
+                  // so the browser saves the file with the right type.
+                  file_name: "download.zip",
+                  file_size: null,
+                  url:       `/api/download/${data.token}`,
+                }],
+                expires_at:     manifestData.expires_at ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                downloads_left: manifestData.downloads_left ?? 5,
+              });
+            }
           } else {
-            // Legacy single-file product: synthesize a 1-item manifest
+            // FIX: Binary response = legacy single-file product streaming directly.
+            // Synthesize a 1-item manifest pointing back at the same token URL.
+            // The route will stream the file again when the user clicks the button.
             setManifest({
               files: [{
                 index:     0,
-                file_name: "Download",
+                file_name: "download.zip",
                 file_size: null,
                 url:       `/api/download/${data.token}`,
               }],
@@ -68,7 +94,7 @@ function SuccessContent() {
           clearInterval(interval);
         }
       } catch {
-        // ignore, keep polling
+        // ignore transient errors, keep polling
       }
 
       if (attempts.current >= 15) {
@@ -127,9 +153,12 @@ function SuccessContent() {
                 padding: "28px 32px",
                 border: "1px solid var(--line)",
                 background: "var(--bg-alt)",
-                display: "inline-block",
-                minWidth: "340px",
+                display: "block",
+                width: "100%",
+                maxWidth: "480px",
+                margin: "40px auto 0",
                 textAlign: "left",
+                boxSizing: "border-box",
               }}>
                 {manifest ? (
                   <>

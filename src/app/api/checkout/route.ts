@@ -12,17 +12,47 @@ function getIp(req: NextRequest): string {
   );
 }
 
+/** Fetch live Price IDs from Supabase — always the source of truth for Stripe keys. */
+async function getDbPriceIds(productId: string): Promise<{
+  salePriceId: string | null;
+  regularPriceId: string | null;
+  salePriceDollars: number | null;
+  regularPriceDollars: number | null;
+}> {
+  const { data } = await supabaseAdmin
+    .from("products")
+    .select("sale_stripe_price_id, regular_stripe_price_id, sale_price_cents, regular_price_cents")
+    .eq("id", productId)
+    .single();
+
+  return {
+    salePriceId:         data?.sale_stripe_price_id     ?? null,
+    regularPriceId:      data?.regular_stripe_price_id  ?? null,
+    salePriceDollars:    data?.sale_price_cents    ? data.sale_price_cents / 100    : null,
+    regularPriceDollars: data?.regular_price_cents ? data.regular_price_cents / 100 : null,
+  };
+}
+
 /** Returns the correct Stripe Price ID based on live timer state for this visitor. */
 async function resolvePrice(
   req: NextRequest,
   productId: string,
   clientPriceId: string | undefined
 ): Promise<{ priceId: string | undefined; priceInDollars: number | undefined }> {
-  const product = mockProducts.find((p) => p.id === productId);
+  const mockProduct = mockProducts.find((p) => p.id === productId);
 
-  // No known product or no sale configured — trust what the client sent
-  if (!product || !product.regularPriceId || !product.priceId) {
-    return { priceId: clientPriceId, priceInDollars: product?.price };
+  // Always fetch live Price IDs from Supabase — mock-data IDs may be stale test keys
+  const db = await getDbPriceIds(productId);
+
+  // Prefer Supabase Price IDs; fall back to mock only if Supabase has nothing
+  const salePriceId      = db.salePriceId      ?? mockProduct?.priceId       ?? undefined;
+  const regularPriceId   = db.regularPriceId   ?? mockProduct?.regularPriceId ?? undefined;
+  const salePriceDollars    = db.salePriceDollars    ?? mockProduct?.price          ?? undefined;
+  const regularPriceDollars = db.regularPriceDollars ?? mockProduct?.regularPrice   ?? undefined;
+
+  // No sale configured — return the sale price (only active price)
+  if (!regularPriceId || !salePriceId) {
+    return { priceId: salePriceId ?? clientPriceId, priceInDollars: salePriceDollars };
   }
 
   // Product has a sale — check admin override first, then visitor timer
@@ -30,10 +60,10 @@ async function resolvePrice(
 
   const override = await getActiveOverride(productId, ip);
   if (override === "force_sale") {
-    return { priceId: product.priceId, priceInDollars: product.price };
+    return { priceId: salePriceId, priceInDollars: salePriceDollars };
   }
   if (override === "force_regular") {
-    return { priceId: product.regularPriceId, priceInDollars: product.regularPrice };
+    return { priceId: regularPriceId, priceInDollars: regularPriceDollars };
   }
 
   const { data } = await supabaseAdmin
@@ -47,24 +77,24 @@ async function resolvePrice(
 
   // No record → new visitor (or post-reset) → sale price
   if (!data) {
-    return { priceId: product.priceId, priceInDollars: product.price };
+    return { priceId: salePriceId, priceInDollars: salePriceDollars };
   }
 
   const expiryMs = new Date(data.expires_at as string).getTime();
-  const resetMs = expiryMs + 24 * 60 * 60 * 1000;
+  const resetMs  = expiryMs + 24 * 60 * 60 * 1000;
 
   // Phase 1: sale window active → sale price
   if (now < expiryMs) {
-    return { priceId: product.priceId, priceInDollars: product.price };
+    return { priceId: salePriceId, priceInDollars: salePriceDollars };
   }
 
   // Phase 3: past 24-hr reset window → sale price (timer will reset on next page load)
   if (now >= resetMs) {
-    return { priceId: product.priceId, priceInDollars: product.price };
+    return { priceId: salePriceId, priceInDollars: salePriceDollars };
   }
 
   // Phase 2: in the 24-hr regular window → regular price
-  return { priceId: product.regularPriceId, priceInDollars: product.regularPrice };
+  return { priceId: regularPriceId, priceInDollars: regularPriceDollars };
 }
 
 export async function POST(req: NextRequest) {
@@ -99,8 +129,8 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       line_items: lineItems,
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/checkout/cancel`,
-      metadata: { productId: productId ?? "" },
+      cancel_url:  `${appUrl}/checkout/cancel`,
+      metadata:    { productId: productId ?? "" },
       automatic_tax: { enabled: false },
     });
 

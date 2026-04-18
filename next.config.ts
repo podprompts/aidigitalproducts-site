@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
         hostname: "imszwjevnmukemxlryox.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.allnaturalbox.com",
+        pathname: "/**",
+      },
     ],
   },
 };

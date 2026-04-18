@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
   }
 
   // Record the raw event for idempotency / audit
-  // Columns: stripe_event_id, event_type, payload (processed_at has a DB default)
   const { error: webhookInsertError } = await supabaseAdmin
     .from("webhook_events")
     .insert({
@@ -48,20 +47,17 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as Stripe.Checkout.Session;
     const productId = session.metadata?.productId ?? null;
 
-    // Columns: stripe_checkout_session_id, email, amount_cents, currency, status, metadata
-    // product_id lives in the metadata jsonb since there is no top-level product_id column
     const { data: order, error } = await supabaseAdmin.from("orders").insert({
       stripe_checkout_session_id: session.id,
       email: session.customer_details?.email ?? null,
-      amount_cents: session.amount_total,        // Stripe amount_total is already in cents
+      amount_cents: session.amount_total,
       currency: session.currency,
-      status: session.payment_status,            // "paid" | "unpaid" | "no_payment_required"
+      status: session.payment_status,
       metadata: { product_id: productId },
     }).select("id").single();
 
     if (error) {
       console.error("[webhook] failed to insert order", error);
-      // Return 500 so Stripe retries
       return NextResponse.json({ error: "DB insert failed" }, { status: 500 });
     }
 
@@ -86,13 +82,12 @@ export async function POST(req: NextRequest) {
         token,
         expires_at:     expiresAt,
         download_count: 0,
-        max_downloads:  5,
+        max_downloads:  15,
       });
 
       if (tokenError) {
         console.error("[webhook] failed to create download token", tokenError);
       } else {
-        // Send order confirmation email
         const customerEmail = session.customer_details?.email;
         const customerName  = session.customer_details?.name ?? undefined;
 
@@ -106,14 +101,30 @@ export async function POST(req: NextRequest) {
           const siteUrl     = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
           const downloadUrl = `${siteUrl}/checkout/success?token=${token}`;
 
+          // Check for multi-file product_files rows
+          const { data: productFiles } = await supabaseAdmin
+            .from("product_files")
+            .select("file_name, sort_order")
+            .eq("product_id", productId)
+            .order("sort_order", { ascending: true });
+
+          // Build downloadFiles array if multi-file product, otherwise fall back to single URL
+          const downloadFiles =
+            productFiles && productFiles.length > 0
+              ? productFiles.map((f, i) => ({
+                  file_name: f.file_name,
+                  url: `${siteUrl}/api/download/${token}?file=${i}`,
+                }))
+              : [{ file_name: product?.name ?? "Your product", url: downloadUrl }];
+
           sendOrderConfirmation({
-            toEmail:     customerEmail,
-            toName:      customerName,
-            productName: product?.name ?? "Your product",
-            amountCents: session.amount_total ?? 0,
-            currency:    session.currency ?? "usd",
-            downloadUrl,
-            orderId:     order.id,
+            toEmail:      customerEmail,
+            toName:       customerName,
+            productName:  product?.name ?? "Your product",
+            amountCents:  session.amount_total ?? 0,
+            currency:     session.currency ?? "usd",
+            downloadFiles,
+            orderId:      order.id,
           }).catch((err) => {
             console.error("[webhook] failed to send confirmation email", err);
           });

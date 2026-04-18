@@ -14,7 +14,8 @@ export interface OrderEmailData {
   productName: string;
   amountCents: number;
   currency: string;
-  downloadUrl: string;
+  downloadUrl?: string;                                        // legacy single-file fallback
+  downloadFiles?: { file_name: string; url: string }[];      // multi-file (new)
   orderId: string;
 }
 
@@ -26,11 +27,26 @@ function formatCurrency(cents: number, currency: string): string {
 }
 
 function buildOrderConfirmationHtml(data: OrderEmailData): string {
-  const { toName, productName, amountCents, currency, downloadUrl } = data;
+  const { toName, productName, amountCents, currency } = data;
   const greeting  = toName ? `Hi ${toName.split(" ")[0]},` : "Hi there,";
   const amount    = formatCurrency(amountCents, currency);
   const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
   const year      = new Date().getFullYear();
+
+  const downloadButtons =
+    data.downloadFiles && data.downloadFiles.length > 0
+      ? data.downloadFiles
+          .map(
+            (f) =>
+              `<a href="${f.url}" class="download-btn" style="display:block; margin-bottom:12px;">${f.file_name}</a>`
+          )
+          .join("")
+      : `<a href="${data.downloadUrl}" class="download-btn">Download Your File</a>`;
+
+  const fileCountNote =
+    data.downloadFiles && data.downloadFiles.length > 1
+      ? `${data.downloadFiles.length} files included`
+      : "1 file included";
 
   return `
 <!DOCTYPE html>
@@ -81,7 +97,7 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
       <div class="body">
         <div class="label">Order Confirmed</div>
         <h1>Your download is ready.</h1>
-        <p>${greeting} Thank you for your purchase. Your file is ready to download right now — just click the button below.</p>
+        <p>${greeting} Thank you for your purchase. ${data.downloadFiles && data.downloadFiles.length > 1 ? "Your files are ready to download — just click the buttons below." : "Your file is ready to download — just click the button below."}</p>
 
         <div class="order-box">
           <div class="order-row">
@@ -95,9 +111,9 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
         </div>
 
         <div class="download-section">
-          <a href="${downloadUrl}" class="download-btn">Download Your File</a>
+          ${downloadButtons}
           <p class="download-note">
-            5 downloads available &nbsp;·&nbsp; Link expires in 7 days<br />
+            ${fileCountNote} &nbsp;·&nbsp; 15 downloads available &nbsp;·&nbsp; Link expires in 7 days<br />
             Keep this email — it's your permanent receipt.
           </p>
         </div>
@@ -111,7 +127,7 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
 
       <div class="footer">
         <p>
-          &copy; ${year} HONNYDO LLC d/b/a AI Digital Products &nbsp;·&nbsp;
+          &copy; ${year} AI Digital Products, LLC &nbsp;·&nbsp;
           <a href="${siteUrl}/privacy">Privacy Policy</a> &nbsp;·&nbsp;
           <a href="${siteUrl}/terms">Terms of Service</a><br />
           You received this because you made a purchase at aidigitalproducts.com.
@@ -126,10 +142,17 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
 }
 
 function buildOrderConfirmationText(data: OrderEmailData): string {
-  const { toName, productName, amountCents, currency, downloadUrl } = data;
+  const { toName, productName, amountCents, currency } = data;
   const greeting = toName ? `Hi ${toName.split(" ")[0]},` : "Hi there,";
   const amount   = formatCurrency(amountCents, currency);
   const year     = new Date().getFullYear();
+
+  const linksText =
+    data.downloadFiles && data.downloadFiles.length > 0
+      ? data.downloadFiles
+          .map((f, i) => `File ${i + 1} — ${f.file_name}:\n${f.url}`)
+          .join("\n\n")
+      : data.downloadUrl;
 
   return `
 ${greeting}
@@ -141,15 +164,15 @@ ORDER SUMMARY
 Product: ${productName}
 Amount:  ${amount}
 
-YOUR DOWNLOAD LINK
-──────────────────
-${downloadUrl}
+YOUR DOWNLOAD LINKS
+───────────────────
+${linksText}
 
-You have 5 downloads available. This link expires in 7 days.
+You have 15 downloads available per file. Links expire in 7 days.
 
 Questions? Reply to this email or contact support@aidigitalproducts.com.
 
-© ${year} HONNYDO LLC d/b/a AI Digital Products
+© ${year} AI Digital Products, LLC
   `.trim();
 }
 
