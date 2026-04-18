@@ -8,7 +8,7 @@ export const revalidate = 0;
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, thumbnail_url, video_url, is_active, is_favorite, is_featured, is_not_ai, created_at, updated_at")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, thumbnail_url, video_url, is_active, is_favorite, is_featured, is_not_ai, created_at, updated_at, purchases")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
@@ -32,6 +32,9 @@ async function getSupabaseProducts(): Promise<Product[]> {
     isFavorite: p.is_favorite ?? false,
     isFeatured: p.is_featured ?? false,
     isNotAi: p.is_not_ai ?? false,
+    purchases: p.purchases ?? 0,
+    rating: undefined,    // populated once reviews exist
+    reviewCount: undefined,
   }));
 }
 

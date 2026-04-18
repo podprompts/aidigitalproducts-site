@@ -28,6 +28,12 @@ export interface Product {
   isFeatured?: boolean;
   /** Admin-marked as not an AI product */
   isNotAi?: boolean;
+  /** Aggregate star rating (1–5) from approved reviews */
+  rating?: number;
+  /** Total number of approved reviews */
+  reviewCount?: number;
+  /** Total confirmed purchases (from products.purchases column) */
+  purchases?: number;
 }
 
 export interface Category {

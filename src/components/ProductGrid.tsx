@@ -5,6 +5,7 @@ import Link from "next/link";
 import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import ViewingBadge from "@/components/ViewingBadge";
+import ProductMeta from "@/components/ProductMeta";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
  
 export default function ProductGrid({ products }: { products: Product[] }) {
@@ -205,9 +206,14 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                   {product.title}
                 </div>
                 <div className="card-seller">Seller · {product.seller}</div>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)" }}>
-                  ${product.price}
-                </div>
+
+                {/* ── Review / price / purchases meta row ── */}
+                <ProductMeta
+                  rating={product.rating}
+                  reviewCount={product.reviewCount}
+                  price={product.price}
+                  purchases={product.purchases}
+                />
  
                 <ViewingBadge productId={product.id} />
  

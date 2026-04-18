@@ -5,6 +5,7 @@ import Link from "next/link";
 import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import ViewingBadge from "@/components/ViewingBadge";
+import ProductMeta from "@/components/ProductMeta";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
 export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
@@ -55,7 +56,7 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
                 product.isFeatured
                   ? {
                       boxShadow: "0 0 0 1px rgba(160,160,160,0.13), 0 6px 32px rgba(0,0,0,0.16)",
-        borderRadius: "inherit",
+                      borderRadius: "inherit",
                     }
                   : undefined
               }
@@ -69,39 +70,39 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
                 />
 
                 {product.isFavorite && (
-  <div
-    style={{
-      position: "absolute",
-      bottom: "10px",
-      right: "10px",
-      display: "flex",
-      alignItems: "center",
-      gap: "5px",
-      background: "rgba(245, 243, 238, 0.93)",
-      backdropFilter: "blur(6px)",
-      WebkitBackdropFilter: "blur(6px)",
-      border: "1px solid rgba(0,0,0,0.10)",
-      borderRadius: "4px",
-      padding: "4px 8px",
-      zIndex: 10,
-    }}
-  >
-    <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
-      <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
-    </svg>
-    <span
-      style={{
-        fontSize: "9px",
-        fontWeight: 700,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase",
-        color: "#2a2a2a",
-      }}
-    >
-      Favorite
-    </span>
-  </div>
-)}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "10px",
+                      right: "10px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      background: "rgba(245, 243, 238, 0.93)",
+                      backdropFilter: "blur(6px)",
+                      WebkitBackdropFilter: "blur(6px)",
+                      border: "1px solid rgba(0,0,0,0.10)",
+                      borderRadius: "4px",
+                      padding: "4px 8px",
+                      zIndex: 10,
+                    }}
+                  >
+                    <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
+                      <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
+                    </svg>
+                    <span
+                      style={{
+                        fontSize: "9px",
+                        fontWeight: 700,
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        color: "#2a2a2a",
+                      }}
+                    >
+                      Favorite
+                    </span>
+                  </div>
+                )}
 
                 {product.isNotAi && (
                   <div
@@ -151,9 +152,14 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
                 {product.title}
               </div>
               <div className="card-seller">Seller · {product.seller}</div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)" }}>
-                ${product.price}
-              </div>
+
+              {/* ── Review / price / purchases meta row ── */}
+              <ProductMeta
+                rating={product.rating}
+                reviewCount={product.reviewCount}
+                price={product.price}
+                purchases={product.purchases}
+              />
 
               <ViewingBadge productId={product.id} />
 

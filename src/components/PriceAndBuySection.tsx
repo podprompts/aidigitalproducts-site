@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import BuyButton from "@/components/BuyButton";
 import CountdownTimer from "@/components/CountdownTimer";
 import UrgencyBar from "@/components/UrgencyBar";
+import ProductMeta from "@/components/ProductMeta";
 
 interface Props {
   productId: string;
@@ -13,6 +14,9 @@ interface Props {
   regularPrice?: number;
   regularPriceId?: string;
   description: string;
+  rating?: number;
+  reviewCount?: number;
+  purchases?: number;
 }
 
 interface TimerState {
@@ -34,6 +38,9 @@ export default function PriceAndBuySection({
   regularPrice,
   regularPriceId,
   description,
+  rating,
+  reviewCount,
+  purchases,
 }: Props) {
   const hasSale = !!(regularPrice && salePriceId && regularPriceId);
 
@@ -68,8 +75,18 @@ export default function PriceAndBuySection({
 
   return (
     <>
-      {/* ── Price block ── */}
+      {/* ── Review / price / purchases meta row ── */}
       <div style={{ marginTop: "24px" }}>
+        <ProductMeta
+          rating={rating}
+          reviewCount={reviewCount}
+          price={timerState === null ? salePrice : activePrice}
+          purchases={purchases}
+        />
+      </div>
+
+      {/* ── Price block ── */}
+      <div style={{ marginTop: "12px" }}>
         {timerState === null ? (
           <div
             style={{

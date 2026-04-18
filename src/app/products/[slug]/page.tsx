@@ -8,6 +8,7 @@ import StickyBuyBar from "@/components/StickyBuyBar";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import PriceAndBuySection from "@/components/PriceAndBuySection";
 import ViewingBadge from "@/components/ViewingBadge";
+import ProductMeta from "@/components/ProductMeta";
 import { mockProducts, mockCategories } from "@/lib/mock-data";
 import ViewTracker from "@/components/ViewTracker";
 import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
@@ -50,7 +51,7 @@ export default async function ProductDetailPage({ params }: Props) {
   if (!product) {
     const { data: dbProduct } = await supabaseAdmin
       .from("products")
-      .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active")
+      .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active, purchases")
       .eq("slug", slug)
       .eq("is_active", true)
       .single();
@@ -82,6 +83,9 @@ export default async function ProductDetailPage({ params }: Props) {
       priceId: dbProduct.sale_stripe_price_id ?? null,
       regularPriceId: dbProduct.regular_stripe_price_id ?? null,
       thumbnailUrl: null,
+      purchases: dbProduct.purchases ?? 0,
+      rating: undefined,
+      reviewCount: undefined,
     };
     // @ts-ignore
     product = shaped;
@@ -95,21 +99,21 @@ export default async function ProductDetailPage({ params }: Props) {
   const related = allProducts.filter((p) => p.slug !== product.slug).slice(0, 4);
 
   async function generateHowToUseSteps(productTitle: string): Promise<string[]> {
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 300,
-        messages: [
-          {
-            role: "user",
-            content: `You are writing 3 short "How To Use" steps for a digital product called: "${productTitle}".
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 300,
+          messages: [
+            {
+              role: "user",
+              content: `You are writing 3 short "How To Use" steps for a digital product called: "${productTitle}".
 
 Rules:
 - Each step is one concise sentence (max 12 words)
@@ -119,28 +123,28 @@ Rules:
 - Return ONLY a JSON array of 3 strings, nothing else
 
 Example format: ["Step one here", "Step two here", "Step three here"]`,
-          },
-        ],
-      }),
-      next: { revalidate: 86400 }, // cache for 24 hours
-    });
+            },
+          ],
+        }),
+        next: { revalidate: 86400 },
+      });
 
-    const data = await response.json();
-    const text = data.content?.[0]?.text ?? "[]";
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed) && parsed.length === 3) return parsed;
-  } catch {
-    // fall through to defaults
+      const data = await response.json();
+      const text = data.content?.[0]?.text ?? "[]";
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed) && parsed.length === 3) return parsed;
+    } catch {
+      // fall through to defaults
+    }
+
+    return [
+      "Download your files instantly after purchase",
+      "Follow the included documentation to get started",
+      "Deploy or use your product right away",
+    ];
   }
 
-  return [
-    "Download your files instantly after purchase",
-    "Follow the included documentation to get started",
-    "Deploy or use your product right away",
-  ];
-}
-
-const howToUseSteps = await generateHowToUseSteps(product.title);
+  const howToUseSteps = await generateHowToUseSteps(product.title);
 
   const isComingSoon = !product.priceId;
   const hasSale = !!(product.regularPrice && product.regularPriceId);
@@ -311,6 +315,9 @@ const howToUseSteps = await generateHowToUseSteps(product.title);
                     regularPrice={hasSale ? product.regularPrice : undefined}
                     regularPriceId={hasSale ? product.regularPriceId : undefined}
                     description={product.description}
+                    rating={product.rating}
+                    reviewCount={product.reviewCount}
+                    purchases={product.purchases}
                   />
                 )}
 
@@ -530,123 +537,129 @@ const howToUseSteps = await generateHowToUseSteps(product.title);
               <span style={{ color: "var(--ink-mute)" }}>More from the marketplace.</span>
             </h2>
             <div className="related-grid">
-  {related.map((p) => (
-    <Link
-      key={p.id}
-      href={`/products/${p.slug}`}
-      style={{ textDecoration: "none", display: "flex", height: "100%", color: "inherit" }}
-    >
-      <div
-        className="card"
-        style={{
-          padding: "28px 28px 40px",
-          minHeight: "220px",
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          ...(p.isFeatured
-            ? { boxShadow: "0 0 0 1px rgba(160,160,160,0.13), 0 6px 32px rgba(0,0,0,0.16)" }
-            : {}),
-        }}
-      >
-        {/* Thumbnail + badges */}
-        <div style={{ position: "relative" }}>
-          <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
+              {related.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/products/${p.slug}`}
+                  style={{ textDecoration: "none", display: "flex", height: "100%", color: "inherit" }}
+                >
+                  <div
+                    className="card"
+                    style={{
+                      padding: "28px 28px 40px",
+                      minHeight: "220px",
+                      display: "flex",
+                      flexDirection: "column",
+                      width: "100%",
+                      height: "100%",
+                      ...(p.isFeatured
+                        ? { boxShadow: "0 0 0 1px rgba(160,160,160,0.13), 0 6px 32px rgba(0,0,0,0.16)" }
+                        : {}),
+                    }}
+                  >
+                    {/* Thumbnail + badges */}
+                    <div style={{ position: "relative" }}>
+                      <ProductThumbnail url={p.thumbnailUrl} alt={p.title} />
 
-          {p.isFavorite && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "10px",
-                right: "10px",
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: "rgba(245, 243, 238, 0.93)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                border: "1px solid rgba(0,0,0,0.10)",
-                borderRadius: "4px",
-                padding: "4px 8px",
-                zIndex: 10,
-              }}
-            >
-              <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
-                <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
-              </svg>
-              <span
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  letterSpacing: "0.16em",
-                  textTransform: "uppercase",
-                  color: "#2a2a2a",
-                }}
-              >
-                Favorite
-              </span>
-            </div>
-          )}
+                      {p.isFavorite && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "10px",
+                            right: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            background: "rgba(245, 243, 238, 0.93)",
+                            backdropFilter: "blur(6px)",
+                            WebkitBackdropFilter: "blur(6px)",
+                            border: "1px solid rgba(0,0,0,0.10)",
+                            borderRadius: "4px",
+                            padding: "4px 8px",
+                            zIndex: 10,
+                          }}
+                        >
+                          <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
+                            <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
+                          </svg>
+                          <span
+                            style={{
+                              fontSize: "9px",
+                              fontWeight: 700,
+                              letterSpacing: "0.16em",
+                              textTransform: "uppercase",
+                              color: "#2a2a2a",
+                            }}
+                          >
+                            Favorite
+                          </span>
+                        </div>
+                      )}
 
-          {p.isNotAi && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "10px",
-                left: "10px",
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-                background: "rgba(245, 243, 238, 0.93)",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-                border: "1px solid rgba(0,0,0,0.10)",
-                borderRadius: "4px",
-                padding: "4px 8px",
-                zIndex: 10,
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" style={{ display: "block", flexShrink: 0, fill: "none" }}>
-                <path d="M2 8 Q5 1 8 8" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
-                <path d="M3.5 9 Q5 3.5 6.5 9" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
-                <circle cx="5" cy="9.2" r="0.6" style={{ fill: "#3a3a3a" }} />
-              </svg>
-              <span
-                style={{
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: "#2a2a2a",
-                }}
-              >
-                Human-Made
-              </span>
-            </div>
-          )}
-        </div>
+                      {p.isNotAi && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "10px",
+                            left: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            background: "rgba(245, 243, 238, 0.93)",
+                            backdropFilter: "blur(6px)",
+                            WebkitBackdropFilter: "blur(6px)",
+                            border: "1px solid rgba(0,0,0,0.10)",
+                            borderRadius: "4px",
+                            padding: "4px 8px",
+                            zIndex: 10,
+                          }}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 10 10" style={{ display: "block", flexShrink: 0, fill: "none" }}>
+                            <path d="M2 8 Q5 1 8 8" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
+                            <path d="M3.5 9 Q5 3.5 6.5 9" style={{ stroke: "#3a3a3a", fill: "none" }} strokeWidth="1.2" strokeLinecap="round" />
+                            <circle cx="5" cy="9.2" r="0.6" style={{ fill: "#3a3a3a" }} />
+                          </svg>
+                          <span
+                            style={{
+                              fontSize: "9px",
+                              fontWeight: 700,
+                              letterSpacing: "0.14em",
+                              textTransform: "uppercase",
+                              color: "#2a2a2a",
+                            }}
+                          >
+                            Human-Made
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--ink-faded)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
-              {p.category}
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--ink-faded)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                          {p.category}
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.25 }}>
+                          {p.title}
+                        </div>
+                        <div className="card-seller">Seller · {p.seller}</div>
+
+                        {/* ── Review / price / purchases meta row ── */}
+                        <ProductMeta
+                          rating={p.rating}
+                          reviewCount={p.reviewCount}
+                          price={p.price}
+                          purchases={p.purchases}
+                        />
+
+                        <ViewingBadge productId={p.id} />
+                      </div>
+                      <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <div style={{ fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.25 }}>
-              {p.title}
-            </div>
-            <div className="card-seller">Seller · {p.seller}</div>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
-              ${p.price}
-            </div>
-            <ViewingBadge productId={p.id} />
-          </div>
-          <span className="card-arrow" style={{ marginTop: "20px" }}>→</span>
-        </div>
-      </div>
-    </Link>
-  ))}
-</div>
           </div>
         </section>
       </main>
