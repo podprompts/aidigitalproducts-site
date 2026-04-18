@@ -46,31 +46,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
 
-  let product = mockProducts.find((p) => p.slug === slug);
+  const mockMatch = mockProducts.find((p) => p.slug === slug);
 
-  if (!product) {
-    const { data: dbProduct } = await supabaseAdmin
-      .from("products")
-      .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active, purchases")
-      .eq("slug", slug)
-      .eq("is_active", true)
-      .single();
+  // Always fetch live Supabase data to get purchases (and future rating/reviewCount)
+  const { data: dbProduct } = await supabaseAdmin
+    .from("products")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active, purchases")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .single();
 
-    if (!dbProduct) {
-      const { data: redirectTarget } = await supabaseAdmin
-        .from("products")
-        .select("slug")
-        .eq("old_slug", slug)
-        .eq("is_active", true)
-        .single();
+  let product: (typeof mockProducts)[0] | null = null;
 
-      if (redirectTarget?.slug) {
-        redirect(`/products/${redirectTarget.slug}`);
-      }
-
-      notFound();
-    }
-
+  if (mockMatch && dbProduct) {
+    // Merge: mock is source of truth for priceId/regularPriceId/features,
+    // Supabase is source of truth for purchases (and future rating/reviewCount)
+    product = {
+      ...mockMatch,
+      purchases: dbProduct.purchases ?? 0,
+    };
+  } else if (mockMatch) {
+    product = { ...mockMatch, purchases: 0 };
+  } else if (dbProduct) {
     const shaped = {
       id: dbProduct.id,
       slug: dbProduct.slug,
@@ -80,18 +77,33 @@ export default async function ProductDetailPage({ params }: Props) {
       regularPrice: dbProduct.regular_price_cents ? dbProduct.regular_price_cents / 100 : undefined,
       description: dbProduct.description ?? "",
       seller: "AI Digital Products",
-      priceId: dbProduct.sale_stripe_price_id ?? null,
-      regularPriceId: dbProduct.regular_stripe_price_id ?? null,
-      thumbnailUrl: null,
+      priceId: dbProduct.sale_stripe_price_id ?? undefined,
+      regularPriceId: dbProduct.regular_stripe_price_id ?? undefined,
+      thumbnailUrl: undefined,
       purchases: dbProduct.purchases ?? 0,
       rating: undefined,
       reviewCount: undefined,
     };
     // @ts-ignore
     product = shaped;
+  } else {
+    // Check for slug redirect
+    const { data: redirectTarget } = await supabaseAdmin
+      .from("products")
+      .select("slug")
+      .eq("old_slug", slug)
+      .eq("is_active", true)
+      .single();
+
+    if (redirectTarget?.slug) {
+      redirect(`/products/${redirectTarget.slug}`);
+    }
+
+    notFound();
   }
 
   if (!product) notFound();
+
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");
 
