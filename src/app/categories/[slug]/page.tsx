@@ -195,6 +195,11 @@ export default async function CategoryPage({ params }: Props) {
                           <div className="card-seller">Seller · {product.seller}</div>
                           <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)" }}>
                             ${product.price}
+                            {(product.purchases ?? 0) > 0 && (
+                              <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--ink-mute)", marginLeft: "6px" }}>
+                                ({product.purchases})
+                              </span>
+                            )}
                           </div>
                           <ViewingBadge productId={product.id} />
                         </div>

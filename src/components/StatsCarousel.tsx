@@ -144,11 +144,9 @@ export default function StatsCarousel() {
   if (loading) {
     return (
       <div
-        style={{
-          height: 56,
-          borderTop: "1px solid var(--line)",
-          borderBottom: "1px solid var(--line)",
-        }}
+       style={{
+  height: 56,
+}}
       />
     );
   }
@@ -156,10 +154,8 @@ export default function StatsCarousel() {
   return (
     <div
       style={{
-        height: 56,
-        borderTop: "1px solid var(--line)",
-        borderBottom: "1px solid var(--line)",
-        overflow: "hidden",
+  height: 56,
+  overflow: "hidden",
         position: "relative",
         WebkitMaskImage:
           "linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)",
@@ -171,7 +167,7 @@ export default function StatsCarousel() {
         .cat-track { scrollbar-width: none; -ms-overflow-style: none; }
         .cat-track::-webkit-scrollbar { display: none; }
         .cat-pill { transition: border-color 0.15s, color 0.15s, background 0.15s; }
-        .cat-pill:hover { border-color: var(--ink-faded) !important; color: var(--ink) !important; background: var(--bg-alt) !important; }
+        .cat-pill:hover { color: var(--ink) !important; background: var(--line) !important; }
       `}</style>
 
       <div
@@ -202,9 +198,9 @@ export default function StatsCarousel() {
               whiteSpace: "nowrap",
               padding: "5px 14px",
               borderRadius: 9999,
-              border: "1px solid var(--line)",
-              background: "var(--bg)",
-              color: "var(--ink-soft)",
+              border: "none",
+background: "var(--bg-alt)",
+color: "var(--ink-faded)",
               fontSize: "0.8125rem",
               fontWeight: 500,
               letterSpacing: "0.01em",

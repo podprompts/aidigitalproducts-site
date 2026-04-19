@@ -97,39 +97,39 @@ export default function ProductsClient({
                   />
 
                   {product.isFavorite && (
-  <div
-    style={{
-      position: "absolute",
-      bottom: "10px",
-      right: "10px",
-      display: "flex",
-      alignItems: "center",
-      gap: "5px",
-      background: "rgba(245, 243, 238, 0.93)",
-      backdropFilter: "blur(6px)",
-      WebkitBackdropFilter: "blur(6px)",
-      border: "1px solid rgba(0,0,0,0.10)",
-      borderRadius: "4px",
-      padding: "4px 8px",
-      zIndex: 10,
-    }}
-  >
-    <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
-      <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
-    </svg>
-    <span
-      style={{
-        fontSize: "9px",
-        fontWeight: 700,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase",
-        color: "#2a2a2a",
-      }}
-    >
-      Favorite
-    </span>
-  </div>
-)}
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "10px",
+                        right: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        background: "rgba(245, 243, 238, 0.93)",
+                        backdropFilter: "blur(6px)",
+                        WebkitBackdropFilter: "blur(6px)",
+                        border: "1px solid rgba(0,0,0,0.10)",
+                        borderRadius: "4px",
+                        padding: "4px 8px",
+                        zIndex: 10,
+                      }}
+                    >
+                      <svg width="8" height="8" viewBox="0 0 8 8" style={{ display: "block", flexShrink: 0, fill: "none" }}>
+                        <circle cx="4" cy="4" r="3" style={{ fill: "#e8c97a" }} />
+                      </svg>
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: 700,
+                          letterSpacing: "0.16em",
+                          textTransform: "uppercase",
+                          color: "#2a2a2a",
+                        }}
+                      >
+                        Favorite
+                      </span>
+                    </div>
+                  )}
 
                   {product.isNotAi && (
                     <div
@@ -183,8 +183,12 @@ export default function ProductsClient({
                     <div className="card-seller">Seller · {product.seller}</div>
                     <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)" }}>
                       ${product.price}
+                      {(product.purchases ?? 0) > 0 && (
+                        <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--ink-mute)", marginLeft: "6px" }}>
+                          ({product.purchases})
+                        </span>
+                      )}
                     </div>
-
                     <ViewingBadge productId={product.id} />
                   </div>
                   <span className="card-arrow">→</span>

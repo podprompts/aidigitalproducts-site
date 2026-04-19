@@ -80,7 +80,7 @@ export default async function Home() {
       <StatsCarousel />
 
       {/* Recently Added */}
-      <section className="block" id="recently-added">
+      <section className="block" id="recently-added" style={{ paddingTop: "clamp(24px, 3vw, 40px)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
           <div
             style={{

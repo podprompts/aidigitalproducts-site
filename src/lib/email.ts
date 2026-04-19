@@ -97,17 +97,17 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
       <div class="body">
         <div class="label">Order Confirmed</div>
         <h1>Your download is ready.</h1>
-        <p>${greeting} Thank you for your purchase. ${data.downloadFiles && data.downloadFiles.length > 1 ? "Your files are ready to download — just click the buttons below." : "Your file is ready to download — just click the button below."}</p>
+        <p>${greeting} Thank you so much for your purchase — it truly means a lot. We put a lot of care into everything we create, and we hope this gives you exactly what you need. ${data.downloadFiles && data.downloadFiles.length > 1 ? "Your files are ready to download — just click the buttons below." : "Your file is ready to download — just click the button below."}</p>
+<p>If you have any questions or feedback, don't hesitate to reach out — we're always happy to help.</p>
 
-        <div class="order-box">
-          <div class="order-row">
-            <span class="order-label">Product</span>
-            <span class="order-value">${productName}</span>
-          </div>
-          <div class="order-row">
-            <span class="order-label">Amount paid</span>
-            <span class="order-value">${amount}</span>
-          </div>
+        <div class="order-row">
+  <span class="order-label">Product</span>
+  <span class="order-value" style="margin-left:16px; text-align:right;">${productName}</span>
+</div>
+<div class="order-row">
+  <span class="order-label">Amount paid</span>
+  <span class="order-value" style="margin-left:16px;">${amount}</span>
+</div>
         </div>
 
         <div class="download-section">
@@ -154,10 +154,12 @@ function buildOrderConfirmationText(data: OrderEmailData): string {
           .join("\n\n")
       : data.downloadUrl;
 
-  return `
+ return `
 ${greeting}
 
-Your order is confirmed and your download is ready.
+Thank you so much for your purchase — it truly means a lot. We put a lot of care into everything we create, and we hope this gives you exactly what you need.
+
+Your order is confirmed and your download is ready below.
 
 ORDER SUMMARY
 ─────────────
