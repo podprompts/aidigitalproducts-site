@@ -109,7 +109,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
                 style={
   product.isFeatured
     ? {
-        outline: "2px solid rgba(20,20,20,0.55)",
+        outline: "1.5px solid rgba(20,20,20,0.88)",
         borderRadius: "inherit",
       }
     : undefined
