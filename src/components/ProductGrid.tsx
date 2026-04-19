@@ -107,13 +107,13 @@ export default function ProductGrid({ products }: { products: Product[] }) {
               <div
                 className="carousel-cell"
                 style={
-                  product.isFeatured
-                    ? {
-                        boxShadow: "0 0 0 1px rgba(160,160,160,0.13), 0 6px 32px rgba(0,0,0,0.16)",
-                        borderRadius: "inherit",
-                      }
-                    : undefined
-                }
+  product.isFeatured
+    ? {
+        outline: "2px solid rgba(20,20,20,0.55)",
+        borderRadius: "inherit",
+      }
+    : undefined
+}
               >
                 {/* Thumbnail + badges */}
                 <div style={{ position: "relative" }}>
