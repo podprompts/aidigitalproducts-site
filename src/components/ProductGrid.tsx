@@ -86,13 +86,12 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         <div className="carousel-fade-left" />
         <div
           ref={trackRef}
-className="carousel-track"
-style={{
-  cursor: "grab",
-  userSelect: "none",
-  scrollSnapType: "none",
-  overflow: "visible",
-}}
+          className="carousel-track"
+          style={{
+            cursor: "grab",
+            userSelect: "none",
+            scrollSnapType: "none",
+          }}
           onClickCapture={(e) => {
             if (didDragRef.current) { e.stopPropagation(); return; }
             if (e.detail === 1) e.stopPropagation();
@@ -108,16 +107,15 @@ style={{
               <div
                 className="carousel-cell"
                 style={
-  product.isFeatured
-    ? {
-        boxShadow: "0 0 0 1.5px rgba(20,20,20,0.88)",
-        borderRadius: "inherit",
-        marginTop: "3px",
-        marginBottom: "3px",
-        marginLeft: "3px",
-      }
-    : undefined
-}
+                  product.isFeatured
+                    ? {
+                        border: "1.5px solid rgba(20,20,20,0.88)",
+                      }
+                    : {
+                        borderTop: "1px solid var(--line)",
+                        borderBottom: "1px solid var(--line)",
+                      }
+                }
               >
                 {/* Thumbnail + badges */}
                 <div style={{ position: "relative" }}>
