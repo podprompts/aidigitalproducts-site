@@ -7,7 +7,7 @@ const r2 = new S3Client({
   region: "auto",
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    accessKeyId:     process.env.R2_ACCESS_KEY_ID!,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
@@ -22,17 +22,12 @@ export async function POST(req: NextRequest) {
   const file      = formData.get("file") as File | null;
   const productId = formData.get("productId") as string | null;
 
-  if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-
-  if (!file.name.toLowerCase().endsWith(".mp4")) {
-    return NextResponse.json({ error: "Only .mp4 files are allowed" }, { status: 400 });
-  }
+  if (!file)      return NextResponse.json({ error: "No file provided" },  { status: 400 });
+  if (!productId) return NextResponse.json({ error: "No productId provided" }, { status: 400 });
 
   const bytes  = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const path   = productId
-    ? `product-videos/${productId}/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`
-    : `product-videos/temp/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
+  const path   = `product-videos/${productId}/${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
 
   await r2.send(new PutObjectCommand({
     Bucket:      BUCKET,
@@ -43,12 +38,13 @@ export async function POST(req: NextRequest) {
 
   const publicUrl = `${CDN}/${path}`;
 
-  if (productId) {
-    await supabaseAdmin
-      .from("products")
-      .update({ video_url: publicUrl })
-      .eq("id", productId);
-  }
+  // Stamp video_url onto the product row
+  const { error } = await supabaseAdmin
+    .from("products")
+    .update({ video_url: publicUrl })
+    .eq("id", productId);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ url: publicUrl, path });
 }

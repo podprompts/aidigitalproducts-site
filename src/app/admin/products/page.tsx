@@ -196,7 +196,8 @@ function ProductsTable() {
                   <td style={{ padding: "10px 14px" }}>
                     <div style={{ width: "48px", height: "48px", position: "relative", background: "var(--bg-soft)", flexShrink: 0, overflow: "hidden" }}>
                       {p.thumbnail_url ? (
-                        <Image src={p.thumbnail_url} alt={p.name} fill style={{ objectFit: "cover" }} sizes="48px" />
+                        <Image src={p.thumbnail_url} alt={p.name} fill style={{ objectFit: "cover" }} sizes="48px" unoptimized />
+
                       ) : (
                         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <span style={{ fontSize: "10px", color: "var(--ink-mute)" }}>—</span>
