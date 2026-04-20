@@ -11,7 +11,9 @@ export default function EmailPopup() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!localStorage.getItem("popup_subscribed")) {
+      const alreadySubscribed = localStorage.getItem("popup_subscribed");
+      const dismissedThisSession = sessionStorage.getItem("popup_dismissed");
+      if (!alreadySubscribed && !dismissedThisSession) {
         setVisible(true);
       }
     }, 10000);
@@ -24,11 +26,17 @@ export default function EmailPopup() {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setVisible(false);
+      if (e.key === "Escape") handleDismiss();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
+
+  // Dismiss = hide for rest of session, but can show again next visit
+  function handleDismiss() {
+    sessionStorage.setItem("popup_dismissed", "true");
+    setVisible(false);
+  }
 
   const handleSubmit = async () => {
     if (!email || !email.includes("@")) {
@@ -50,7 +58,7 @@ export default function EmailPopup() {
         return;
       }
       setStatus("success");
-      localStorage.setItem("popup_subscribed", "true");
+      localStorage.setItem("popup_subscribed", "true"); // never show again
     } catch {
       setStatus("error");
       setErrorMsg("Network error. Please try again.");
@@ -61,9 +69,8 @@ export default function EmailPopup() {
 
   return (
     <>
-      {/* Full-screen overlay — flex centers the modal */}
       <div
-        onClick={() => setVisible(false)}
+        onClick={handleDismiss}
         style={{
           position: "fixed",
           inset: 0,
@@ -78,7 +85,6 @@ export default function EmailPopup() {
           animation: "fadeIn 300ms ease both",
         }}
       >
-        {/* Modal — stopPropagation so clicking inside doesn't close */}
         <div
           role="dialog"
           aria-modal="true"
@@ -94,9 +100,8 @@ export default function EmailPopup() {
             animation: "slideUpIn 350ms cubic-bezier(0.16, 1, 0.3, 1) both",
           }}
         >
-          {/* Close button */}
           <button
-            onClick={() => setVisible(false)}
+            onClick={handleDismiss}
             aria-label="Close"
             style={{
               position: "absolute",
@@ -146,7 +151,6 @@ export default function EmailPopup() {
             </div>
           ) : (
             <>
-              {/* Early access label — emoji isolated so parent color doesn't mute it */}
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "16px" }}>
                 <span style={{ fontSize: "14px", lineHeight: 1 }}>🔥</span>
                 <span
@@ -203,14 +207,7 @@ export default function EmailPopup() {
               </div>
 
               {errorMsg && (
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#c0392b",
-                    marginBottom: "12px",
-                    fontWeight: 600,
-                  }}
-                >
+                <p style={{ fontSize: "12px", color: "#c0392b", marginBottom: "12px", fontWeight: 600 }}>
                   {errorMsg}
                 </p>
               )}
@@ -234,7 +231,7 @@ export default function EmailPopup() {
               >
                 No spam. No newsletters. Just deal alerts.{" "}
                 <button
-                  onClick={() => setVisible(false)}
+                  onClick={handleDismiss}
                   style={{
                     background: "none",
                     border: "none",

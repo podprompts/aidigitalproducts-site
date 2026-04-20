@@ -7,7 +7,6 @@ interface Props {
   url?: string;
   videoUrl?: string;
   alt: string;
-  /** Use "detail" for the large 4:3 preview on the product detail page */
   variant?: "card" | "detail";
 }
 
@@ -20,17 +19,11 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
   const hasHoverVideo = !!videoUrl;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hovering, setHovering] = useState(false);
-  // Only set to true once — keeps the src loaded after first hover
-  const [videoLoaded, setVideoLoaded] = useState(false);
 
   function handleMouseEnter() {
     if (!hasHoverVideo) return;
     setHovering(true);
-    setVideoLoaded(true); // triggers src injection
-    // Small delay so the src attr is in the DOM before we call play()
-    requestAnimationFrame(() => {
-      videoRef.current?.play().catch(() => {});
-    });
+    videoRef.current?.play().catch(() => {});
   }
 
   function handleMouseLeave() {
@@ -64,13 +57,7 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
               muted
               loop
               playsInline
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
             <Image
@@ -83,15 +70,7 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
             />
           )
         ) : (
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "var(--ink-mute)",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-            }}
-          >
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
             Preview
           </span>
         )}
@@ -99,7 +78,6 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
     );
   }
 
-  // "card" variant — hover plays videoUrl silently over the thumbnail
   if (!url && !videoUrl) return null;
 
   return (
@@ -109,7 +87,7 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Static thumbnail — image or mp4 */}
+      {/* Static thumbnail */}
       {url && (
         primaryIsVideo ? (
           <video
@@ -118,13 +96,7 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
             muted
             loop
             playsInline
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
           <Image
@@ -142,14 +114,15 @@ export default function ProductThumbnail({ url, videoUrl, alt, variant = "card" 
         )
       )}
 
-      {/* Hover video — src is withheld until first hover (lazy load) */}
+      {/* Hover video — always in DOM with src, browser buffers via preload="metadata" */}
       {hasHoverVideo && (
         <video
           ref={videoRef}
-          src={videoLoaded ? videoUrl : undefined}
+          src={videoUrl}
           muted
           loop
           playsInline
+          preload="metadata"
           style={{
             position: "absolute",
             inset: 0,
