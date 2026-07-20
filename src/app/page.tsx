@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 // To hide the video entirely: set SHOW_HOMEPAGE_VIDEO = false
 // ─────────────────────────────────────────────────────────────────────────────
 const YOUTUBE_VIDEO_ID = "gBV5FT40N_M";
-const SHOW_HOMEPAGE_VIDEO = true;
+const SHOW_HOMEPAGE_VIDEO = false;
 
 export default async function Home() {
   const products = await getProducts();

@@ -203,7 +203,10 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         headers: { "x-admin-key": token },
         body: fd,
       });
-      if (!res.ok) throw new Error("Image upload failed");
+      if (!res.ok) {
+  const err = await res.json().catch(() => ({}));
+  throw new Error(err.error ?? "Image upload failed");
+}
       const { url } = await res.json();
       result.push({ ...img, url, file: undefined });
     }

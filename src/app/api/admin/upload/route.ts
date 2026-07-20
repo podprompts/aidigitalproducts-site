@@ -13,7 +13,8 @@ const r2 = new S3Client({
 });
 
 const BUCKET = process.env.R2_BUCKET_NAME!;
-const CDN    = process.env.R2_CDN_URL!; // e.g. https://cdn.allnaturalbox.com
+const CDN    = process.env.R2_CDN_URL!; // e.g. https://cdn.hireaireceptionist.com
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB — adjust if you want a different limit
 
 export async function POST(req: NextRequest) {
   if (!isAdminAuthed(req)) return unauthorized();
@@ -26,6 +27,15 @@ export async function POST(req: NextRequest) {
 
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json(
+      {
+        error: `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+      },
+      { status: 413 }
+    );
+  }
+
   const bytes  = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   const ext    = (file.name.split(".").pop() ?? "jpg").toLowerCase();
@@ -33,12 +43,19 @@ export async function POST(req: NextRequest) {
     ? `product-images/${productId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     : `product-images/temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-  await r2.send(new PutObjectCommand({
-    Bucket:      BUCKET,
-    Key:         path,
-    Body:        buffer,
-    ContentType: file.type,
-  }));
+  try {
+    await r2.send(new PutObjectCommand({
+      Bucket:      BUCKET,
+      Key:         path,
+      Body:        buffer,
+      ContentType: file.type,
+    }));
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Upload to storage failed: ${err instanceof Error ? err.message : "Unknown error"}` },
+      { status: 500 }
+    );
+  }
 
   const publicUrl = `${CDN}/${path}`;
 

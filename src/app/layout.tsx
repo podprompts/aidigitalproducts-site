@@ -26,25 +26,34 @@ export const metadata: Metadata = {
     other: [{ rel: "manifest", url: "/site.webmanifest" }],
   },
   title: {
-    template: "%s — AI Digital Products",
-    default: "AI Digital Products — The Marketplace for AI",
+    default: 'AiDigitalProducts.com',
+    template: '%s | AiDigitalProducts.com',
   },
   description:
-    "A curated marketplace for AI digital products. Chatbots, voice agents, automations, and more. Built for the new way.",
+    'Ready-made AI products that work out of the box. Skip the build — buy the solution. Built by experts, deployed in minutes.',
   openGraph: {
-    title: "AI Digital Products — The Marketplace for AI",
+    title: 'AiDigitalProducts.com — The AI Marketplace',
     description:
-      "A curated marketplace for AI digital products. Chatbots, voice agents, automations, and more. Built for the new way.",
-    url: "https://aidigitalproducts.com",
-    siteName: "AI Digital Products",
-    type: "website",
-    locale: "en_US",
+      'Ready-made AI products that work out of the box. Skip the build — buy the solution. Built by experts, deployed in minutes.',
+    url: 'https://aidigitalproducts.com',
+    siteName: 'AiDigitalProducts.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'AiDigitalProducts.com — Skip the Build. Buy the Solution.',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "AI Digital Products — The Marketplace for AI",
+    card: 'summary_large_image',
+    title: 'AiDigitalProducts.com — The AI Marketplace',
     description:
-      "A curated marketplace for AI digital products. Chatbots, voice agents, automations, and more. Built for the new way.",
+      'Ready-made AI products that work out of the box. Skip the build — buy the solution. Built by experts, deployed in minutes.',
+    images: ['/og-image.png'],
   },
 };
 
