@@ -255,10 +255,15 @@
   @media (max-width: 560px){
     .wrap{ padding: 24px 20px 28px; }
     nav{ padding-bottom: 40px; }
-    .social{ gap: 12px; }
     form.capture{ flex-direction: column; }
     form.capture button{ width: 100%; }
-    .countdown{ gap: 14px; }
+    .countdown{
+      gap: 14px;
+      margin-left: auto;
+      margin-right: auto;
+      justify-content: center;
+      text-align: center;
+    }
     .countdown .cell{ min-width: 46px; }
     .countdown .num{ font-size: 24px; }
     .shelf{ display:none; }
@@ -336,12 +341,19 @@
 
   // ---- Countdown ----
   // Set your real launch date/time here (local time of the visitor).
-  const LAUNCH_DATE = new Date('2026-10-18T09:00:00');
+  let launchDate = new Date('2026-10-18T09:00:00');
+  const COUNTDOWN_DURATION_MS = launchDate - new Date();
 
   function updateCountdown(){
     const now = new Date();
-    let diff = LAUNCH_DATE - now;
-    if (diff < 0) diff = 0;
+    let diff = launchDate - now;
+
+    if (diff <= 0) {
+      // Timer finished — loop it by pushing the target date forward
+      // by the same original duration, so it counts down again.
+      launchDate = new Date(now.getTime() + COUNTDOWN_DURATION_MS);
+      diff = launchDate - now;
+    }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
