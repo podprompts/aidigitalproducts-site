@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Digital Products — Coming Soon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #171717;
+    --bg-alt: #232323;
+    --ink: #FFFFFF;
+    --muted: #9A9A9A;
+    --line: rgba(255,255,255,0.14);
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(60% 50% at 78% 18%, rgba(255,255,255,0.05), transparent 60%),
+      radial-gradient(45% 40% at 15% 85%, rgba(255,255,255,0.04), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  a { color: inherit; }
+
+  .wrap{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 32px 40px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Nav */
+  nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom: 56px;
+  }
+  .wordmark{
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .wordmark .dot{
+    width:9px; height:9px; border-radius:50%;
+    background: var(--ink);
+    display:inline-block;
+    flex-shrink:0;
+  }
+  .social{
+    display:flex;
+    gap: 18px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .social a{ text-decoration:none; transition: color .2s ease; }
+  .social a:hover, .social a:focus-visible { color: var(--ink); }
+
+  /* Main grid */
+  main{
+    flex:1;
+    display:grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 48px;
+    align-items:center;
+  }
+
+  .lede{ max-width: 560px; }
+
+  h1{
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.4rem, 4.6vw, 3.6rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin: 0 0 22px;
+  }
+  h1 em{
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .sub{
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0 0 34px;
+    max-width: 46ch;
+  }
+
+  /* Email capture */
+  form.capture{
+    display:flex;
+    gap: 10px;
+    max-width: 440px;
+    margin-bottom: 14px;
+  }
+  form.capture input[type="email"]{
+    flex:1;
+    min-width: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  form.capture input[type="email"]::placeholder{ color: rgba(167,159,201,0.7); }
+  form.capture input[type="email"]:focus-visible{
+    border-color: var(--ink);
+    background: rgba(255,255,255,0.06);
+  }
+  form.capture button{
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    padding: 13px 22px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .15s ease, background .2s ease;
+  }
+  form.capture button:hover{ background: #E4E4E4; }
+  form.capture button:active{ transform: scale(0.97); }
+  form.capture button:focus-visible,
+  form.capture input:focus-visible{
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .capture-note{
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  .capture-note.success{ color: var(--ink); }
+
+  /* Countdown */
+  .countdown{
+    display:flex;
+    gap: 22px;
+    margin-top: 44px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    max-width: 440px;
+  }
+  .countdown .cell{ min-width: 56px; }
+  .countdown .num{
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height:1;
+  }
+  .countdown .label{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Product shelf (right side) */
+  .shelf{
+    position: relative;
+    height: 460px;
+  }
+  .card{
+    position: absolute;
+    width: 168px;
+    padding: 16px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    box-shadow: 0 18px 40px -18px rgba(0,0,0,0.55);
+    opacity: 0;
+    transform: translateY(14px) rotate(var(--r, 0deg));
+    animation: settle .7s cubic-bezier(.2,.7,.3,1) forwards;
+    animation-delay: var(--d, 0s);
+  }
+  .card .swatch{
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    margin-bottom: 14px;
+  }
+  .card .name{
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+  .card .meta{
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .card--1{ top: 0;   left: 38px;  --r: -6deg;  border-radius: 16px; animation-delay: .05s; }
+  .card--2{ top: 26px; left: 236px; --r: 4deg;   border-radius: 12px; animation-delay: .17s; }
+  .card--3{ top: 178px; left: 6px;  --r: 3deg;   border-radius: 20px; animation-delay: .29s; }
+  .card--4{ top: 190px; left: 222px; --r: -4deg; border-radius: 12px; animation-delay: .41s; }
+  .card--5{ top: 336px; left: 96px; --r: -2deg;  border-radius: 16px; animation-delay: .53s; }
+
+  @keyframes settle{
+    to{ opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); }
+  }
+
+  footer{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    padding-top: 56px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ animation: none; opacity: 1; transform: rotate(var(--r,0deg)); }
+    html{ scroll-behavior:auto; }
+  }
+
+  @media (max-width: 900px){
+    main{ grid-template-columns: 1fr; }
+    .shelf{ height: 340px; margin-top: 16px; }
+    .card{ width: 140px; padding: 13px; }
+    .card--1{ left: 4px; }
+    .card--2{ left: 190px; top: 14px; }
+    .card--3{ left: -6px; top: 150px; }
+    .card--4{ left: 186px; top: 160px; }
+    .card--5{ left: 74px; top: 268px; }
+  }
+
+  @media (max-width: 560px){
+    .wrap{ padding: 24px 20px 28px; }
+    nav{ padding-bottom: 40px; }
+    .social{ gap: 12px; }
+    form.capture{ flex-direction: column; }
+    form.capture button{ width: 100%; }
+    .countdown{ gap: 14px; }
+    .countdown .cell{ min-width: 46px; }
+    .countdown .num{ font-size: 24px; }
+    .shelf{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <a class="wordmark" href="#" aria-label="AI Digital Products home">
+      <span class="dot" aria-hidden="true"></span>
+      AI Digital Products
+    </a>
+    <div class="social">
+      <a href="#" aria-label="Follow on X">X</a>
+      <a href="#" aria-label="Follow on Instagram">Instagram</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="lede">
+      <h1>Systems that do the work, <em>not just describe it.</em></h1>
+      <p class="sub">AI-built workflows, operating systems, and outcome-ready setups — install them and get the result, not another prompt to write. Launching soon.</p>
+
+      <form class="capture" id="captureForm">
+        <label for="email" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
+        <input type="email" id="email" name="email" placeholder="you@email.com" required autocomplete="email">
+        <button type="submit">Notify me first</button>
+      </form>
+      <p class="capture-note" id="captureNote">No spam — just a heads up when we open the doors.</p>
+
+      <div class="countdown" id="countdown" aria-label="Time until launch">
+        <div class="cell"><div class="num" id="cd-days">00</div><div class="label">days</div></div>
+        <div class="cell"><div class="num" id="cd-hours">00</div><div class="label">hours</div></div>
+        <div class="cell"><div class="num" id="cd-mins">00</div><div class="label">minutes</div></div>
+        <div class="cell"><div class="num" id="cd-secs">00</div><div class="label">seconds</div></div>
+      </div>
+    </div>
+
+    <div class="shelf" aria-hidden="true">
+      <div class="card card--1">
+        <div class="swatch" style="background:#FFFFFF;"></div>
+        <div class="name">Content OS</div>
+        <div class="meta">Plan, write, publish</div>
+      </div>
+      <div class="card card--2">
+        <div class="swatch" style="background:#8A8A8A;"></div>
+        <div class="name">Client Onboarding</div>
+        <div class="meta">Zero to kickoff</div>
+      </div>
+      <div class="card card--3">
+        <div class="swatch" style="background:#5A5A5A;"></div>
+        <div class="name">Sales Pipeline</div>
+        <div class="meta">Lead to close</div>
+      </div>
+      <div class="card card--4">
+        <div class="swatch" style="background:#8A8A8A;"></div>
+        <div class="name">Financial Dashboard</div>
+        <div class="meta">Auto-updating</div>
+      </div>
+      <div class="card card--5">
+        <div class="swatch" style="background:#FFFFFF;"></div>
+        <div class="name">Hiring Workflow</div>
+        <div class="meta">Screen to offer</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span>© <span id="year"></span> AI Digital Products</span>
+    <span>Made by Adrien</span>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---- Countdown ----
+  // Set your real launch date/time here (local time of the visitor).
+  const LAUNCH_DATE = new Date('2026-10-18T09:00:00');
+
+  function updateCountdown(){
+    const now = new Date();
+    let diff = LAUNCH_DATE - now;
+    if (diff < 0) diff = 0;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
+
+    document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+    document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+    document.getElementById('cd-mins').textContent = String(mins).padStart(2, '0');
+    document.getElementById('cd-secs').textContent = String(secs).padStart(2, '0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // ---- Email capture ----
+  // Wired to Supabase. Fill in your project URL + anon key below, and
+  // create a table to receive signups:
+  //
+  //   create table waitlist (
+  //     id uuid primary key default gen_random_uuid(),
+  //     email text not null unique,
+  //     created_at timestamptz default now()
+  //   );
+  //
+  // Then add an RLS policy allowing anon inserts:
+  //   alter table waitlist enable row level security;
+  //   create policy "Allow anon insert" on waitlist
+  //     for insert to anon with check (true);
+  //
+  // Find both values in Supabase: Project Settings → API.
+  const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL'; // e.g. https://xxxx.supabase.co
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+  const form = document.getElementById('captureForm');
+  const note = document.getElementById('captureNote');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    if (!email) return;
+
+    const button = form.querySelector('button');
+    button.disabled = true;
+    note.classList.remove('success');
+    note.textContent = 'Adding you to the list…';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      if (!res.ok && res.status !== 409) throw new Error('Signup failed');
+
+      note.textContent = "You're on the list — we'll email you at launch.";
+      note.classList.add('success');
+      form.reset();
+    } catch (err) {
+      note.textContent = "Something went wrong — mind trying again?";
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
