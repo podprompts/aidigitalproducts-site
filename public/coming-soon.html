@@ -369,24 +369,9 @@
   setInterval(updateCountdown, 1000);
 
   // ---- Email capture ----
-  // Wired to Supabase. Fill in your project URL + anon key below, and
-  // create a table to receive signups:
-  //
-  //   create table waitlist (
-  //     id uuid primary key default gen_random_uuid(),
-  //     email text not null unique,
-  //     created_at timestamptz default now()
-  //   );
-  //
-  // Then add an RLS policy allowing anon inserts:
-  //   alter table waitlist enable row level security;
-  //   create policy "Allow anon insert" on waitlist
-  //     for insert to anon with check (true);
-  //
-  // Find both values in Supabase: Project Settings → API.
-  const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL'; // e.g. https://xxxx.supabase.co
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-
+  // Posts to /api/notify — the same route your per-product "notify me"
+  // signups already use — with a special productId ("site-launch") so
+  // it lands as its own segment in email_signups. No new table needed.
   const form = document.getElementById('captureForm');
   const note = document.getElementById('captureNote');
 
@@ -401,18 +386,13 @@
     note.textContent = 'Adding you to the list…';
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+      const res = await fetch('/api/notify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ email })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, productId: 'site-launch' })
       });
 
-      if (!res.ok && res.status !== 409) throw new Error('Signup failed');
+      if (!res.ok) throw new Error('Signup failed');
 
       note.textContent = "You're on the list — we'll email you at launch.";
       note.classList.add('success');

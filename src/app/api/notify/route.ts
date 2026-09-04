@@ -26,6 +26,30 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
+    // Site-launch signups get an immediate confirmation email via Resend,
+    // on top of the normal notified_at flow. Best-effort — a failed send
+    // shouldn't fail the signup itself.
+    if (productId === "site-launch" && process.env.RESEND_API_KEY) {
+      try {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            // TODO: replace with your verified Resend sending domain/address.
+            from: "AI Digital Products <hello@aidigitalproducts.com>",
+            to: email.toLowerCase().trim(),
+            subject: "You're on the list",
+            html: `<p>Thanks for signing up — we'll email you the moment AI Digital Products launches.</p>`,
+          }),
+        });
+      } catch (err) {
+        console.error("[notify] resend error", err);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[notify]", err);
