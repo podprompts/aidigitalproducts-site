@@ -15,5 +15,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
 
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+
+  // Set an httpOnly cookie so middleware can recognize the admin session
+  // server-side. This is separate from the localStorage token your admin
+  // UI already uses for x-admin-key — that stays unchanged.
+  res.cookies.set("admin_session", password, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+
+  return res;
 }

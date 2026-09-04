@@ -63,6 +63,10 @@ export default function AdminShell({ title, children }: Props) {
   }
 
   function logout() {
+    // Clears the httpOnly admin_session cookie server-side (can't be
+    // cleared from client JS directly) so maintenance mode kicks back
+    // in for you on every route, not just /admin.
+    fetch("/api/admin/logout", { method: "POST" }).catch(() => {});
     localStorage.removeItem("admin_auth");
     setToken(null);
   }
