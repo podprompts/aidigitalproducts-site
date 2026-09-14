@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
             from: "AI Digital Products <hello@aidigitalproducts.com>",
             to: email.toLowerCase().trim(),
             subject: "You're on the list",
-            html: `<p>Thanks for signing up — we'll email you the moment AI Digital Products launches.</p>`,
+            html: `<p>Thanks for signing up — we'll email you the moment AI Digital Products launches.</p><p>— Adrien</p>`,
           }),
         });
       } catch (err) {
