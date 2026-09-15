@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, productId } = await req.json();
+    const { email, productId, interest } = await req.json();
 
     if (!email || !productId) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
         product_id: productId,
         deals_list: true,
         notified_at: null,
+        ...(interest ? { interest } : {}),
       },
       { onConflict: "email,product_id" }
     );

@@ -112,9 +112,39 @@
   /* Email capture */
   form.capture{
     display:flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
     max-width: 440px;
     margin-bottom: 14px;
+  }
+  .capture-row{
+    display:flex;
+    gap: 10px;
+  }
+  select.interest{
+    width: 100%;
+    background: rgba(255,255,255,0.04) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>") no-repeat right 14px center;
+    background-size: 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 40px 13px 16px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    color: var(--ink);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .2s ease, background-color .2s ease;
+  }
+  select.interest:invalid{ color: rgba(255,255,255,0.55); }
+  select.interest option{ background: var(--bg-alt); color: var(--ink); }
+  select.interest:focus-visible{
+    border-color: var(--ink);
+    background-color: rgba(255,255,255,0.06);
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
   }
   form.capture input[type="email"]{
     flex:1;
@@ -255,7 +285,7 @@
   @media (max-width: 560px){
     .wrap{ padding: 24px 20px 28px; }
     nav{ padding-bottom: 40px; }
-    form.capture{ flex-direction: column; }
+    .capture-row{ flex-direction: column; }
     form.capture button{ width: 100%; }
     .countdown{
       gap: 14px;
@@ -286,9 +316,21 @@
       <p class="sub">AI-built workflows, operating systems, and outcome-ready setups — install them and get the result, not another prompt to write. Launching soon.</p>
 
       <form class="capture" id="captureForm">
-        <label for="email" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
-        <input type="email" id="email" name="email" placeholder="you@email.com" required autocomplete="email">
-        <button type="submit">Notify me first</button>
+        <label for="interest" class="visually-hidden" style="position:absolute;left:-9999px;">What are you most interested in?</label>
+        <select id="interest" name="interest" class="interest" required defaultValue="">
+          <option value="" disabled selected hidden>What are you most interested in?</option>
+          <option value="prompt_templates">Prompt packs &amp; templates</option>
+          <option value="tools_apps">AI tools &amp; mini-apps</option>
+          <option value="agents_workflows">AI agents / workflows</option>
+          <option value="guides_howto">Guides &amp; how-to content</option>
+          <option value="dfy_plr">Done-for-you / PLR (resell rights)</option>
+          <option value="not_sure">Not sure yet / just curious</option>
+        </select>
+        <div class="capture-row">
+          <label for="email" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
+          <input type="email" id="email" name="email" placeholder="you@email.com" required autocomplete="email">
+          <button type="submit">Notify me first</button>
+        </div>
       </form>
       <p class="capture-note" id="captureNote">No spam — just a heads up when we open the doors.</p>
 
@@ -378,7 +420,8 @@
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
-    if (!email) return;
+    const interest = document.getElementById('interest').value;
+    if (!email || !interest) return;
 
     const button = form.querySelector('button');
     button.disabled = true;
@@ -389,12 +432,12 @@
       const res = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, productId: 'site-launch' })
+        body: JSON.stringify({ email, productId: 'site-launch', interest })
       });
 
       if (!res.ok) throw new Error('Signup failed');
 
-      note.textContent = "You're on the list! — Please check your spam or junk folder.";
+      note.textContent = "You're on the list — we'll email you at launch.";
       note.classList.add('success');
       form.reset();
     } catch (err) {
