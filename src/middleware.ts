@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/coming-soon.html') {
+  if (pathname === '/make-offer.html') {
     return NextResponse.next();
   }
 
@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
   }
 
   const url = request.nextUrl.clone();
-  url.pathname = '/coming-soon.html';
+  url.pathname = '/make-offer.html';
   return NextResponse.rewrite(url);
 }
 
@@ -41,9 +41,9 @@ export const config = {
   //                        login route itself, so you can always log in)
   // - /admin              (the admin UI itself always loads, so the
   //                        login screen and dashboard are always reachable)
-  // - /coming-soon.html   (the page itself, so it doesn't rewrite in a loop)
+  // - /make-offer.html    (the page itself, so it doesn't rewrite in a loop)
   // - favicon.ico and common static asset extensions
   matcher: [
-    '/((?!_next/|api/|admin|coming-soon\\.html|favicon\\.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$).*)',
+    '/((?!_next/|api/|admin|make-offer\\.html|favicon\\.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$).*)',
   ],
 };
