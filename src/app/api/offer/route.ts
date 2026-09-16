@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     // throttling middleware elsewhere in the app, this route benefits
     // from it automatically since it's just another API route.
 
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "AiDigitalProducts.com <offers@aidigitalproducts.com>", // must be a verified sending domain in Resend
       to: OFFER_NOTIFY_EMAIL,
       replyTo: email,
@@ -50,7 +50,15 @@ export async function POST(req: NextRequest) {
       ].join("\n"),
     });
 
-    return NextResponse.json({ ok: true });
+    if (error) {
+      // This is the case that was silently slipping through before:
+      // Resend accepted the request but rejected the send itself
+      // (most commonly an unverified sending domain).
+      console.error("Resend rejected the send:", error);
+      return NextResponse.json({ error: "Email send failed" }, { status: 502 });
+    }
+
+    return NextResponse.json({ ok: true, id: data?.id });
   } catch (err) {
     console.error("Offer submission failed:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
