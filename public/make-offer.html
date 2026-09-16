@@ -25,9 +25,11 @@
     --teal: #3f7d69;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
   body {
     margin: 0;
+    max-width: 100vw;
+    overflow-x: hidden;
     background: var(--ink);
     color: var(--ink-text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -64,11 +66,14 @@
   h1.wordmark {
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 400;
-    font-size: clamp(38px, 8vw, 74px);
+    font-size: clamp(24px, 7vw, 74px);
     line-height: 1;
     letter-spacing: -0.01em;
     margin: 0 0 18px;
     opacity: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
     animation: rise 900ms 150ms cubic-bezier(.2,.7,.3,1) forwards;
   }
   h1.wordmark .tld {
@@ -444,9 +449,9 @@
       </div>
 
       <div class="field amount-field">
-        <label for="amount">Your offer</label>
+        <label for="amount">Your offer (USD only)</label>
         <span class="cur">$</span>
-        <input id="amount" name="amount" type="text" inputmode="numeric" placeholder="1,000,000" required>
+        <input id="amount" name="amount" type="text" inputmode="numeric" required>
       </div>
 
       <div class="field">
