@@ -331,6 +331,28 @@
     font-size: 22px;
     padding-left: 22px;
   }
+  .agree-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 8px 0 22px;
+  }
+  .agree-field input[type="checkbox"] {
+    width: auto;
+    margin-top: 3px;
+    accent-color: var(--brass-deep);
+    flex-shrink: 0;
+  }
+  .agree-field label {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--paper-dim);
+    line-height: 1.5;
+  }
+  .agree-field a {
+    color: var(--paper-text);
+    text-decoration: underline;
+  }
   button {
     margin-top: 8px;
     background: var(--brass);
@@ -460,6 +482,12 @@
       </div>
 
       <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off">
+
+      <div class="agree-field">
+        <input type="checkbox" id="agree" name="agree" required>
+        <label for="agree">I understand this is a non-binding offer, not an accepted agreement,
+        and is subject to the <a href="/terms.html" target="_blank" rel="noopener">offer terms</a>.</label>
+      </div>
 
       <button type="submit" id="submit-btn">Submit offer</button>
       <div class="status" id="status"></div>

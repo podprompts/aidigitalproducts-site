@@ -15,7 +15,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, amount, message, company } = body ?? {};
+    const { name, email, amount, message, company, agree } = body ?? {};
 
     // Honeypot: bots fill hidden fields. Pretend success, send nothing.
     if (company) {
@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
     if (
       typeof name !== "string" || !name.trim() ||
       typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
-      typeof amount !== "string" || !amount.trim()
+      typeof amount !== "string" || !amount.trim() ||
+      agree !== true && agree !== "on" && agree !== "true"
     ) {
       return NextResponse.json({ error: "Invalid submission" }, { status: 400 });
     }

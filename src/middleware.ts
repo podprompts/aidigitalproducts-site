@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/make-offer.html') {
+  if (pathname === '/make-offer.html' || pathname === '/terms.html') {
     return NextResponse.next();
   }
 
@@ -42,8 +42,9 @@ export const config = {
   // - /admin              (the admin UI itself always loads, so the
   //                        login screen and dashboard are always reachable)
   // - /make-offer.html    (the page itself, so it doesn't rewrite in a loop)
+  // - /terms.html         (linked from the offer form, must load directly)
   // - favicon.ico and common static asset extensions
   matcher: [
-    '/((?!_next/|api/|admin|make-offer\\.html|favicon\\.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$).*)',
+    '/((?!_next/|api/|admin|make-offer\\.html|terms\\.html|favicon\\.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$).*)',
   ],
 };
