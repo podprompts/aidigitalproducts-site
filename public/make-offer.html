@@ -118,6 +118,16 @@
     line-height: 1.4;
     color: var(--ink-dim);
   }
+  .tick .lbl a {
+    color: var(--ink-dim);
+    text-decoration: underline;
+    text-decoration-color: var(--hairline);
+    text-underline-offset: 2px;
+  }
+  .tick .lbl a:hover {
+    color: var(--brass);
+    text-decoration-color: var(--brass);
+  }
   @media (max-width: 640px) {
     .ticker-inner { grid-template-columns: repeat(2, 1fr); }
     .tick:nth-child(3) { border-left: none; }
@@ -363,7 +373,7 @@
   <div class="ticker-inner">
     <div class="tick">
       <div class="num serif">$390B → $3.5T</div>
-      <div class="lbl">Global AI market, 2025 to a 2033 projection (Grand View Research)</div>
+      <div class="lbl">Global AI market, 2025 to a 2033 projection (<a href="https://www.grandviewresearch.com/industry-analysis/artificial-intelligence-ai-market" target="_blank" rel="noopener">Grand View Research</a>)</div>
     </div>
     <div class="tick">
       <div class="num serif">~30%/yr</div>
@@ -371,7 +381,7 @@
     </div>
     <div class="tick">
       <div class="num serif">$124B → $511B</div>
-      <div class="lbl">Global digital goods market, 2025 to a 2031 projection (Mordor Intelligence)</div>
+      <div class="lbl">Global digital goods market, 2025 to a 2031 projection (<a href="https://www.mordorintelligence.com/industry-reports/digital-goods-market" target="_blank" rel="noopener">Mordor Intelligence</a>)</div>
     </div>
     <div class="tick">
       <div class="num serif">One name</div>
@@ -405,7 +415,7 @@
 </div>
 
 <div class="quote wrap">
-  <p>Many domain names require context before they make sense. This one doesn't.</p>
+  <p>Exact-match names like this rarely return to market. Once it's claimed, it's claimed for good.</p>
   <div class="brass-rule"></div>
 </div>
 
