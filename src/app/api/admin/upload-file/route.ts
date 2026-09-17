@@ -19,8 +19,6 @@ export async function POST(req: NextRequest) {
   const fileName = `${Date.now()}.${ext}`;
   const path     = `products/${productId}/${fileName}`;
 
-  console.log("[upload-file] DIAGNOSTIC — productId:", productId, "| path:", path);
-
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error } = await supabaseAdmin.storage
@@ -50,8 +48,6 @@ export async function POST(req: NextRequest) {
     console.error("[upload-file] failed to update product row", updateError);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
-
-  console.log("[upload-file] DIAGNOSTIC — updateData:", JSON.stringify(updateData));
 
   if (!updateData || updateData.length === 0) {
     console.error("[upload-file] update matched zero rows for productId:", productId);
