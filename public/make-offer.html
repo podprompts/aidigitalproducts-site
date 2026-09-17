@@ -491,7 +491,7 @@
       <div class="field amount-field">
         <label for="amount">Your offer (USD only)</label>
         <span class="cur">$</span>
-        <input id="amount" name="amount" type="text" inputmode="numeric" required>
+        <input id="amount" name="amount" type="text" inputmode="decimal" required>
       </div>
 
       <div class="field">
@@ -519,6 +519,42 @@
   const form = document.getElementById('offer-form');
   const btn = document.getElementById('submit-btn');
   const status = document.getElementById('status');
+  const amountInput = document.getElementById('amount');
+
+  // Format the offer amount with commas as the person types, e.g. 600000 -> 600,000,
+  // and support cents, e.g. 600000.5 -> 600,000.5
+  function formatAmount(raw) {
+    // Keep only digits and dots
+    let cleaned = raw.replace(/[^\d.]/g, '');
+
+    // Allow only the first decimal point typed; drop any extras
+    const firstDot = cleaned.indexOf('.');
+    if (firstDot !== -1) {
+      cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
+    }
+
+    let [intPart, decPart] = cleaned.split('.');
+    intPart = (intPart || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    if (decPart !== undefined) {
+      decPart = decPart.slice(0, 2); // limit to cents
+      return intPart + '.' + decPart;
+    }
+    return intPart;
+  }
+
+  amountInput.addEventListener('input', (e) => {
+    const input = e.target;
+    const prevLength = input.value.length;
+    const cursorFromEnd = prevLength - input.selectionStart;
+
+    input.value = formatAmount(input.value);
+
+    // Keep the cursor roughly where the person was typing, adjusted for
+    // any comma that was just added or removed by the reformat.
+    const newPos = Math.max(0, input.value.length - cursorFromEnd);
+    input.setSelectionRange(newPos, newPos);
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
