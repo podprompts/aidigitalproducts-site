@@ -36,6 +36,12 @@ function EditProductContent({ id }: { id: string }) {
           regular_price:    product.regular_price_cents ? (product.regular_price_cents / 100).toFixed(2) : "",
           sale_stripe_price_id:    product.sale_stripe_price_id ?? "",
           regular_stripe_price_id: product.regular_stripe_price_id ?? "",
+          // PLR fields — new. Without these, the form always fell back to its
+          // blank defaults on every page load, silently clearing PLR settings
+          // the next time the product was saved.
+          plr_price:            product.plr_price_cents ? (product.plr_price_cents / 100).toFixed(2) : "",
+          plr_stripe_price_id:  product.plr_stripe_price_id ?? "",
+          is_plr_available:     product.is_plr_available ?? false,
           seller:           product.seller ?? "",
           features:         Array.isArray(product.features) ? product.features.join("\n") : (product.features ?? ""),
           status:           product.status ?? "active",
@@ -44,6 +50,9 @@ function EditProductContent({ id }: { id: string }) {
           is_not_ai:        product.is_not_ai   ?? false,
           thumbnail_url:    product.thumbnail_url ?? "",
           video_url:        product.video_url ?? "",
+          // Was also missing — this is why the "Current: filename" indicator
+          // never showed under Download File on this page.
+          download_file_url: product.download_file_url ?? "",
           attributes:       (product.attributes as Record<string, unknown>) ?? {},
         });
 
