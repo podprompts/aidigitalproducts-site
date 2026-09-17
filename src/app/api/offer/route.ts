@@ -15,10 +15,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, amount, message, company, agree } = body ?? {};
+    const { name, email, amount, message, hp_field_9x2q, agree } = body ?? {};
 
     // Honeypot: bots fill hidden fields. Pretend success, send nothing.
-    if (company) {
+    if (hp_field_9x2q) {
       return NextResponse.json({ ok: true });
     }
 

@@ -499,7 +499,7 @@
         <textarea id="message" name="message" placeholder="Intended use, timeline, or relevant background."></textarea>
       </div>
 
-      <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off">
+      <input class="hp" type="text" name="hp_field_9x2q" tabindex="-1" autocomplete="off">
 
       <div class="agree-field">
         <input type="checkbox" id="agree" name="agree" required>
@@ -563,7 +563,7 @@
 
     const data = Object.fromEntries(new FormData(form).entries());
 
-    if (data.company) {
+    if (data.hp_field_9x2q) {
       status.textContent = "Thanks — your offer has been submitted.";
       status.className = 'status show ok';
       form.reset();
