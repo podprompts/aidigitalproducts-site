@@ -76,7 +76,11 @@ export async function GET(
       return NextResponse.json({ error: "File not available" }, { status: 500 });
     }
 
-    const fileName = (product.download_url as string).split("/").pop() ?? "download.zip";
+    const ext = (product.download_url as string).split(".").pop() || "zip";
+    const safeName = (product.name as string || "download")
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-+|-+$/g, "");
+    const fileName = `${safeName}.${ext}`;
     return new NextResponse(fileData, {
       headers: {
         "Content-Type": "application/octet-stream",
