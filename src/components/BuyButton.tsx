@@ -10,6 +10,8 @@ interface BuyButtonProps {
   productName?: string;
   /** Price in dollars, e.g. 29.99 */
   productPrice?: number;
+  /** Which license this purchase is for — defaults to "personal" server-side if omitted */
+  licenseType?: "personal" | "plr";
   label?: string;
   className?: string;
 }
@@ -19,6 +21,7 @@ export default function BuyButton({
   productId,
   productName,
   productPrice,
+  licenseType,
   label = "Buy Now",
   className = "btn btn-primary",
 }: BuyButtonProps) {
@@ -33,7 +36,7 @@ export default function BuyButton({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId, productId, productName, productPrice }),
+        body: JSON.stringify({ priceId, productId, productName, productPrice, licenseType }),
       });
       const data = await res.json();
 

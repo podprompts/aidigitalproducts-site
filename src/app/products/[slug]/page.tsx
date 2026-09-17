@@ -48,10 +48,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const mockMatch = mockProducts.find((p) => p.slug === slug);
 
-  // Always fetch live Supabase data to get purchases, flags (and future rating/reviewCount)
+  // Always fetch live Supabase data to get purchases, flags, and PLR fields
   const { data: dbProduct } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, is_active, purchases, is_favorite, is_featured, is_not_ai")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, is_active, purchases, is_favorite, is_featured, is_not_ai")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
@@ -60,13 +60,16 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (mockMatch && dbProduct) {
     // Merge: mock is source of truth for priceId/regularPriceId/features,
-    // Supabase is source of truth for purchases, flags (and future rating/reviewCount)
+    // Supabase is source of truth for purchases, flags, and PLR pricing
     product = {
       ...mockMatch,
       purchases: dbProduct.purchases ?? 0,
       isFavorite: dbProduct.is_favorite ?? false,
       isFeatured: dbProduct.is_featured ?? false,
       isNotAi: dbProduct.is_not_ai ?? false,
+      plrPrice: dbProduct.plr_price_cents ? dbProduct.plr_price_cents / 100 : undefined,
+      plrPriceId: dbProduct.plr_stripe_price_id ?? undefined,
+      isPlrAvailable: dbProduct.is_plr_available ?? false,
     };
   } else if (mockMatch) {
     product = { ...mockMatch, purchases: 0 };
@@ -82,6 +85,9 @@ export default async function ProductDetailPage({ params }: Props) {
       seller: "AI Digital Products",
       priceId: dbProduct.sale_stripe_price_id ?? undefined,
       regularPriceId: dbProduct.regular_stripe_price_id ?? undefined,
+      plrPrice: dbProduct.plr_price_cents ? dbProduct.plr_price_cents / 100 : undefined,
+      plrPriceId: dbProduct.plr_stripe_price_id ?? undefined,
+      isPlrAvailable: dbProduct.is_plr_available ?? false,
       thumbnailUrl: undefined,
       purchases: dbProduct.purchases ?? 0,
       isFavorite: dbProduct.is_favorite ?? false,
@@ -384,6 +390,9 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                     rating={product.rating}
                     reviewCount={product.reviewCount}
                     purchases={product.purchases}
+                    plrPrice={product.plrPrice}
+                    plrPriceId={product.plrPriceId}
+                    isPlrAvailable={product.isPlrAvailable}
                   />
                 )}
 

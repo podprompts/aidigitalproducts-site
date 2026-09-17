@@ -46,6 +46,8 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const productId = session.metadata?.productId ?? null;
+    const licenseType: "personal" | "plr" =
+      session.metadata?.licenseType === "plr" ? "plr" : "personal";
 
     const { data: order, error } = await supabaseAdmin.from("orders").insert({
       stripe_checkout_session_id: session.id,
@@ -53,7 +55,8 @@ export async function POST(req: NextRequest) {
       amount_cents: session.amount_total,
       currency: session.currency,
       status: session.payment_status,
-      metadata: { product_id: productId },
+      license_type: licenseType,
+      metadata: { product_id: productId, license_type: licenseType },
     }).select("id").single();
 
     if (error) {
@@ -117,6 +120,8 @@ export async function POST(req: NextRequest) {
                 }))
               : [{ file_name: product?.name ?? "Your product", url: downloadUrl }];
 
+          // NOTE: sendOrderConfirmation needs to accept and render these two new
+          // fields — see the follow-up note about src/lib/email.ts below.
           sendOrderConfirmation({
             toEmail:      customerEmail,
             toName:       customerName,
@@ -125,6 +130,8 @@ export async function POST(req: NextRequest) {
             currency:     session.currency ?? "usd",
             downloadFiles,
             orderId:      order.id,
+            licenseType,
+            licenseUrl: licenseType === "plr" ? `${siteUrl}/plr-license` : undefined,
           }).catch((err) => {
             console.error("[webhook] failed to send confirmation email", err);
           });

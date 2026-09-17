@@ -17,6 +17,10 @@ interface Props {
   rating?: number;
   reviewCount?: number;
   purchases?: number;
+  // PLR fields — new
+  plrPrice?: number;
+  plrPriceId?: string;
+  isPlrAvailable?: boolean;
 }
 
 interface TimerState {
@@ -24,9 +28,11 @@ interface TimerState {
   expiresAt: string | null;
 }
 
-function broadcastPrice(price: number, priceId: string | undefined) {
+type LicenseType = "personal" | "plr";
+
+function broadcastPrice(price: number, priceId: string | undefined, licenseType: LicenseType) {
   window.dispatchEvent(
-    new CustomEvent("activePriceChange", { detail: { price, priceId } })
+    new CustomEvent("activePriceChange", { detail: { price, priceId, licenseType } })
   );
 }
 
@@ -41,10 +47,15 @@ export default function PriceAndBuySection({
   rating,
   reviewCount,
   purchases,
+  plrPrice,
+  plrPriceId,
+  isPlrAvailable,
 }: Props) {
   const hasSale = !!(regularPrice && salePriceId && regularPriceId);
+  const plrAvailable = !!(isPlrAvailable && plrPriceId && plrPrice);
 
   const [timerState, setTimerState] = useState<TimerState | null>(null);
+  const [licenseType, setLicenseType] = useState<LicenseType>("personal");
 
   useEffect(() => {
     if (!hasSale) {
@@ -64,14 +75,28 @@ export default function PriceAndBuySection({
       });
   }, [productId, hasSale]);
 
-  const saleActive    = timerState?.saleActive ?? false;
-  const activePriceId = hasSale && !saleActive ? regularPriceId : salePriceId;
-  const activePrice   = hasSale && !saleActive ? regularPrice!  : salePrice;
+  const saleActive = timerState?.saleActive ?? false;
+
+  // PLR is a fixed price tier — it never participates in the countdown/urgency
+  // system. Personal-license pricing keeps all existing sale/regular behavior.
+  const activePriceId =
+    licenseType === "plr"
+      ? plrPriceId
+      : hasSale && !saleActive
+      ? regularPriceId
+      : salePriceId;
+
+  const activePrice =
+    licenseType === "plr"
+      ? plrPrice!
+      : hasSale && !saleActive
+      ? regularPrice!
+      : salePrice;
 
   useEffect(() => {
     if (timerState === null) return;
-    broadcastPrice(activePrice, activePriceId);
-  }, [activePrice, activePriceId, timerState]);
+    broadcastPrice(activePrice, activePriceId, licenseType);
+  }, [activePrice, activePriceId, licenseType, timerState]);
 
   return (
     <>
@@ -84,6 +109,50 @@ export default function PriceAndBuySection({
           purchases={purchases}
         />
       </div>
+
+      {/* ── License toggle — only shown when this product offers PLR ── */}
+      {plrAvailable && (
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            marginTop: "16px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLicenseType("personal")}
+            style={{
+              flex: 1,
+              padding: "10px 14px",
+              fontSize: "13px",
+              fontWeight: 700,
+              border: `1px solid ${licenseType === "personal" ? "var(--ink)" : "var(--ink-faded)"}`,
+              background: licenseType === "personal" ? "var(--ink)" : "transparent",
+              color: licenseType === "personal" ? "#fff" : "var(--ink-faded)",
+              cursor: "pointer",
+            }}
+          >
+            Personal License
+          </button>
+          <button
+            type="button"
+            onClick={() => setLicenseType("plr")}
+            style={{
+              flex: 1,
+              padding: "10px 14px",
+              fontSize: "13px",
+              fontWeight: 700,
+              border: `1px solid ${licenseType === "plr" ? "var(--ink)" : "var(--ink-faded)"}`,
+              background: licenseType === "plr" ? "var(--ink)" : "transparent",
+              color: licenseType === "plr" ? "#fff" : "var(--ink-faded)",
+              cursor: "pointer",
+            }}
+          >
+            PLR License
+          </button>
+        </div>
+      )}
 
       {/* ── Price block ── */}
       <div style={{ marginTop: "12px" }}>
@@ -98,6 +167,18 @@ export default function PriceAndBuySection({
             }}
           >
             —
+          </div>
+        ) : licenseType === "plr" ? (
+          <div
+            style={{
+              fontSize: "48px",
+              fontWeight: 800,
+              letterSpacing: "-0.04em",
+              color: "var(--ink)",
+              lineHeight: 1,
+            }}
+          >
+            ${plrPrice!.toFixed(2)}
           </div>
         ) : hasSale ? (
           <>
@@ -157,8 +238,8 @@ export default function PriceAndBuySection({
         )}
       </div>
 
-      {/* ── Urgency bar — only on purchasable products ── */}
-      {timerState !== null && activePriceId && (
+      {/* ── Urgency bar — personal-license only; PLR is a fixed price, no urgency mechanic ── */}
+      {timerState !== null && activePriceId && licenseType === "personal" && (
         <UrgencyBar
           productId={productId}
           salePrice={salePrice}
@@ -180,6 +261,22 @@ export default function PriceAndBuySection({
         {description}
       </p>
 
+      {licenseType === "plr" && (
+        <p
+          style={{
+            marginTop: "8px",
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "var(--ink-faded)",
+          }}
+        >
+          Includes PLR rights — rebrand and resell as your own.{" "}
+          <a href="/plr-license" style={{ textDecoration: "underline" }}>
+            View license terms
+          </a>
+        </p>
+      )}
+
       {/* ── Buy button ── */}
       <div
         style={{
@@ -191,12 +288,19 @@ export default function PriceAndBuySection({
         }}
       >
         {timerState === null ? null : activePriceId ? (
+          // NOTE: BuyButton needs to accept a `licenseType` prop and include it
+          // in the POST body it sends to /api/checkout — see follow-up note.
           <BuyButton
             priceId={activePriceId}
             productId={productId}
             productName={productName}
             productPrice={activePrice}
-            label={`Buy Now — $${activePrice.toFixed(2)}`}
+            licenseType={licenseType}
+            label={
+              licenseType === "plr"
+                ? `Buy PLR License — $${activePrice.toFixed(2)}`
+                : `Buy Now — $${activePrice.toFixed(2)}`
+            }
           />
         ) : (
           <span

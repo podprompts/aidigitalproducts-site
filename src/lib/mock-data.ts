@@ -12,6 +12,12 @@ export interface Product {
   regularPrice?: number;
   /** Stripe Price ID used after the countdown timer expires */
   regularPriceId?: string;
+  /** PLR license price in dollars — present means this product offers a PLR license */
+  plrPrice?: number;
+  /** Stripe Price ID for the PLR license tier */
+  plrPriceId?: string;
+  /** Whether this product currently offers a PLR license option at all */
+  isPlrAvailable?: boolean;
   /** Thumbnail image URL — Supabase Storage or any allowed remote */
   thumbnailUrl?: string;
   /** Preview video URL — mp4, plays silently on card hover */

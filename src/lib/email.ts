@@ -17,6 +17,8 @@ export interface OrderEmailData {
   downloadUrl?: string;                                        // legacy single-file fallback
   downloadFiles?: { file_name: string; url: string }[];      // multi-file (new)
   orderId: string;
+  licenseType?: "personal" | "plr";
+  licenseUrl?: string;
 }
 
 function formatCurrency(cents: number, currency: string): string {
@@ -47,6 +49,16 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
     data.downloadFiles && data.downloadFiles.length > 1
       ? `${data.downloadFiles.length} files included`
       : "1 file included";
+
+  const plrNotice =
+    data.licenseType === "plr"
+      ? `
+        <div style="background:#fdf6e3; border:1px solid #eadfb4; border-radius:4px; padding:16px 20px; margin:24px 0; font-size:13px; color:#6b5d1e; line-height:1.6;">
+          <strong>This purchase includes a PLR (resale) license.</strong> You're free to rebrand and resell this product as your own.
+          See the <a href="${data.licenseUrl}" style="color:#6b5d1e; text-decoration:underline;">full license terms</a> for what's included and what's restricted.
+        </div>
+      `
+      : "";
 
   return `
 <!DOCTYPE html>
@@ -110,6 +122,8 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
 </div>
         </div>
 
+        ${plrNotice}
+
         <div class="download-section">
           ${downloadButtons}
           <p class="download-note">
@@ -154,6 +168,11 @@ function buildOrderConfirmationText(data: OrderEmailData): string {
           .join("\n\n")
       : data.downloadUrl;
 
+  const plrNoticeText =
+    data.licenseType === "plr"
+      ? `\nTHIS PURCHASE INCLUDES A PLR (RESALE) LICENSE\nFull terms: ${data.licenseUrl}\n`
+      : "";
+
  return `
 ${greeting}
 
@@ -165,7 +184,7 @@ ORDER SUMMARY
 ─────────────
 Product: ${productName}
 Amount:  ${amount}
-
+${plrNoticeText}
 YOUR DOWNLOAD LINKS
 ───────────────────
 ${linksText}
@@ -179,12 +198,12 @@ Questions? Reply to this email or contact support@aidigitalproducts.com.
 }
 
 export async function sendOrderConfirmation(data: OrderEmailData): Promise<void> {
-  const { toEmail, productName } = data;
+  const { toEmail, productName, licenseType } = data;
 
   await transporter.sendMail({
     from: `"AI Digital Products" <${process.env.GMAIL_USER}>`,
     to: toEmail,
-    subject: `Your order is ready: ${productName}`,
+    subject: `Your order is ready: ${productName}${licenseType === "plr" ? " (PLR License)" : ""}`,
     html: buildOrderConfirmationHtml(data),
     text: buildOrderConfirmationText(data),
   });

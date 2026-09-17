@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params;
+  const { token } = await params;
 
   // ── 1. Validate the token ──────────────────────────────────────────────────
   const { data: tokenRow, error: tokenError } = await supabaseAdmin

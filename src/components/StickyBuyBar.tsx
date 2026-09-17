@@ -10,6 +10,8 @@ interface StickyBuyBarProps {
   productName?: string;
 }
 
+type LicenseType = "personal" | "plr";
+
 export default function StickyBuyBar({ price, priceId, productId, productName }: StickyBuyBarProps) {
   const [visible, setVisible] = useState(false);
 
@@ -18,6 +20,7 @@ export default function StickyBuyBar({ price, priceId, productId, productName }:
   // the timer resolves, and we update from there.
   const [activePrice, setActivePrice] = useState(price);
   const [activePriceId, setActivePriceId] = useState(priceId);
+  const [licenseType, setLicenseType] = useState<LicenseType>("personal");
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 400);
@@ -25,12 +28,16 @@ export default function StickyBuyBar({ price, priceId, productId, productName }:
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Listen for price changes broadcast by PriceAndBuySection
+  // Listen for price + license changes broadcast by PriceAndBuySection
   useEffect(() => {
     const handler = (e: Event) => {
-      const { price: newPrice, priceId: newPriceId } = (e as CustomEvent).detail;
+      const { price: newPrice, priceId: newPriceId, licenseType: newLicenseType } =
+        (e as CustomEvent).detail;
       setActivePrice(newPrice);
       setActivePriceId(newPriceId);
+      if (newLicenseType === "plr" || newLicenseType === "personal") {
+        setLicenseType(newLicenseType);
+      }
     };
     window.addEventListener("activePriceChange", handler);
     return () => window.removeEventListener("activePriceChange", handler);
@@ -55,7 +62,8 @@ export default function StickyBuyBar({ price, priceId, productId, productName }:
           productId={productId}
           productName={productName}
           productPrice={activePrice}
-          label="Buy Now"
+          licenseType={licenseType}
+          label={licenseType === "plr" ? "Buy PLR License" : "Buy Now"}
           className="btn btn-primary"
         />
       ) : (

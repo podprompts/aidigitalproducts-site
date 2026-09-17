@@ -18,10 +18,15 @@ async function getDbPriceIds(productId: string): Promise<{
   regularPriceId: string | null;
   salePriceDollars: number | null;
   regularPriceDollars: number | null;
+  plrPriceId: string | null;
+  plrPriceDollars: number | null;
+  plrAvailable: boolean;
 }> {
   const { data } = await supabaseAdmin
     .from("products")
-    .select("sale_stripe_price_id, regular_stripe_price_id, sale_price_cents, regular_price_cents")
+    .select(
+      "sale_stripe_price_id, regular_stripe_price_id, sale_price_cents, regular_price_cents, plr_stripe_price_id, plr_price_cents, is_plr_available"
+    )
     .eq("id", productId)
     .single();
 
@@ -30,6 +35,9 @@ async function getDbPriceIds(productId: string): Promise<{
     regularPriceId:      data?.regular_stripe_price_id  ?? null,
     salePriceDollars:    data?.sale_price_cents    ? data.sale_price_cents / 100    : null,
     regularPriceDollars: data?.regular_price_cents ? data.regular_price_cents / 100 : null,
+    plrPriceId:          data?.plr_stripe_price_id ?? null,
+    plrPriceDollars:     data?.plr_price_cents ? data.plr_price_cents / 100 : null,
+    plrAvailable:        data?.is_plr_available ?? false,
   };
 }
 
@@ -97,17 +105,57 @@ async function resolvePrice(
   return { priceId: regularPriceId, priceInDollars: regularPriceDollars };
 }
 
+/**
+ * PLR pricing is a fixed tier — deliberately bypasses the countdown/urgency
+ * timer logic entirely. A resale license isn't the kind of purchase that
+ * should feel like an impulse-buy discount race; it's a flat, considered price.
+ */
+async function resolvePlrPrice(
+  productId: string
+): Promise<{ priceId: string | undefined; priceInDollars: number | undefined; available: boolean }> {
+  const db = await getDbPriceIds(productId);
+  return {
+    priceId: db.plrPriceId ?? undefined,
+    priceInDollars: db.plrPriceDollars ?? undefined,
+    available: db.plrAvailable && !!db.plrPriceId,
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { priceId: clientPriceId, productId, productName, productPrice } = body;
+    const {
+      priceId: clientPriceId,
+      productId,
+      productName,
+      productPrice,
+      licenseType, // "personal" (default) | "plr"
+    } = body;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const resolvedLicenseType: "personal" | "plr" = licenseType === "plr" ? "plr" : "personal";
 
-    // Resolve the correct price server-side when a productId is provided
-    const { priceId, priceInDollars } = productId
-      ? await resolvePrice(req, productId as string, clientPriceId as string)
-      : { priceId: clientPriceId as string | undefined, priceInDollars: Number(productPrice) };
+    let priceId: string | undefined;
+    let priceInDollars: number | undefined;
+
+    if (resolvedLicenseType === "plr" && productId) {
+      const plr = await resolvePlrPrice(productId as string);
+      if (!plr.available) {
+        return NextResponse.json(
+          { error: "A PLR license is not available for this product" },
+          { status: 400 }
+        );
+      }
+      priceId = plr.priceId;
+      priceInDollars = plr.priceInDollars;
+    } else if (productId) {
+      const resolved = await resolvePrice(req, productId as string, clientPriceId as string);
+      priceId = resolved.priceId;
+      priceInDollars = resolved.priceInDollars;
+    } else {
+      priceId = clientPriceId as string | undefined;
+      priceInDollars = Number(productPrice);
+    }
 
     const lineItems = priceId
       ? [{ price: priceId, quantity: 1 }]
@@ -118,7 +166,9 @@ export async function POST(req: NextRequest) {
               currency: "usd",
               unit_amount: Math.round(Number(priceInDollars ?? productPrice) * 100),
               product_data: {
-                name: (productName as string) ?? "Digital Product",
+                name:
+                  ((productName as string) ?? "Digital Product") +
+                  (resolvedLicenseType === "plr" ? " (PLR License)" : ""),
                 metadata: { productId: (productId as string) ?? "" },
               },
             },
@@ -130,7 +180,7 @@ export async function POST(req: NextRequest) {
       line_items: lineItems,
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${appUrl}/checkout/cancel`,
-      metadata:    { productId: productId ?? "" },
+      metadata:    { productId: productId ?? "", licenseType: resolvedLicenseType },
       automatic_tax: { enabled: false },
     });
 

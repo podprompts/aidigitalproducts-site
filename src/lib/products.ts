@@ -8,7 +8,7 @@ export const revalidate = 0;
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, description, thumbnail_url, video_url, is_active, is_favorite, is_featured, is_not_ai, created_at, updated_at, purchases")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, thumbnail_url, video_url, is_active, is_favorite, is_featured, is_not_ai, created_at, updated_at, purchases")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
@@ -27,6 +27,10 @@ async function getSupabaseProducts(): Promise<Product[]> {
     videoUrl: p.video_url ?? undefined,
     priceId: p.sale_stripe_price_id ?? undefined,
     regularPriceId: p.regular_stripe_price_id ?? undefined,
+    // PLR fields — see the Product type note below, these need to be added there too
+    plrPrice: p.plr_price_cents ? p.plr_price_cents / 100 : undefined,
+    plrPriceId: p.plr_stripe_price_id ?? undefined,
+    isPlrAvailable: p.is_plr_available ?? false,
     createdAt: p.created_at ?? undefined,
     updatedAt: p.updated_at ?? undefined,
     isFavorite: p.is_favorite ?? false,
