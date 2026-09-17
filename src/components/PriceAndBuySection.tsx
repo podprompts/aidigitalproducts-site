@@ -56,6 +56,7 @@ export default function PriceAndBuySection({
 
   const [timerState, setTimerState] = useState<TimerState | null>(null);
   const [licenseType, setLicenseType] = useState<LicenseType>("personal");
+  const [plrAgreed, setPlrAgreed] = useState(false);
 
   useEffect(() => {
     if (!hasSale) {
@@ -121,7 +122,7 @@ export default function PriceAndBuySection({
         >
           <button
             type="button"
-            onClick={() => setLicenseType("personal")}
+            onClick={() => { setLicenseType("personal"); setPlrAgreed(false); }}
             style={{
               flex: 1,
               padding: "10px 14px",
@@ -137,7 +138,7 @@ export default function PriceAndBuySection({
           </button>
           <button
             type="button"
-            onClick={() => setLicenseType("plr")}
+            onClick={() => { setLicenseType("plr"); setPlrAgreed(false); }}
             style={{
               flex: 1,
               padding: "10px 14px",
@@ -262,19 +263,39 @@ export default function PriceAndBuySection({
       </p>
 
       {licenseType === "plr" && (
-        <p
-          style={{
-            marginTop: "8px",
-            fontSize: "13px",
-            fontWeight: 500,
-            color: "var(--ink-faded)",
-          }}
-        >
-          Includes PLR rights — rebrand and resell as your own.{" "}
-          <a href="/plr-license" style={{ textDecoration: "underline" }}>
-            View license terms
-          </a>
-        </p>
+        <div style={{ marginTop: "8px" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--ink-faded)",
+              marginBottom: "10px",
+            }}
+          >
+            Includes PLR rights — rebrand and resell as your own.{" "}
+            <a href="/plr-license" style={{ textDecoration: "underline" }}>
+              View license terms
+            </a>
+          </p>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "8px",
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={plrAgreed}
+              onChange={(e) => setPlrAgreed(e.target.checked)}
+              style={{ marginTop: "3px", width: "15px", height: "15px", cursor: "pointer" }}
+            />
+            <span style={{ fontSize: "13px", color: "var(--ink-faded)" }}>
+              I have read and agree to the PLR license terms.
+            </span>
+          </label>
+        </div>
       )}
 
       {/* ── Buy button ── */}
@@ -288,20 +309,27 @@ export default function PriceAndBuySection({
         }}
       >
         {timerState === null ? null : activePriceId ? (
-          // NOTE: BuyButton needs to accept a `licenseType` prop and include it
-          // in the POST body it sends to /api/checkout — see follow-up note.
-          <BuyButton
-            priceId={activePriceId}
-            productId={productId}
-            productName={productName}
-            productPrice={activePrice}
-            licenseType={licenseType}
-            label={
-              licenseType === "plr"
-                ? `Buy PLR License — $${activePrice.toFixed(2)}`
-                : `Buy Now — $${activePrice.toFixed(2)}`
-            }
-          />
+          licenseType === "plr" && !plrAgreed ? (
+            <span
+              className="btn btn-primary"
+              style={{ opacity: 0.45, cursor: "not-allowed" }}
+            >
+              Check the box above to continue
+            </span>
+          ) : (
+            <BuyButton
+              priceId={activePriceId}
+              productId={productId}
+              productName={productName}
+              productPrice={activePrice}
+              licenseType={licenseType}
+              label={
+                licenseType === "plr"
+                  ? `Buy PLR License — $${activePrice.toFixed(2)}`
+                  : `Buy Now — $${activePrice.toFixed(2)}`
+              }
+            />
+          )
         ) : (
           <span
             className="btn btn-primary"
