@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAdmin, adminHeaders } from "@/app/admin/AdminContext";
 import ImageUploader, { type UIImage } from "./ImageUploader";
 import { mockCategories } from "@/lib/mock-data";
+import { supabase } from "@/lib/supabase/client";
  
 export interface AdminProductData {
   id?: string;
@@ -218,6 +219,43 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     return result;
   }
 
+  async function uploadDownloadFile(productId: string): Promise<void> {
+    if (!downloadFile) return;
+
+    // Step 1: get a Supabase signed upload URL/token
+    const presignRes = await fetch("/api/admin/upload-file/presign", {
+      method: "POST",
+      headers: adminHeaders(token),
+      body: JSON.stringify({ productId, fileName: downloadFile.name }),
+    });
+    if (!presignRes.ok) {
+      const err = await presignRes.json().catch(() => ({}));
+      throw new Error(err.error ?? "Failed to get upload URL");
+    }
+    const { token: uploadToken, path } = await presignRes.json();
+
+    // Step 2: upload the actual file bytes directly to Supabase Storage —
+    // this bypasses Vercel's serverless function body-size limit entirely,
+    // the same fix applied to video uploads. Supabase's signed-upload flow
+    // requires this specific SDK method (not a plain PUT) to set up the
+    // request correctly.
+    const { error: uploadError } = await supabase.storage
+      .from("product-files")
+      .uploadToSignedUrl(path, uploadToken, downloadFile);
+    if (uploadError) throw new Error(uploadError.message ?? "File upload to storage failed");
+
+    // Step 3: confirm — stamp download_url onto the product row
+    const confirmRes = await fetch("/api/admin/upload-file", {
+      method: "POST",
+      headers: adminHeaders(token),
+      body: JSON.stringify({ productId, path }),
+    });
+    if (!confirmRes.ok) {
+      const err = await confirmRes.json().catch(() => ({}));
+      throw new Error(err.error ?? "Failed to save file URL");
+    }
+  }
+
   async function uploadVideo(productId: string): Promise<void> {
     if (!videoFile) return;
 
@@ -356,20 +394,9 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         }
       }
  
-      // Upload download file
+      // Upload download file — direct to storage, bypassing Vercel's body-size limit
       if (downloadFile) {
-        const fd = new FormData();
-        fd.append("file", downloadFile);
-        fd.append("productId", productId);
-        const fileRes = await fetch("/api/admin/upload-file", {
-          method: "POST",
-          headers: { "x-admin-key": token },
-          body: fd,
-        });
-        if (!fileRes.ok) {
-          const err = await fileRes.json();
-          throw new Error(err.error ?? "File upload failed");
-        }
+        await uploadDownloadFile(productId);
       }
  
       setToast({ msg: isEdit ? "Product updated!" : "Product created!", ok: true });
