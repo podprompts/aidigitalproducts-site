@@ -48,15 +48,16 @@ export async function GET(
   }
 
   // ── 4. Fallback: legacy single-file products ───────────────────────────────
-  // If no product_files rows exist, fall back to the old products.file_path column.
+  // If no product_files rows exist, fall back to the old products.download_file_url column
+  // (this is the column upload-file/route.ts actually writes to).
   if (!productFiles || productFiles.length === 0) {
     const { data: product } = await supabaseAdmin
       .from("products")
-      .select("file_path, name")
+      .select("download_file_url, name")
       .eq("id", productId)
       .single();
 
-    if (!product?.file_path) {
+    if (!product?.download_file_url) {
       return NextResponse.json({ error: "No files found for this product" }, { status: 404 });
     }
 
@@ -68,14 +69,14 @@ export async function GET(
 
     const { data: fileData, error: storageError } = await supabaseAdmin.storage
       .from("product-files")
-      .download(product.file_path as string);
+      .download(product.download_file_url as string);
 
     if (storageError || !fileData) {
       console.error("[download] storage error (legacy)", storageError);
       return NextResponse.json({ error: "File not available" }, { status: 500 });
     }
 
-    const fileName = (product.file_path as string).split("/").pop() ?? "download.zip";
+    const fileName = (product.download_file_url as string).split("/").pop() ?? "download.zip";
     return new NextResponse(fileData, {
       headers: {
         "Content-Type": "application/octet-stream",

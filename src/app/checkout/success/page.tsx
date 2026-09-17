@@ -28,70 +28,89 @@ function formatBytes(bytes: number | null): string {
 function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId    = searchParams.get("session_id");
+  const directToken  = searchParams.get("token"); // present when arriving from the email link
 
   const [manifest,  setManifest]  = useState<DownloadManifest | null>(null);
-  const [polling,   setPolling]   = useState(!!sessionId);
+  const [polling,   setPolling]   = useState(!!sessionId || !!directToken);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const attempts = useRef(0);
 
+  // Shared logic: given a resolved token, fetch the manifest (or detect a
+  // direct binary stream for legacy single-file products) and update state.
+  async function loadManifestForToken(token: string): Promise<boolean> {
+    try {
+      const manifestRes = await fetch(`/api/download/${token}`);
+      const contentType = manifestRes.headers.get("content-type") ?? "";
+
+      if (!manifestRes.ok) {
+        // A real error (expired link, download limit reached, no files
+        // configured for this product, etc.) — surface it plainly instead
+        // of pretending a download exists.
+        let message = "Something went wrong loading your download.";
+        if (contentType.includes("application/json")) {
+          const body = await manifestRes.json().catch(() => null);
+          if (body?.error) message = body.error;
+        }
+        setLoadError(message);
+        return true;
+      }
+
+      if (contentType.includes("application/json")) {
+        const manifestData = await manifestRes.json();
+
+        if (manifestData.files) {
+          // Multi-file product: use the manifest as-is
+          setManifest(manifestData);
+        } else {
+          // Successful JSON response but no files array — unexpected shape.
+          // This should no longer be reachable now that error responses are
+          // handled above, but fail safe rather than assume it's fine.
+          setLoadError("Something went wrong loading your download.");
+        }
+      } else {
+        // Binary response = legacy single-file product streaming directly.
+        // Synthesize a 1-item manifest pointing back at the same token URL.
+        setManifest({
+          files: [{
+            index:     0,
+            file_name: "download.zip",
+            file_size: null,
+            url:       `/api/download/${token}`,
+          }],
+          expires_at:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          downloads_left: 5,
+        });
+      }
+      return true;
+    } catch {
+      return false; // transient/network error — caller may retry
+    }
+  }
+
+  // Path 1: arrived directly from the confirmation email (?token=...) —
+  // no session to verify, just load the manifest once.
+  useEffect(() => {
+    if (!directToken || sessionId) return;
+    loadManifestForToken(directToken).finally(() => setPolling(false));
+  }, [directToken, sessionId]);
+
+  // Path 2: arrived from Stripe's redirect (?session_id=...) — poll
+  // /api/checkout/verify until the webhook has created the token, then load it.
   useEffect(() => {
     if (!sessionId) return;
 
     const interval = setInterval(async () => {
       attempts.current += 1;
       try {
-        // Step 1: get the token from the verify endpoint
         const res  = await fetch(`/api/checkout/verify?session_id=${sessionId}`);
         const data = await res.json();
 
         if (data.token) {
-          // Step 2: fetch the file manifest from the download route
-          const manifestRes = await fetch(`/api/download/${data.token}`);
-
-          // FIX: Check Content-Type before parsing as JSON.
-          // Legacy single-file products stream binary directly (no product_files rows),
-          // so the response is octet-stream, not JSON. Calling .json() on binary
-          // throws silently and causes infinite polling until the 15-attempt timeout.
-          const contentType = manifestRes.headers.get("content-type") ?? "";
-
-          if (contentType.includes("application/json")) {
-            const manifestData = await manifestRes.json();
-
-            if (manifestData.files) {
-              // Multi-file product: use the manifest as-is
-              setManifest(manifestData);
-            } else {
-              // JSON response but no files array — unexpected shape, treat as legacy
-              setManifest({
-                files: [{
-                  index:     0,
-                  // FIX: use a meaningful name with .zip extension instead of bare "Download"
-                  // so the browser saves the file with the right type.
-                  file_name: "download.zip",
-                  file_size: null,
-                  url:       `/api/download/${data.token}`,
-                }],
-                expires_at:     manifestData.expires_at ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                downloads_left: manifestData.downloads_left ?? 5,
-              });
-            }
-          } else {
-            // FIX: Binary response = legacy single-file product streaming directly.
-            // Synthesize a 1-item manifest pointing back at the same token URL.
-            // The route will stream the file again when the user clicks the button.
-            setManifest({
-              files: [{
-                index:     0,
-                file_name: "download.zip",
-                file_size: null,
-                url:       `/api/download/${data.token}`,
-              }],
-              expires_at:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              downloads_left: 5,
-            });
+          const done = await loadManifestForToken(data.token);
+          if (done) {
+            setPolling(false);
+            clearInterval(interval);
           }
-
-          setPolling(false);
-          clearInterval(interval);
         }
       } catch {
         // ignore transient errors, keep polling
@@ -111,6 +130,8 @@ function SuccessContent() {
         month: "short", day: "numeric", year: "numeric",
       })
     : null;
+
+  const showDownloadArea = !!sessionId || !!directToken;
 
   return (
     <>
@@ -147,7 +168,7 @@ function SuccessContent() {
             </p>
 
             {/* Download area */}
-            {sessionId && (
+            {showDownloadArea && (
               <div style={{
                 marginTop: "40px",
                 padding: "28px 32px",
@@ -160,7 +181,17 @@ function SuccessContent() {
                 textAlign: "left",
                 boxSizing: "border-box",
               }}>
-                {manifest ? (
+                {loadError ? (
+                  <>
+                    <div style={{ fontSize: "13px", color: "#c0392b", fontWeight: 600 }}>
+                      {loadError}
+                    </div>
+                    <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--ink-mute)" }}>
+                      Check your confirmation email for your download link, or contact
+                      support if this keeps happening.
+                    </div>
+                  </>
+                ) : manifest ? (
                   <>
                     <div style={{
                       fontSize: "12px", color: "var(--ink-faded)", marginBottom: "20px",
