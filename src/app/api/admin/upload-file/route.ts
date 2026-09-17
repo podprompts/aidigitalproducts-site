@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
   const fileName = `${Date.now()}.${ext}`;
   const path     = `products/${productId}/${fileName}`;
 
+  console.log("[upload-file] DIAGNOSTIC — productId:", productId, "| path:", path);
+
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error } = await supabaseAdmin.storage
@@ -33,11 +35,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Save path on product record
-  await supabaseAdmin
+  // Save path on product record — this is the actual column name confirmed
+  // by the live database export (not download_file_url, not file_path).
+  // .select() is required here: without it, Supabase reports success even
+  // when zero rows match .eq("id", productId), which would silently hide
+  // a mismatched or invalid productId instead of surfacing it as an error.
+  const { data: updateData, error: updateError } = await supabaseAdmin
     .from("products")
-    .update({ download_file_url: path })
-    .eq("id", productId);
+    .update({ download_url: path })
+    .eq("id", productId)
+    .select();
+
+  if (updateError) {
+    console.error("[upload-file] failed to update product row", updateError);
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  console.log("[upload-file] DIAGNOSTIC — updateData:", JSON.stringify(updateData));
+
+  if (!updateData || updateData.length === 0) {
+    console.error("[upload-file] update matched zero rows for productId:", productId);
+    return NextResponse.json(
+      { error: `No product found with id ${productId} — file was uploaded to storage but not linked` },
+      { status: 404 }
+    );
+  }
 
   return NextResponse.json({ path });
 }
