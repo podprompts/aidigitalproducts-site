@@ -50,9 +50,11 @@ function EditProductContent({ id }: { id: string }) {
           is_not_ai:        product.is_not_ai   ?? false,
           thumbnail_url:    product.thumbnail_url ?? "",
           video_url:        product.video_url ?? "",
-          // Was also missing — this is why the "Current: filename" indicator
-          // never showed under Download File on this page.
-          download_file_url: product.download_file_url ?? "",
+          // Was missing before, and the column name itself was also wrong —
+          // confirmed via database export that the real column is download_url,
+          // not download_file_url. This is why the "Current: filename"
+          // indicator never showed under Download File on this page.
+          download_file_url: product.download_url ?? "",
           attributes:       (product.attributes as Record<string, unknown>) ?? {},
         });
 
