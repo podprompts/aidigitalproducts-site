@@ -7,7 +7,7 @@
 <meta name="description" content="AiDigitalProducts.com is for sale. An exact-match, keyword-rich .com domain in the AI category, with a working marketplace platform already built. Make your best offer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #0c0e12;
@@ -56,12 +56,23 @@
     margin-bottom: 40px;
   }
   .for-sale-label {
-    text-align: center;
-    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
     color: var(--brass);
-    margin-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  .for-sale-label::before,
+  .for-sale-label::after {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: var(--hairline);
   }
   h1.wordmark {
     font-family: 'Fraunces', Georgia, serif;
@@ -258,11 +269,12 @@
     border-top: 1px solid var(--hairline);
   }
   .quote p {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-style: italic;
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: normal;
     font-weight: 400;
-    font-size: clamp(24px, 4.2vw, 36px);
-    line-height: 1.35;
+    letter-spacing: -0.005em;
+    font-size: clamp(24px, 3.8vw, 33px);
+    line-height: 1.45;
     max-width: 620px;
     margin: 0 auto;
   }
