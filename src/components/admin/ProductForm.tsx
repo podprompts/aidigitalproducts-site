@@ -220,15 +220,39 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
 
   async function uploadVideo(productId: string): Promise<void> {
     if (!videoFile) return;
-    const fd = new FormData();
-    fd.append("file", videoFile);
-    fd.append("productId", productId);
-    const res = await fetch("/api/admin/upload-video", {
+
+    // Step 1: get a short-lived presigned URL to upload directly to R2
+    const presignRes = await fetch("/api/admin/upload-video/presign", {
       method: "POST",
-      headers: { "x-admin-key": token },
-      body: fd,
+      headers: adminHeaders(token),
+      body: JSON.stringify({ productId, fileName: videoFile.name }),
     });
-    if (!res.ok) throw new Error("Video upload failed");
+    if (!presignRes.ok) {
+      const err = await presignRes.json().catch(() => ({}));
+      throw new Error(err.error ?? "Failed to get upload URL");
+    }
+    const { uploadUrl, publicUrl } = await presignRes.json();
+
+    // Step 2: upload the actual video bytes directly to R2 — this bypasses
+    // Vercel's serverless function body-size limit entirely, since the file
+    // never passes through our own server.
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": "video/mp4" },
+      body: videoFile,
+    });
+    if (!uploadRes.ok) throw new Error("Video upload to storage failed");
+
+    // Step 3: confirm — stamp video_url onto the product row
+    const confirmRes = await fetch("/api/admin/upload-video", {
+      method: "POST",
+      headers: adminHeaders(token),
+      body: JSON.stringify({ productId, publicUrl }),
+    });
+    if (!confirmRes.ok) {
+      const err = await confirmRes.json().catch(() => ({}));
+      throw new Error(err.error ?? "Failed to save video URL");
+    }
   }
  
   async function handleSubmit(e: React.FormEvent) {
