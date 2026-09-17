@@ -16,6 +16,10 @@ export interface AdminProductData {
   regular_price: string;
   sale_stripe_price_id: string;
   regular_stripe_price_id: string;
+  // PLR fields — new
+  plr_price: string;
+  plr_stripe_price_id: string;
+  is_plr_available: boolean;
   seller: string;
   features: string;
   status: "active" | "coming_soon" | "archived";
@@ -119,6 +123,7 @@ function buildAttributesPayload(attrs: AttributeState): Record<string, unknown> 
 const EMPTY: AdminProductData = {
   name: "", slug: "", description: "", category: mockCategories[0]?.name ?? "",
   price: "", regular_price: "", sale_stripe_price_id: "", regular_stripe_price_id: "",
+  plr_price: "", plr_stripe_price_id: "", is_plr_available: false,
   seller: "AI Digital Products", features: "",
   status: "active", is_featured: false, is_favorite: false, is_not_ai: false,
   video_url: "",
@@ -241,6 +246,10 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         regular_price_cents:     form.regular_price ? Math.round(parseFloat(form.regular_price) * 100) : null,
         sale_stripe_price_id:    form.sale_stripe_price_id || null,
         regular_stripe_price_id: form.regular_stripe_price_id || null,
+        // PLR fields — new
+        plr_price_cents:         form.plr_price ? Math.round(parseFloat(form.plr_price) * 100) : null,
+        plr_stripe_price_id:     form.plr_stripe_price_id || null,
+        is_plr_available:        form.is_plr_available,
         is_active:               form.status === "active",
         is_featured:             form.is_featured,
         is_favorite:             form.is_favorite,
@@ -420,6 +429,48 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
             <input style={inputStyle} value={form.regular_stripe_price_id} onChange={(e) => set("regular_stripe_price_id", e.target.value)} placeholder="price_xxx" />
           </Field>
         </div>
+      </div>
+
+      {/* PLR licensing — new section */}
+      <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid var(--line)" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "16px" }}>
+          PLR Licensing
+        </div>
+        <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: "20px" }}>
+          <input
+            type="checkbox"
+            checked={form.is_plr_available}
+            onChange={(e) => set("is_plr_available", e.target.checked)}
+            style={{ width: "16px", height: "16px", cursor: "pointer" }}
+          />
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)" }}>
+            Offer a PLR (resale) license for this product
+          </span>
+        </label>
+
+        {form.is_plr_available && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+            <Field label="PLR Price ($)">
+              <input
+                style={inputStyle}
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.plr_price}
+                onChange={(e) => set("plr_price", e.target.value)}
+                placeholder="e.g. 97.00"
+              />
+            </Field>
+            <Field label="Stripe PLR Price ID">
+              <input
+                style={inputStyle}
+                value={form.plr_stripe_price_id}
+                onChange={(e) => set("plr_stripe_price_id", e.target.value)}
+                placeholder="price_xxx"
+              />
+            </Field>
+          </div>
+        )}
       </div>
  
       <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "24px" }}>
