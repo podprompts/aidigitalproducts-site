@@ -51,7 +51,7 @@ export default async function ProductDetailPage({ params }: Props) {
   // Always fetch live Supabase data to get purchases, flags, and PLR fields
   const { data: dbProduct } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, is_active, purchases, is_favorite, is_featured, is_not_ai")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, is_active, purchases, is_favorite, is_featured, is_not_ai, vendor_id")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
@@ -82,7 +82,6 @@ export default async function ProductDetailPage({ params }: Props) {
       price: (dbProduct.sale_price_cents ?? 0) / 100,
       regularPrice: dbProduct.regular_price_cents ? dbProduct.regular_price_cents / 100 : undefined,
       description: dbProduct.description ?? "",
-      seller: "AI Digital Products",
       priceId: dbProduct.sale_stripe_price_id ?? undefined,
       regularPriceId: dbProduct.regular_stripe_price_id ?? undefined,
       plrPrice: dbProduct.plr_price_cents ? dbProduct.plr_price_cents / 100 : undefined,
@@ -115,6 +114,20 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   if (!product) notFound();
+
+  // Resolve the real "Sold by" name from the vendor relationship. dbProduct
+  // is only populated when a real Supabase row exists — mock-only products
+  // have no vendor_id and fall back to the site default.
+  let sellerName = "AI Digital Products";
+  if (dbProduct?.vendor_id) {
+    const { data: vendorRow } = await supabaseAdmin
+      .from("vendor_profiles")
+      .select("display_name")
+      .eq("id", dbProduct.vendor_id)
+      .single();
+    if (vendorRow?.display_name) sellerName = vendorRow.display_name;
+  }
+  product.seller = sellerName;
 
   const categoryObj = mockCategories.find((c) => c.name === product.category);
   const categorySlug = categoryObj?.slug ?? product.category.toLowerCase().replace(/\s+/g, "-");

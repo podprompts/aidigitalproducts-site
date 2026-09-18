@@ -4,7 +4,8 @@ export interface Product {
   title: string;
   category: string;
   price: number;
-  seller: string;
+  /** "Sold by" name — resolved from the real vendor relationship at query time; falls back to a default if unset */
+  seller?: string;
   description: string;
   /** Stripe Price ID — present means the product is purchasable (sale price when on sale) */
   priceId?: string;
@@ -69,7 +70,6 @@ export const mockProducts: Product[] = [
     title: "Outdoors & Adventure Prompt Pack 50",
     category: "Prompt Packs",
     price: 9.99,
-    seller: "AI Digital Products",
     description:
       "Unlock 50 expertly crafted AI prompts designed specifically for the outdoor and adventure niche. Perfect for creating stunning print-on-demand designs for hikers, campers, mountain lovers, and nature enthusiasts. Just paste into your favourite AI image generator and start creating.",
     priceId: "price_1TJYBlEU074NZnN830sEZ3MJ",
@@ -92,7 +92,6 @@ export const mockProducts: Product[] = [
     title: "Blue Collar Trades Prompt Pack 50",
     category: "Prompt Packs",
     price: 9.99,
-    seller: "AI Digital Products",
     description:
       "Get 50 powerful AI prompts crafted for the blue collar market. Create designs that resonate with electricians, plumbers, welders, carpenters, mechanics, and hardworking tradespeople. High-demand niche with loyal customers.",
     priceId: "price_1TJYC7EU074NZnN8wDCCz4Cv",
@@ -115,7 +114,6 @@ export const mockProducts: Product[] = [
     title: "Pet & Animal Lovers Prompt Pack 50",
     category: "Prompt Packs",
     price: 9.99,
-    seller: "AI Digital Products",
     description:
       "Tap into the massive pet lover market with 50 AI prompts designed for dog moms, cat dads, and animal enthusiasts. Create heartwarming, funny, and emotional designs that pet owners can not resist buying.",
     priceId: "price_1TJYCQEU074NZnN8ZNCqEl5H",
@@ -138,7 +136,6 @@ export const mockProducts: Product[] = [
     title: "Beacons AI Playbook: Monetization Guide with MRR & PLR (71-Page Editable eBook)",
     category: "Content Systems",
     price: 9.99,
-    seller: "AI Digital Products",
     description:
       "A 71-page editable eBook and step-by-step guide to monetizing your content on the Beacons platform. Includes 2 bonus MRR & PLR products.",
     priceId: "price_1TMoq4Rv2p2YlsIVgyBmLVcL",

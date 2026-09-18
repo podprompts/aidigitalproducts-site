@@ -8,11 +8,27 @@ export const revalidate = 0;
 async function getSupabaseProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, thumbnail_url, video_url, is_active, is_favorite, is_featured, is_not_ai, created_at, updated_at, purchases")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, thumbnail_url, video_url, is_active, is_favorite, is_featured, is_not_ai, created_at, updated_at, purchases, vendor_id")
     .eq("is_active", true)
     .order("display_order", { ascending: true });
 
   if (error || !data) return [];
+
+  // vendor_id points to auth.users, which isn't exposed via the public API,
+  // so vendor display info is fetched separately from vendor_profiles
+  // (keyed to the same id) and merged in code — same pattern used below
+  // for thumbnails/video URLs.
+  const vendorIds = [...new Set(data.map((p) => p.vendor_id).filter(Boolean))];
+  const vendorMap: Record<string, string> = {};
+  if (vendorIds.length > 0) {
+    const { data: vendorData } = await supabaseAdmin
+      .from("vendor_profiles")
+      .select("id, display_name")
+      .in("id", vendorIds);
+    for (const v of vendorData ?? []) {
+      vendorMap[v.id as string] = v.display_name as string;
+    }
+  }
 
   return data.map((p) => ({
     id: p.id,
@@ -22,7 +38,7 @@ async function getSupabaseProducts(): Promise<Product[]> {
     price: p.sale_price_cents / 100,
     regularPrice: p.regular_price_cents ? p.regular_price_cents / 100 : undefined,
     description: p.description ?? "",
-    seller: "AI Digital Products",
+    seller: (p.vendor_id && vendorMap[p.vendor_id]) || "AI Digital Products",
     thumbnailUrl: p.thumbnail_url ?? undefined,
     videoUrl: p.video_url ?? undefined,
     priceId: p.sale_stripe_price_id ?? undefined,
@@ -63,6 +79,9 @@ export async function getProducts(): Promise<Product[]> {
     .filter((p) => !supabaseSlugs.has(p.slug))
     .map((p) => ({
       ...p,
+      // No Supabase row means no vendor_id to resolve — these have no real
+      // vendor relationship, so they keep the default name.
+      seller: p.seller ?? "AI Digital Products",
       thumbnailUrl: thumbMap[p.slug] ?? p.thumbnailUrl ?? undefined,
       videoUrl: videoMap[p.slug] ?? p.videoUrl ?? undefined,
     }));
