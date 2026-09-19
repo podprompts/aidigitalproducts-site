@@ -1,3 +1,7 @@
+# Cleans up orphaned R2/storage files when a video, file, or image gets rejected.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthed, unauthorized, getAdminUser } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -284,3 +288,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   return NextResponse.json({ product: updated });
 }
+'@
+Set-Content -LiteralPath "src\app\api\admin\products\[id]\approve\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\admin\products\[id]\approve\route.ts" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

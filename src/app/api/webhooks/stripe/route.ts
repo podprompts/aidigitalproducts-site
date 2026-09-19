@@ -49,6 +49,11 @@ export async function POST(req: NextRequest) {
     const licenseType: "personal" | "plr" =
       session.metadata?.licenseType === "plr" ? "plr" : "personal";
 
+    const paymentIntentId =
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : session.payment_intent?.id ?? null;
+
     // Vendor payout split — only present when checkout actually applied one.
     // Absent for the platform's own products or a vendor with no connected
     // Stripe account, in which case these all stay null, matching today's
@@ -64,6 +69,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order, error } = await supabaseAdmin.from("orders").insert({
       stripe_checkout_session_id: session.id,
+      stripe_payment_intent_id: paymentIntentId,
       email: session.customer_details?.email ?? null,
       amount_cents: session.amount_total,
       currency: session.currency,
@@ -152,6 +158,28 @@ export async function POST(req: NextRequest) {
             console.error("[webhook] failed to send confirmation email", err);
           });
         }
+      }
+    }
+  }
+
+  // Track disputes on orders — matched by payment intent, since a Dispute
+  // object references the charge, not the checkout session directly.
+  if (event.type === "charge.dispute.created" || event.type === "charge.dispute.closed") {
+    const dispute = event.data.object as Stripe.Dispute;
+    const paymentIntentId =
+      typeof dispute.payment_intent === "string" ? dispute.payment_intent : dispute.payment_intent?.id;
+
+    if (paymentIntentId) {
+      const { error: disputeUpdateError } = await supabaseAdmin
+        .from("orders")
+        .update({
+          dispute_status: dispute.status,
+          disputed_at: event.type === "charge.dispute.created" ? new Date().toISOString() : undefined,
+        })
+        .eq("stripe_payment_intent_id", paymentIntentId);
+
+      if (disputeUpdateError) {
+        console.error("[webhook] failed to record dispute", disputeUpdateError);
       }
     }
   }
