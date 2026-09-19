@@ -1,3 +1,102 @@
+# Adds a permanent vendor review-history log, and makes the top-of-page
+# approval/rejection banners clear after being viewed once.
+# Run from the root of your aidigitalproducts-site repo.
+
+New-Item -ItemType Directory -Force -Path "src\app\vendor\(protected)\history" | Out-Null
+
+$content = @'
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+interface ApprovedChange { label: string; oldValue: string; newValue: string }
+
+export default async function VendorHistoryPage() {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: logs } = await supabaseAdmin
+    .from("product_review_log")
+    .select("id, product_id, approved_changes, rejected_reason, rejected_fields, created_at")
+    .eq("vendor_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  const productIds = [...new Set((logs ?? []).map((l) => l.product_id).filter(Boolean))];
+  let productNames: Record<string, string> = {};
+  if (productIds.length > 0) {
+    const { data: products } = await supabaseAdmin.from("products").select("id, name").in("id", productIds);
+    productNames = Object.fromEntries((products ?? []).map((p) => [p.id, p.name]));
+  }
+
+  return (
+    <div style={{ maxWidth: "640px" }}>
+      <h1 className="display" style={{ fontSize: "28px", color: "var(--ink)", marginBottom: "8px" }}>
+        Review History
+      </h1>
+      <p style={{ fontSize: "13px", color: "var(--ink-mute)", marginBottom: "24px" }}>
+        A permanent record of every decision made on your submitted edits — this stays here even
+        after the notice at the top of the edit page has cleared.
+      </p>
+
+      {(!logs || logs.length === 0) && (
+        <p style={{ fontSize: "14px", color: "var(--ink-faded)" }}>No review history yet.</p>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {(logs ?? []).map((log) => {
+          const approved = (log.approved_changes as ApprovedChange[] | null) ?? [];
+          const rejectedFields = (log.rejected_fields as string[] | null) ?? [];
+          return (
+            <div key={log.id} style={{ border: "1px solid var(--line)", padding: "18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--ink)" }}>
+                  {productNames[log.product_id] ?? "Unknown product"}
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--ink-mute)" }}>
+                  {new Date(log.created_at).toLocaleString()}
+                </div>
+              </div>
+
+              {approved.length > 0 && (
+                <div
+                  style={{
+                    background: "#eaf6ec", border: "1px solid #9dd6a8", padding: "10px 14px",
+                    fontSize: "13px", color: "#1e5e2f", marginBottom: log.rejected_reason ? "8px" : 0,
+                  }}
+                >
+                  <strong>Approved:</strong>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: "18px" }}>
+                    {approved.map((c, i) => (
+                      <li key={i}>{c.label}: {c.oldValue} → {c.newValue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {log.rejected_reason && (
+                <div style={{ background: "#fdecea", border: "1px solid #e5a19a", padding: "10px 14px", fontSize: "13px", color: "#7a2e26" }}>
+                  <strong>Declined:</strong> {rejectedFields.join(", ") || "—"}
+                  <br />
+                  Reason: {log.rejected_reason}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\history\page.tsx" -Value $content -NoNewline
+Write-Host "NEW: src\app\vendor\(protected)\history\page.tsx" -ForegroundColor Green
+
+$content = @'
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthed, unauthorized, getAdminUser } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -231,3 +330,152 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   return NextResponse.json({ product: updated });
 }
+'@
+Set-Content -LiteralPath "src\app\api\admin\products\[id]\approve\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\admin\products\[id]\approve\route.ts" -ForegroundColor Green
+
+$content = @'
+import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import VendorProductEditForm from "./EditForm";
+
+export const dynamic = "force-dynamic";
+
+export default async function EditVendorProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
+
+  const { data: product } = await supabaseAdmin
+    .from("products")
+    .select("id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, review_status, review_rejected_reason, last_approved_changes, last_approved_at")
+    .eq("id", id)
+    .single();
+
+  // Ownership check — a vendor can only ever land here for their own product
+  if (!product || product.vendor_id !== user.id) notFound();
+
+  // The rejection/approval banners are shown exactly once — capture their
+  // current values for THIS render, then clear them immediately so a
+  // refresh or a later visit doesn't keep showing a decision the vendor
+  // has already seen. The permanent record still lives in
+  // product_review_log regardless of this clearing.
+  const bannerData = {
+    review_status: product.review_status,
+    review_rejected_reason: product.review_rejected_reason,
+    last_approved_changes: product.last_approved_changes,
+    last_approved_at: product.last_approved_at,
+  };
+
+  const hasApprovedBanner = Array.isArray(product.last_approved_changes) && product.last_approved_changes.length > 0;
+  if (product.review_status === "rejected" || hasApprovedBanner) {
+    await supabaseAdmin
+      .from("products")
+      .update({
+        // "pending" is an ongoing state, not a past decision — only ever
+        // clear review_status if it was specifically "rejected".
+        review_status: product.review_status === "rejected" ? "none" : product.review_status,
+        review_rejected_reason: null,
+        last_approved_changes: null,
+        last_approved_at: null,
+      })
+      .eq("id", id);
+  }
+
+  const { data: images } = await supabaseAdmin
+    .from("product_images")
+    .select("id, url, is_primary, display_order")
+    .eq("product_id", id)
+    .order("display_order", { ascending: true });
+
+  return (
+    <VendorProductEditForm
+      product={{ ...product, ...bannerData }}
+      initialImages={images ?? []}
+    />
+  );
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\[id]\edit\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\[id]\edit\page.tsx" -ForegroundColor Green
+
+$content = @'
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { signOutAction } from "../actions";
+
+export const dynamic = "force-dynamic";
+
+export default async function VendorLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/vendor/login");
+  }
+
+  // Confirm this logged-in user actually has a vendor_profiles row —
+  // being a valid Supabase Auth user isn't enough on its own; only
+  // real vendors should get past this point.
+  const { data: vendorProfile } = await supabaseAdmin
+    .from("vendor_profiles")
+    .select("display_name, is_active")
+    .eq("id", user.id)
+    .single();
+
+  if (!vendorProfile || !vendorProfile.is_active) {
+    redirect("/vendor/login");
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "20px 32px",
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
+        <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
+          Vendor Portal — {vendorProfile.display_name}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <a href="/vendor/products" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            Products
+          </a>
+          <a href="/vendor/connect" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            Payouts
+          </a>
+          <a href="/vendor/history" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            History
+          </a>
+          <form action={signOutAction}>
+            <button type="submit" className="btn btn-ghost btn-sm">
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+      <div style={{ padding: "32px" }}>{children}</div>
+    </div>
+  );
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\layout.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\layout.tsx" -ForegroundColor Green
+
+Write-Host "`nAll 4 files written." -ForegroundColor Cyan
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

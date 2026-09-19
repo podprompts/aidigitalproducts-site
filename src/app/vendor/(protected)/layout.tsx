@@ -49,6 +49,9 @@ export default async function VendorLayout({ children }: { children: React.React
           <a href="/vendor/connect" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
             Payouts
           </a>
+          <a href="/vendor/history" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            History
+          </a>
           <form action={signOutAction}>
             <button type="submit" className="btn btn-ghost btn-sm">
               Sign Out
