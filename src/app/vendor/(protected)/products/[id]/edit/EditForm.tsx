@@ -77,8 +77,14 @@ interface Props {
   product: {
     id: string;
     name: string;
+    slug: string;
+    category: string | null;
     description: string | null;
+    features: string[] | null;
     sale_price_cents: number | null;
+    regular_price_cents: number | null;
+    is_plr_available: boolean | null;
+    plr_price_cents: number | null;
     is_active: boolean;
     video_url: string | null;
     download_url: string | null;
@@ -90,9 +96,19 @@ interface Props {
 export default function VendorProductEditForm({ product, initialImages }: Props) {
   const router = useRouter();
   const [name, setName] = useState(product.name);
+  const [slug, setSlug] = useState(product.slug);
+  const [category, setCategory] = useState(product.category ?? "");
   const [description, setDescription] = useState(product.description ?? "");
+  const [features, setFeatures] = useState((product.features ?? []).join("\n"));
   const [price, setPrice] = useState(
     product.sale_price_cents ? (product.sale_price_cents / 100).toFixed(2) : ""
+  );
+  const [regularPrice, setRegularPrice] = useState(
+    product.regular_price_cents ? (product.regular_price_cents / 100).toFixed(2) : ""
+  );
+  const [isPlrAvailable, setIsPlrAvailable] = useState(product.is_plr_available ?? false);
+  const [plrPrice, setPlrPrice] = useState(
+    product.plr_price_cents ? (product.plr_price_cents / 100).toFixed(2) : ""
   );
   const [isActive, setIsActive] = useState(product.is_active);
   const [images, setImages] = useState<UIImage[]>(initialImages);
@@ -250,9 +266,15 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          slug,
+          category,
           description,
+          features: features.split("\n").map((f) => f.trim()).filter(Boolean),
           sale_price_cents: price ? Math.round(parseFloat(price) * 100) : null,
+          regular_price_cents: regularPrice ? Math.round(parseFloat(regularPrice) * 100) : null,
           is_active: isActive,
+          is_plr_available: isPlrAvailable,
+          plr_price_cents: isPlrAvailable && plrPrice ? Math.round(parseFloat(plrPrice) * 100) : null,
           attributes: buildAttributesPayload(attrs),
         }),
       });
@@ -309,11 +331,33 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
       </div>
 
       <div>
+        <label style={labelStyle}>Slug</label>
+        <input style={inputStyle} value={slug} onChange={(e) => setSlug(e.target.value)} required />
+        <p style={{ fontSize: "11px", color: "var(--ink-mute)", marginTop: "4px" }}>
+          This controls the product's URL — changing it breaks any existing links or bookmarks to this page.
+        </p>
+      </div>
+
+      <div>
+        <label style={labelStyle}>Category</label>
+        <input style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Voice Agents" />
+      </div>
+
+      <div>
         <label style={labelStyle}>Description</label>
         <textarea
           style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label style={labelStyle}>Features — one per line</label>
+        <textarea
+          style={{ ...inputStyle, minHeight: "90px", resize: "vertical", fontFamily: "monospace", fontSize: "13px" }}
+          value={features}
+          onChange={(e) => setFeatures(e.target.value)}
         />
       </div>
 
@@ -329,10 +373,48 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
         />
       </div>
 
+      <div>
+        <label style={labelStyle}>Regular Price ($) — optional</label>
+        <input
+          style={inputStyle}
+          type="number"
+          step="0.01"
+          min="0"
+          value={regularPrice}
+          onChange={(e) => setRegularPrice(e.target.value)}
+          placeholder={'Shown as a strikethrough "was" price'}
+        />
+      </div>
+
       <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
         <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
         <span style={{ fontSize: "13px", color: "var(--ink-faded)" }}>Active (visible on the site)</span>
       </label>
+
+      {/* PLR Licensing */}
+      <div style={{ borderTop: "1px solid var(--line)", paddingTop: "20px" }}>
+        <div style={{ ...labelStyle, marginBottom: "12px" }}>PLR Licensing</div>
+        <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: isPlrAvailable ? "16px" : 0 }}>
+          <input type="checkbox" checked={isPlrAvailable} onChange={(e) => setIsPlrAvailable(e.target.checked)} />
+          <span style={{ fontSize: "13px", color: "var(--ink-faded)" }}>Offer a PLR (resale) license for this product</span>
+        </label>
+        {isPlrAvailable && (
+          <div>
+            <label style={labelStyle}>PLR Price ($)</label>
+            <input
+              style={inputStyle}
+              type="number"
+              step="0.01"
+              min="0"
+              value={plrPrice}
+              onChange={(e) => setPlrPrice(e.target.value)}
+            />
+            <p style={{ fontSize: "11px", color: "var(--ink-mute)", marginTop: "4px" }}>
+              This sets the displayed price. The site owner still needs to confirm a matching Stripe price is set up before this goes live for real checkout.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Product Images */}
       <div style={{ borderTop: "1px solid var(--line)", paddingTop: "20px" }}>
@@ -412,6 +494,31 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
             <label style={labelStyle}>AI Model</label>
             <input style={inputStyle} value={attrs.aiModel} onChange={(e) => setAttrs((a) => ({ ...a, aiModel: e.target.value }))} placeholder="e.g. GPT-4, Claude" />
           </div>
+          <div>
+            <label style={labelStyle}>Last Updated</label>
+            <input style={inputStyle} type="date" value={attrs.lastUpdated} onChange={(e) => setAttrs((a) => ({ ...a, lastUpdated: e.target.value }))} />
+          </div>
+          <div>
+            <label style={labelStyle}>Instant Download</label>
+            <select style={{ ...inputStyle, appearance: "auto" }} value={attrs.instantDownload} onChange={(e) => setAttrs((a) => ({ ...a, instantDownload: e.target.value }))}>
+              <option value="">— Select —</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Support</label>
+            <select style={{ ...inputStyle, appearance: "auto" }} value={attrs.support} onChange={(e) => setAttrs((a) => ({ ...a, support: e.target.value }))}>
+              <option value="">— Select —</option>
+              <option value="Email">Email</option>
+              <option value="Community">Community</option>
+              <option value="None">None</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Built With</label>
+            <input style={inputStyle} value={attrs.builtWith} onChange={(e) => setAttrs((a) => ({ ...a, builtWith: e.target.value }))} placeholder="e.g. Notion" />
+          </div>
         </div>
 
         <div style={{ marginTop: "16px" }}>
@@ -431,6 +538,49 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
                 </label>
               );
             })}
+          </div>
+        </div>
+
+        <div style={{ marginTop: "16px" }}>
+          <label style={labelStyle}>Custom Attributes</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {attrs.custom.map((c, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px" }}>
+                <input
+                  style={{ ...inputStyle, flex: 1 }}
+                  placeholder="Key"
+                  value={c.key}
+                  onChange={(e) => setAttrs((a) => ({
+                    ...a,
+                    custom: a.custom.map((x, xi) => xi === i ? { ...x, key: e.target.value } : x),
+                  }))}
+                />
+                <input
+                  style={{ ...inputStyle, flex: 1 }}
+                  placeholder="Value"
+                  value={c.value}
+                  onChange={(e) => setAttrs((a) => ({
+                    ...a,
+                    custom: a.custom.map((x, xi) => xi === i ? { ...x, value: e.target.value } : x),
+                  }))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setAttrs((a) => ({ ...a, custom: a.custom.filter((_, xi) => xi !== i) }))}
+                  style={{ padding: "0 14px", border: "1px solid var(--ink-soft)", background: "transparent", cursor: "pointer", color: "var(--ink-faded)" }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setAttrs((a) => ({ ...a, custom: [...a.custom, { key: "", value: "" }] }))}
+              className="btn btn-ghost btn-sm"
+              style={{ alignSelf: "flex-start" }}
+            >
+              + Add Custom Attribute
+            </button>
           </div>
         </div>
       </div>

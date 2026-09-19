@@ -19,7 +19,7 @@ export default async function EditVendorProductPage({
 
   const { data: product } = await supabaseAdmin
     .from("products")
-    .select("id, name, description, sale_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url")
+    .select("id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url")
     .eq("id", id)
     .single();
 
