@@ -1,3 +1,8 @@
+# Fixes a race condition: waits for Supabase's async recovery-session
+# processing to finish instead of checking for it too early.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 "use client";
 
 import { useState, useEffect } from "react";
@@ -132,3 +137,7 @@ export default function VendorSetPasswordPage() {
     </div>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\vendor\set-password\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\set-password\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
