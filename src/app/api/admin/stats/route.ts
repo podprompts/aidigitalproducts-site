@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   const [products, orders, subscribers, contacts] = await Promise.all([
     supabaseAdmin.from("products").select("id, status"),

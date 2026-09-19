@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 
 export async function PUT(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   let body: { images: { id: string; display_order: number; is_primary: boolean }[] };
   try { body = await req.json(); } catch {

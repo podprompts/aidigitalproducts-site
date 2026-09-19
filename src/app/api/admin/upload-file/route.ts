@@ -5,7 +5,7 @@ import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   let body: { productId?: string; path?: string };
   try {

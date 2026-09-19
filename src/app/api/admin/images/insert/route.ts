@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   let body: { product_id: string; url: string; is_primary: boolean; display_order: number; alt_text?: string };
   try { body = await req.json(); } catch {

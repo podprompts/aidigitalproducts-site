@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   const productId = req.nextUrl.searchParams.get("productId");
   if (!productId) return NextResponse.json({ error: "productId required" }, { status: 400 });

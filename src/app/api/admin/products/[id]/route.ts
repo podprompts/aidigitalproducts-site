@@ -7,7 +7,7 @@ import { syncStripePrice } from "@/lib/stripe-price-sync";
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: Ctx) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
   const { id } = await params;
 
   const { data, error } = await supabaseAdmin
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 }
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
   const { id } = await params;
 
   let body: Record<string, unknown>;
@@ -111,7 +111,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
   const { id } = await params;
 
   // Fetch image records so we can remove files from storage

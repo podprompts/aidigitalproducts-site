@@ -16,7 +16,7 @@ const BUCKET = process.env.R2_BUCKET_NAME!;
 const CDN    = process.env.R2_CDN_URL!;
 
 export async function POST(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   let body: { productId?: string; fileName?: string };
   try {

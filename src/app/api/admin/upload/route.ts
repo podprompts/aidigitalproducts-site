@@ -17,7 +17,7 @@ const CDN    = process.env.R2_CDN_URL!; // e.g. https://cdn.hireaireceptionist.c
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB — adjust if you want a different limit
 
 export async function POST(req: NextRequest) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
 
   const formData     = await req.formData();
   const file         = formData.get("file") as File | null;

@@ -19,6 +19,7 @@ interface Props { title: string; children: React.ReactNode }
 export default function AdminShell({ title, children }: Props) {
   const [token,       setToken]       = useState<string | null>(null);
   const [checked,     setChecked]     = useState(false);
+  const [email,       setEmail]       = useState("");
   const [pw,          setPw]          = useState("");
   const [error,       setError]       = useState("");
   const [loggingIn,   setLoggingIn]   = useState(false);
@@ -50,11 +51,12 @@ export default function AdminShell({ title, children }: Props) {
       const res = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pw }),
+        body: JSON.stringify({ email, password: pw }),
       });
-      if (!res.ok) { setError("Invalid password."); return; }
-      localStorage.setItem("admin_auth", pw);
-      setToken(pw);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(data.error ?? "Invalid email or password."); return; }
+      localStorage.setItem("admin_auth", data.token);
+      setToken(data.token);
     } catch {
       setError("Network error.");
     } finally {
@@ -85,6 +87,18 @@ export default function AdminShell({ title, children }: Props) {
           </h1>
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div className="field">
+              <label htmlFor="admin-email">Email</label>
+              <input
+                id="admin-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                autoFocus
+              />
+            </div>
+            <div className="field">
               <label htmlFor="admin-pw">Password</label>
               <input
                 id="admin-pw"
@@ -93,7 +107,6 @@ export default function AdminShell({ title, children }: Props) {
                 onChange={(e) => setPw(e.target.value)}
                 placeholder="Admin password"
                 required
-                autoFocus
               />
             </div>
             {error && <p style={{ fontSize: "13px", fontWeight: 600, color: "#e53e3e", marginTop: "-8px" }}>{error}</p>}

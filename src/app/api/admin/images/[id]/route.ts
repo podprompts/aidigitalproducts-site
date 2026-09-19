@@ -5,7 +5,7 @@ import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
-  if (!isAdminAuthed(req)) return unauthorized();
+  if (!await isAdminAuthed(req)) return unauthorized();
   const { id } = await params;
 
   const { data: image } = await supabaseAdmin

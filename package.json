@@ -16,6 +16,7 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.102.0",
     "@types/nodemailer": "^8.0.0",
+    "jose": "^6.2.12",
     "next": "15.5.14",
     "nodemailer": "^8.0.5",
     "react": "19.1.0",

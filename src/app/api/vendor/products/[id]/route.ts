@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createSessionClient } from "@/lib/supabase/server-session";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { syncStripePrice } from "@/lib/stripe-price-sync";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   // claim about which product this is.
   const { data: existing } = await supabaseAdmin
     .from("products")
-    .select("id, vendor_id")
+    .select("id, vendor_id, sale_price_cents, sale_stripe_price_id, regular_price_cents, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id")
     .eq("id", id)
     .single();
 
@@ -64,16 +65,44 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (typeof body.category === "string") allowed.category = body.category;
   if (typeof body.description === "string") allowed.description = body.description;
   if (Array.isArray(body.features)) allowed.features = body.features;
-  if (typeof body.sale_price_cents === "number" || body.sale_price_cents === null) {
-    allowed.sale_price_cents = body.sale_price_cents;
-  }
-  if (typeof body.regular_price_cents === "number" || body.regular_price_cents === null) {
-    allowed.regular_price_cents = body.regular_price_cents;
-  }
-  if (typeof body.is_active === "boolean") allowed.is_active = body.is_active;
-  if (typeof body.is_plr_available === "boolean") allowed.is_plr_available = body.is_plr_available;
-  if (typeof body.plr_price_cents === "number" || body.plr_price_cents === null) {
-    allowed.plr_price_cents = body.plr_price_cents;
+  try {
+    if (typeof body.sale_price_cents === "number" || body.sale_price_cents === null) {
+      const synced = await syncStripePrice({
+        productId: id,
+        newPriceCents: body.sale_price_cents,
+        currentPriceCents: existing.sale_price_cents,
+        currentStripePriceId: existing.sale_stripe_price_id,
+      });
+      allowed.sale_price_cents = synced.priceCents;
+      allowed.sale_stripe_price_id = synced.stripePriceId;
+    }
+    if (typeof body.regular_price_cents === "number" || body.regular_price_cents === null) {
+      const synced = await syncStripePrice({
+        productId: id,
+        newPriceCents: body.regular_price_cents,
+        currentPriceCents: existing.regular_price_cents,
+        currentStripePriceId: existing.regular_stripe_price_id,
+      });
+      allowed.regular_price_cents = synced.priceCents;
+      allowed.regular_stripe_price_id = synced.stripePriceId;
+    }
+    if (typeof body.is_active === "boolean") allowed.is_active = body.is_active;
+    if (typeof body.is_plr_available === "boolean") allowed.is_plr_available = body.is_plr_available;
+    if (typeof body.plr_price_cents === "number" || body.plr_price_cents === null) {
+      const synced = await syncStripePrice({
+        productId: id,
+        newPriceCents: body.plr_price_cents,
+        currentPriceCents: existing.plr_price_cents,
+        currentStripePriceId: existing.plr_stripe_price_id,
+      });
+      allowed.plr_price_cents = synced.priceCents;
+      allowed.plr_stripe_price_id = synced.stripePriceId;
+    }
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Failed to sync price with Stripe: ${err instanceof Error ? err.message : "Unknown error"}` },
+      { status: 502 }
+    );
   }
   if (body.attributes && typeof body.attributes === "object") {
     allowed.attributes = body.attributes;

@@ -1,10 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 
 // Set to 'false' (or remove the env var) in Vercel's project settings
 // when you're ready to launch and want the real site back for everyone.
 const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE !== 'false';
 
-export function middleware(request: NextRequest) {
+function getSecretKey(): Uint8Array | null {
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) return null;
+  return new TextEncoder().encode(secret);
+}
+
+async function hasValidAdminSession(request: NextRequest): Promise<boolean> {
+  const sessionCookie = request.cookies.get('admin_session')?.value;
+  if (!sessionCookie) return false;
+
+  const key = getSecretKey();
+  if (!key) return false;
+
+  try {
+    await jwtVerify(sessionCookie, key);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   if (!MAINTENANCE_MODE) {
     return NextResponse.next();
   }
@@ -20,16 +42,10 @@ export function middleware(request: NextRequest) {
   }
 
   // If you're logged into /admin, the login route sets an httpOnly
-  // admin_session cookie. As long as that cookie matches your real
-  // admin password/key, you see the live site everywhere — not just
-  // inside /admin — until you log out.
-  const sessionCookie = request.cookies.get('admin_session')?.value;
-  const adminPw = process.env.ADMIN_PASSWORD;
-  const adminKey = process.env.ADMIN_API_KEY;
-  const isValidAdminSession =
-    !!sessionCookie && (sessionCookie === adminPw || sessionCookie === adminKey);
-
-  if (isValidAdminSession) {
+  // admin_session cookie containing a signed session token. As long as
+  // it's valid, you see the live site everywhere — not just inside
+  // /admin — until you log out or it expires.
+  if (await hasValidAdminSession(request)) {
     return NextResponse.next();
   }
 
