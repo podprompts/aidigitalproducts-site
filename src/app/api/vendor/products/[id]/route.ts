@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const { data, error } = await supabaseAdmin
     .from("products")
     .select(
-      "id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, pending_changes, review_status, review_rejected_reason"
+      "id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, pending_changes, review_status, review_rejected_reason, last_approved_changes, last_approved_at"
     )
     .eq("id", id)
     .eq("vendor_id", user.id) // scoped — a vendor can only ever fetch their own product

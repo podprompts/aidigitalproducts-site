@@ -13,7 +13,7 @@ export default async function VendorProductsPage() {
 
   const { data: products } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, sale_price_cents, purchases, is_active, review_status")
+    .select("id, name, slug, sale_price_cents, purchases, is_active, review_status, last_approved_at")
     .eq("vendor_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -62,6 +62,9 @@ export default async function VendorProductsPage() {
                 )}
                 {p.review_status === "rejected" && (
                   <span style={{ marginLeft: "8px", color: "#c0392b", fontWeight: 600 }}>· Edit rejected</span>
+                )}
+                {p.last_approved_at && Date.now() - new Date(p.last_approved_at).getTime() < 24 * 60 * 60 * 1000 && (
+                  <span style={{ marginLeft: "8px", color: "#1e5e2f", fontWeight: 600 }}>· Recently approved</span>
                 )}
               </div>
             </div>

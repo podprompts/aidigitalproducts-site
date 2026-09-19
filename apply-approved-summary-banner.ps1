@@ -1,3 +1,386 @@
+# Adds a green 'approved changes' summary/banner for vendors, symmetric
+# with the existing red rejection banner. Run from the repo root.
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { isAdminAuthed, unauthorized, getAdminUser } from "@/lib/admin-auth";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { syncStripePrice } from "@/lib/stripe-price-sync";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+const FIELD_LABELS: Record<string, string> = {
+  name: "Name", slug: "Slug", category: "Category", description: "Description",
+  features: "Features", sale_price_cents: "Sale Price", regular_price_cents: "Regular Price",
+  plr_price_cents: "PLR Price", is_active: "Active", is_plr_available: "PLR Available",
+};
+
+const ATTR_LABELS: Record<string, string> = {
+  promptsIncluded: "Prompts Included", worksWith: "Works With", license: "License",
+  format: "Format", lastUpdated: "Last Updated", version: "Version",
+  instantDownload: "Instant Download", support: "Support", difficultyLevel: "Difficulty Level",
+  builtWith: "Built With", requirements: "Requirements", aiModel: "AI Model",
+};
+
+function formatPrice(cents: unknown): string {
+  return typeof cents === "number" ? `$${(cents / 100).toFixed(2)}` : "—";
+}
+function formatBool(v: unknown): string {
+  return v ? "Yes" : "No";
+}
+function formatAttrValue(v: unknown): string {
+  if (v == null || v === "") return "—";
+  if (Array.isArray(v)) return v.length ? v.join(", ") : "—";
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  return String(v);
+}
+interface ApprovedSummaryItem { label: string; oldValue: string; newValue: string }
+
+/**
+ * Applies a vendor submission field by field. Each entry in pending_changes
+ * (and each individual key inside pending_changes.attributes) is its own
+ * independently approvable "path" — e.g. "sale_price_cents", "images", or
+ * "attributes.license". Only paths listed in approvedPaths actually get
+ * written; anything else in the submission is discarded. This is what lets
+ * an admin approve 3 of 5 requested changes and decline the other 2 in one
+ * action, rather than an all-or-nothing decision.
+ */
+export async function POST(req: NextRequest, { params }: Ctx) {
+  if (!(await isAdminAuthed(req))) return unauthorized();
+  const { id } = await params;
+
+  let body: { approvedPaths?: string[]; rejectedPaths?: string[]; reason?: string };
+  try {
+    body = await req.json();
+  } catch {
+    body = {};
+  }
+  const approvedPaths = new Set(body.approvedPaths ?? []);
+  const rejectedPaths = body.rejectedPaths ?? [];
+
+  const { data: product, error: fetchError } = await supabaseAdmin
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !product) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+
+  if (product.review_status !== "pending" || !product.pending_changes) {
+    return NextResponse.json(
+      { error: "This product has no pending submission to review" },
+      { status: 400 }
+    );
+  }
+
+  const pending = product.pending_changes as Record<string, unknown>;
+  const updates: Record<string, unknown> = {};
+  const approvedSummary: ApprovedSummaryItem[] = [];
+
+  // Plain fields — applied only if their exact path was approved
+  const plainFields = [
+    "name", "slug", "category", "description", "features",
+    "is_active", "is_plr_available", "video_url", "download_url",
+  ];
+  for (const field of plainFields) {
+    if (field in pending && approvedPaths.has(field)) {
+      updates[field] = pending[field];
+      if (field === "video_url") {
+        approvedSummary.push({ label: "Preview Video", oldValue: product.video_url ? "Had a video" : "No video", newValue: "New video is now live" });
+      } else if (field === "download_url") {
+        approvedSummary.push({ label: "Download File", oldValue: product.download_url ? "Had a file" : "No file", newValue: "New file is now live" });
+      } else if (field === "is_active" || field === "is_plr_available") {
+        approvedSummary.push({ label: FIELD_LABELS[field], oldValue: formatBool((product as Record<string, unknown>)[field]), newValue: formatBool(pending[field]) });
+      } else if (field === "features") {
+        approvedSummary.push({ label: "Features", oldValue: ((product.features as string[]) ?? []).join(", ") || "—", newValue: ((pending.features as string[]) ?? []).join(", ") || "—" });
+      } else {
+        approvedSummary.push({ label: FIELD_LABELS[field] ?? field, oldValue: String((product as Record<string, unknown>)[field] ?? "—"), newValue: String(pending[field] ?? "—") });
+      }
+    }
+  }
+
+  // Attributes — merge ONLY the approved individual keys on top of the
+  // current live attributes. A rejected attribute key simply keeps its
+  // existing value, while an approved one nearby still goes through.
+  if ("attributes" in pending && pending.attributes && typeof pending.attributes === "object") {
+    const pendingAttrs = pending.attributes as Record<string, unknown>;
+    const currentAttrs = (product.attributes as Record<string, unknown>) ?? {};
+    const mergedAttrs = { ...currentAttrs };
+    let anyAttrApproved = false;
+    for (const key of Object.keys(pendingAttrs)) {
+      if (approvedPaths.has(`attributes.${key}`)) {
+        mergedAttrs[key] = pendingAttrs[key];
+        anyAttrApproved = true;
+        approvedSummary.push({
+          label: ATTR_LABELS[key] ?? key,
+          oldValue: formatAttrValue(currentAttrs[key]),
+          newValue: formatAttrValue(pendingAttrs[key]),
+        });
+      }
+    }
+    if (anyAttrApproved) updates.attributes = mergedAttrs;
+  }
+
+  // Price fields — Stripe sync only runs for a field that was actually approved
+  try {
+    if ("sale_price_cents" in pending && approvedPaths.has("sale_price_cents")) {
+      const synced = await syncStripePrice({
+        productId: id,
+        newPriceCents: pending.sale_price_cents as number | null,
+        currentPriceCents: product.sale_price_cents,
+        currentStripePriceId: product.sale_stripe_price_id,
+      });
+      updates.sale_price_cents = synced.priceCents;
+      updates.sale_stripe_price_id = synced.stripePriceId;
+      approvedSummary.push({ label: "Sale Price", oldValue: formatPrice(product.sale_price_cents), newValue: formatPrice(synced.priceCents) });
+    }
+    if ("regular_price_cents" in pending && approvedPaths.has("regular_price_cents")) {
+      const synced = await syncStripePrice({
+        productId: id,
+        newPriceCents: pending.regular_price_cents as number | null,
+        currentPriceCents: product.regular_price_cents,
+        currentStripePriceId: product.regular_stripe_price_id,
+      });
+      updates.regular_price_cents = synced.priceCents;
+      updates.regular_stripe_price_id = synced.stripePriceId;
+      approvedSummary.push({ label: "Regular Price", oldValue: formatPrice(product.regular_price_cents), newValue: formatPrice(synced.priceCents) });
+    }
+    if ("plr_price_cents" in pending && approvedPaths.has("plr_price_cents")) {
+      const synced = await syncStripePrice({
+        productId: id,
+        newPriceCents: pending.plr_price_cents as number | null,
+        currentPriceCents: product.plr_price_cents,
+        currentStripePriceId: product.plr_stripe_price_id,
+      });
+      updates.plr_price_cents = synced.priceCents;
+      updates.plr_stripe_price_id = synced.stripePriceId;
+      approvedSummary.push({ label: "PLR Price", oldValue: formatPrice(product.plr_price_cents), newValue: formatPrice(synced.priceCents) });
+    }
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Failed to sync price with Stripe: ${err instanceof Error ? err.message : "Unknown error"}` },
+      { status: 502 }
+    );
+  }
+
+  // Images — one all-or-nothing line item, applied only if "images" itself was approved
+  if ("images" in pending && approvedPaths.has("images")) {
+    const images = (pending.images as { url: string; is_primary?: boolean; display_order?: number }[]) ?? [];
+    await supabaseAdmin.from("product_images").delete().eq("product_id", id);
+    if (images.length > 0) {
+      await supabaseAdmin.from("product_images").insert(
+        images.map((img, i) => ({
+          product_id: id,
+          url: img.url,
+          is_primary: !!img.is_primary,
+          display_order: img.display_order ?? i,
+        }))
+      );
+      const primary = images.find((img) => img.is_primary) ?? images[0];
+      updates.thumbnail_url = primary.url;
+    } else {
+      updates.thumbnail_url = null;
+    }
+    approvedSummary.push({ label: "Images", oldValue: "Previous images", newValue: `${images.length} image(s) now live` });
+  }
+
+  const admin = await getAdminUser(req);
+
+  updates.pending_changes = null;
+  updates.review_status = rejectedPaths.length > 0 ? "rejected" : "none";
+  updates.review_rejected_reason =
+    rejectedPaths.length > 0 ? (body.reason || `Not approved: ${rejectedPaths.join(", ")}`) : null;
+  updates.reviewed_by = admin?.sub ?? null;
+  updates.reviewed_at = new Date().toISOString();
+
+  if (approvedSummary.length > 0) {
+    updates.last_approved_changes = approvedSummary;
+    updates.last_approved_at = new Date().toISOString();
+  }
+
+  const { data: updated, error: updateError } = await supabaseAdmin
+    .from("products")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ product: updated });
+}
+'@
+Set-Content -LiteralPath "src\app\api\admin\products\[id]\approve\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\admin\products\[id]\approve\route.ts" -ForegroundColor Green
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+async function getVendorUser() {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+export async function GET(req: NextRequest, { params }: Ctx) {
+  const user = await getVendorUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const { id } = await params;
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .select(
+      "id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, pending_changes, review_status, review_rejected_reason, last_approved_changes, last_approved_at"
+    )
+    .eq("id", id)
+    .eq("vendor_id", user.id) // scoped — a vendor can only ever fetch their own product
+    .single();
+
+  if (error || !data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ product: data });
+}
+
+/**
+ * Every vendor edit is staged, never written live. This route only ever
+ * touches pending_changes / review_status / review_submitted_at — the
+ * actual product columns (and product_images) are only updated when an
+ * admin approves the submission, via the separate admin approval route.
+ * Stripe price syncing also happens at approval time, not here, so a
+ * price change never takes effect until it's actually approved either.
+ */
+export async function PUT(req: NextRequest, { params }: Ctx) {
+  const user = await getVendorUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const { id } = await params;
+
+  // Verify ownership BEFORE allowing any update — never trust the client's
+  // claim about which product this is.
+  const { data: existing } = await supabaseAdmin
+    .from("products")
+    .select("id, vendor_id")
+    .eq("id", id)
+    .single();
+
+  if (!existing || existing.vendor_id !== user.id) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Same field whitelist as before — a vendor can propose changes to their
+  // own listing's content, pricing amounts, images, video, and file, but
+  // never Stripe price IDs directly, site-level curation flags, the
+  // coming-soon/archived states, or is_not_ai. Those stay admin-only.
+  // "images" is a full array of { url, is_primary, display_order } — the
+  // vendor's complete desired image set, not an incremental change.
+  const proposed: Record<string, unknown> = {};
+  if (typeof body.name === "string") proposed.name = body.name;
+  if (typeof body.slug === "string") proposed.slug = body.slug;
+  if (typeof body.category === "string") proposed.category = body.category;
+  if (typeof body.description === "string") proposed.description = body.description;
+  if (Array.isArray(body.features)) proposed.features = body.features;
+  if (typeof body.sale_price_cents === "number" || body.sale_price_cents === null) {
+    proposed.sale_price_cents = body.sale_price_cents;
+  }
+  if (typeof body.regular_price_cents === "number" || body.regular_price_cents === null) {
+    proposed.regular_price_cents = body.regular_price_cents;
+  }
+  if (typeof body.is_active === "boolean") proposed.is_active = body.is_active;
+  if (typeof body.is_plr_available === "boolean") proposed.is_plr_available = body.is_plr_available;
+  if (typeof body.plr_price_cents === "number" || body.plr_price_cents === null) {
+    proposed.plr_price_cents = body.plr_price_cents;
+  }
+  if (body.attributes && typeof body.attributes === "object") {
+    proposed.attributes = body.attributes;
+  }
+  if (typeof body.video_url === "string" || body.video_url === null) {
+    proposed.video_url = body.video_url;
+  }
+  if (typeof body.download_url === "string" || body.download_url === null) {
+    proposed.download_url = body.download_url;
+  }
+  if (Array.isArray(body.images)) {
+    proposed.images = body.images;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .update({
+      pending_changes: proposed,
+      review_status: "pending",
+      review_submitted_at: new Date().toISOString(),
+      review_rejected_reason: null,
+    })
+    .eq("id", id)
+    .eq("vendor_id", user.id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ product: data });
+}
+'@
+Set-Content -LiteralPath "src\app\api\vendor\products\[id]\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\vendor\products\[id]\route.ts" -ForegroundColor Green
+
+$content = @'
+import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import VendorProductEditForm from "./EditForm";
+
+export const dynamic = "force-dynamic";
+
+export default async function EditVendorProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
+
+  const { data: product } = await supabaseAdmin
+    .from("products")
+    .select("id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, review_status, review_rejected_reason, last_approved_changes, last_approved_at")
+    .eq("id", id)
+    .single();
+
+  // Ownership check — a vendor can only ever land here for their own product
+  if (!product || product.vendor_id !== user.id) notFound();
+
+  const { data: images } = await supabaseAdmin
+    .from("product_images")
+    .select("id, url, is_primary, display_order")
+    .eq("product_id", id)
+    .order("display_order", { ascending: true });
+
+  return <VendorProductEditForm product={product} initialImages={images ?? []} />;
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\[id]\edit\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\[id]\edit\page.tsx" -ForegroundColor Green
+
+$content = @'
 "use client";
 
 import { useState } from "react";
@@ -629,3 +1012,93 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
     </form>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\[id]\edit\EditForm.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\[id]\edit\EditForm.tsx" -ForegroundColor Green
+
+$content = @'
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function VendorProductsPage() {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: products } = await supabaseAdmin
+    .from("products")
+    .select("id, name, slug, sale_price_cents, purchases, is_active, review_status, last_approved_at")
+    .eq("vendor_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const list = products ?? [];
+  const totalRevenueCents = list.reduce(
+    (sum, p) => sum + (p.sale_price_cents ?? 0) * (p.purchases ?? 0),
+    0
+  );
+
+  return (
+    <div>
+      <h1 className="display" style={{ fontSize: "28px", color: "var(--ink)", marginBottom: "8px" }}>
+        Your Products
+      </h1>
+      <p style={{ fontSize: "13px", color: "var(--ink-mute)", marginBottom: "24px", maxWidth: "560px" }}>
+        Estimated revenue: <strong>${(totalRevenueCents / 100).toFixed(2)}</strong> — based on
+        current price × total purchases. This is an estimate, not a precise historical figure,
+        since it doesn't account for past price changes or license type.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", border: "1px solid var(--line)" }}>
+        {list.length === 0 && (
+          <div style={{ padding: "20px", fontSize: "14px", color: "var(--ink-faded)" }}>
+            No products linked to your account yet.
+          </div>
+        )}
+        {list.map((p) => (
+          <div
+            key={p.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--line)",
+              fontSize: "14px",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, color: "var(--ink)" }}>{p.name}</div>
+              <div style={{ color: "var(--ink-mute)", fontSize: "12px", marginTop: "2px" }}>
+                ${((p.sale_price_cents ?? 0) / 100).toFixed(2)} · {p.purchases ?? 0} purchases ·{" "}
+                {p.is_active ? "Active" : "Inactive"}
+                {p.review_status === "pending" && (
+                  <span style={{ marginLeft: "8px", color: "#8a6d1a", fontWeight: 600 }}>· Pending review</span>
+                )}
+                {p.review_status === "rejected" && (
+                  <span style={{ marginLeft: "8px", color: "#c0392b", fontWeight: 600 }}>· Edit rejected</span>
+                )}
+                {p.last_approved_at && Date.now() - new Date(p.last_approved_at).getTime() < 24 * 60 * 60 * 1000 && (
+                  <span style={{ marginLeft: "8px", color: "#1e5e2f", fontWeight: 600 }}>· Recently approved</span>
+                )}
+              </div>
+            </div>
+            <Link href={`/vendor/products/${p.id}/edit`} className="btn btn-ghost btn-sm">
+              Edit
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\page.tsx" -ForegroundColor Green
+
+Write-Host "`nAll 5 files replaced." -ForegroundColor Cyan
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
