@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSessionClient } from "@/lib/supabase/server-session";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { signOutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +26,6 @@ export default async function VendorLayout({ children }: { children: React.React
     redirect("/vendor/login");
   }
 
-  async function handleSignOut() {
-    "use server";
-    const supabase = await createSessionClient();
-    await supabase.auth.signOut();
-    redirect("/vendor/login");
-  }
-
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <div
@@ -46,7 +40,7 @@ export default async function VendorLayout({ children }: { children: React.React
         <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
           Vendor Portal — {vendorProfile.display_name}
         </div>
-        <form action={handleSignOut}>
+        <form action={signOutAction}>
           <button type="submit" className="btn btn-ghost btn-sm">
             Sign Out
           </button>
