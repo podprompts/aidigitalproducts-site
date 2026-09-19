@@ -1,3 +1,7 @@
+# Fixes the AdminContext hierarchy bug in the pending-reviews page.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 "use client";
 
 import { useState, useEffect, useContext } from "react";
@@ -184,3 +188,7 @@ function PendingReviewsContent() {
     </>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\admin\pending-reviews\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\admin\pending-reviews\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
