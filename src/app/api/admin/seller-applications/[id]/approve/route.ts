@@ -66,9 +66,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const newUserId = userResult.userId;
 
   // Generate a one-time link the vendor uses to set their own password.
+  // redirectTo is explicit here — without it, this falls back to whatever
+  // your Supabase project's default Site URL is set to, which may still be
+  // a leftover localhost value from local development.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
   const { data: linkResult, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
     type: "recovery",
     email,
+    options: { redirectTo: `${siteUrl}/vendor/set-password` },
   });
 
   if (linkError || !linkResult?.properties?.action_link) {
