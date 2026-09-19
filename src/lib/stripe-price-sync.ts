@@ -14,6 +14,26 @@ interface SyncPriceResult {
   stripePriceId: string | null;
 }
 
+// Logs everything Stripe's SDK gives us about an error — type, code, status,
+// request ID — not just the generic message, so a failure is actually
+// diagnosable from Vercel's function logs instead of a vague string.
+function logStripeError(step: string, err: unknown) {
+  const e = err as {
+    type?: string;
+    code?: string;
+    statusCode?: number;
+    requestId?: string;
+    message?: string;
+  };
+  console.error(`[syncStripePrice] Failed at step: ${step}`, {
+    type: e?.type,
+    code: e?.code,
+    statusCode: e?.statusCode,
+    requestId: e?.requestId,
+    message: e?.message,
+  });
+}
+
 /**
  * Keeps a *_price_cents field and its matching *_stripe_price_id in sync.
  * Call this BEFORE writing to the database, then write both returned values
@@ -36,7 +56,8 @@ export async function syncStripePrice(params: SyncPriceParams): Promise<SyncPric
     if (currentStripePriceId) {
       try {
         await stripe.prices.update(currentStripePriceId, { active: false });
-      } catch {
+      } catch (err) {
+        logStripeError("deactivate old price (clearing)", err);
         // Non-fatal — if Stripe fails to deactivate, we still clear our own reference below
       }
     }
@@ -56,34 +77,50 @@ export async function syncStripePrice(params: SyncPriceParams): Promise<SyncPric
   let stripeProductId: string | null = productRow?.stripe_product_id ?? null;
 
   if (!stripeProductId && currentStripePriceId) {
-    const existingPrice = await stripe.prices.retrieve(currentStripePriceId);
-    stripeProductId = typeof existingPrice.product === "string"
-      ? existingPrice.product
-      : existingPrice.product.id;
+    try {
+      const existingPrice = await stripe.prices.retrieve(currentStripePriceId);
+      stripeProductId = typeof existingPrice.product === "string"
+        ? existingPrice.product
+        : existingPrice.product.id;
+    } catch (err) {
+      logStripeError(`retrieve existing price (${currentStripePriceId})`, err);
+      throw err;
+    }
   }
 
   if (!stripeProductId) {
-    // This product has genuinely never had any Stripe Price on record at all.
-    const newStripeProduct = await stripe.products.create({
-      name: productRow?.name ?? "Untitled Product",
-    });
-    stripeProductId = newStripeProduct.id;
+    try {
+      const newStripeProduct = await stripe.products.create({
+        name: productRow?.name ?? "Untitled Product",
+      });
+      stripeProductId = newStripeProduct.id;
+    } catch (err) {
+      logStripeError("create new Stripe Product", err);
+      throw err;
+    }
   }
 
   if (!productRow?.stripe_product_id) {
     await supabaseAdmin.from("products").update({ stripe_product_id: stripeProductId }).eq("id", productId);
   }
 
-  const newPrice = await stripe.prices.create({
-    product: stripeProductId,
-    unit_amount: newPriceCents,
-    currency,
-  });
+  let newPrice;
+  try {
+    newPrice = await stripe.prices.create({
+      product: stripeProductId,
+      unit_amount: newPriceCents,
+      currency,
+    });
+  } catch (err) {
+    logStripeError(`create new price ($${(newPriceCents / 100).toFixed(2)} for product ${stripeProductId})`, err);
+    throw err;
+  }
 
   if (currentStripePriceId) {
     try {
       await stripe.prices.update(currentStripePriceId, { active: false });
-    } catch {
+    } catch (err) {
+      logStripeError("deactivate old price (after creating new one)", err);
       // Non-fatal — an old Price staying active doesn't break anything;
       // new checkouts will use the new Price ID we're about to store.
     }
