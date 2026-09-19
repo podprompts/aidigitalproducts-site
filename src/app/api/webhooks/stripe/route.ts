@@ -49,6 +49,19 @@ export async function POST(req: NextRequest) {
     const licenseType: "personal" | "plr" =
       session.metadata?.licenseType === "plr" ? "plr" : "personal";
 
+    // Vendor payout split — only present when checkout actually applied one.
+    // Absent for the platform's own products or a vendor with no connected
+    // Stripe account, in which case these all stay null, matching today's
+    // behavior exactly.
+    const vendorId = session.metadata?.vendorId || null;
+    const platformFeeCentsRaw = session.metadata?.platformFeeCents;
+    const platformFeeCents =
+      platformFeeCentsRaw && platformFeeCentsRaw !== "" ? parseInt(platformFeeCentsRaw, 10) : null;
+    const vendorPayoutCents =
+      platformFeeCents !== null && session.amount_total !== null
+        ? session.amount_total - platformFeeCents
+        : null;
+
     const { data: order, error } = await supabaseAdmin.from("orders").insert({
       stripe_checkout_session_id: session.id,
       email: session.customer_details?.email ?? null,
@@ -56,6 +69,9 @@ export async function POST(req: NextRequest) {
       currency: session.currency,
       status: session.payment_status,
       license_type: licenseType,
+      vendor_id: vendorId,
+      platform_fee_cents: platformFeeCents,
+      vendor_payout_cents: vendorPayoutCents,
       metadata: { product_id: productId, license_type: licenseType },
     }).select("id").single();
 

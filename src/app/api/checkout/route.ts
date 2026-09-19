@@ -121,6 +121,48 @@ async function resolvePlrPrice(
   };
 }
 
+/**
+ * Checks whether this product's vendor has a Stripe Connect account that's
+ * actually ready to receive transfers. Always verified live against Stripe —
+ * never trusts a cached "onboarding complete" flag alone, since that could
+ * be stale (e.g. Stripe later restricted the account for some reason).
+ */
+async function getVendorPayoutInfo(
+  productId: string
+): Promise<{ stripeAccountId: string } | null> {
+  const { data: product } = await supabaseAdmin
+    .from("products")
+    .select("vendor_id")
+    .eq("id", productId)
+    .single();
+
+  if (!product?.vendor_id) return null;
+
+  const { data: vendor } = await supabaseAdmin
+    .from("vendor_profiles")
+    .select("stripe_account_id")
+    .eq("id", product.vendor_id)
+    .single();
+
+  if (!vendor?.stripe_account_id) return null;
+
+  try {
+    const account = await stripe.accounts.retrieve(vendor.stripe_account_id);
+    if (!account.charges_enabled || !account.payouts_enabled) return null;
+    return { stripeAccountId: vendor.stripe_account_id };
+  } catch {
+    // Account retrieval failed for any reason — fail safe by not splitting
+    // rather than risking a broken transfer destination.
+    return null;
+  }
+}
+
+function getPlatformCommissionPercent(): number {
+  const raw = process.env.PLATFORM_COMMISSION_PERCENT;
+  const parsed = raw ? parseFloat(raw) : NaN;
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100 ? parsed : 20;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -175,13 +217,50 @@ export async function POST(req: NextRequest) {
           },
         ];
 
+    // Determine whether this product's vendor is set up to receive a split
+    // payout. If not — including the common case of no vendor at all, or
+    // the platform's own products — checkout proceeds exactly as it does
+    // today, with no split whatsoever.
+    let platformFeeCents: number | null = null;
+    let vendorId: string | null = null;
+    let payoutInfo: { stripeAccountId: string } | null = null;
+
+    if (productId) {
+      payoutInfo = await getVendorPayoutInfo(productId as string);
+      if (payoutInfo) {
+        const { data: product } = await supabaseAdmin
+          .from("products")
+          .select("vendor_id")
+          .eq("id", productId)
+          .single();
+        vendorId = product?.vendor_id ?? null;
+
+        const totalCents = Math.round(Number(priceInDollars ?? productPrice) * 100);
+        const commissionPercent = getPlatformCommissionPercent();
+        platformFeeCents = Math.round(totalCents * (commissionPercent / 100));
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${appUrl}/checkout/cancel`,
-      metadata:    { productId: productId ?? "", licenseType: resolvedLicenseType },
+      metadata: {
+        productId: productId ?? "",
+        licenseType: resolvedLicenseType,
+        vendorId: vendorId ?? "",
+        platformFeeCents: platformFeeCents !== null ? String(platformFeeCents) : "",
+      },
       automatic_tax: { enabled: false },
+      ...(payoutInfo && platformFeeCents !== null
+        ? {
+            payment_intent_data: {
+              application_fee_amount: platformFeeCents,
+              transfer_data: { destination: payoutInfo.stripeAccountId },
+            },
+          }
+        : {}),
     });
 
     return NextResponse.json({ url: session.url });
