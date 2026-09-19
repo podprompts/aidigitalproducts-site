@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function VendorLoginPage() {
   const router = useRouter();
@@ -103,19 +104,11 @@ export default function VendorLoginPage() {
           >
             Password
           </label>
-          <input
-            type="password"
-            required
+          <PasswordInput
+            id="vendor-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "12px 14px",
-              border: "1px solid var(--ink-soft)",
-              fontSize: "14px",
-              background: "transparent",
-              color: "var(--ink)",
-            }}
+            onChange={setPassword}
+            required
           />
         </div>
 

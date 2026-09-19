@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminContext } from "./AdminContext";
+import PasswordInput from "@/components/PasswordInput";
 
 const NAV = [
   { label: "Dashboard",           href: "/admin" },
@@ -100,11 +101,10 @@ export default function AdminShell({ title, children }: Props) {
             </div>
             <div className="field">
               <label htmlFor="admin-pw">Password</label>
-              <input
+              <PasswordInput
                 id="admin-pw"
-                type="password"
                 value={pw}
-                onChange={(e) => setPw(e.target.value)}
+                onChange={setPw}
                 placeholder="Admin password"
                 required
               />
