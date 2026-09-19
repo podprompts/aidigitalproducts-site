@@ -37,6 +37,7 @@ const FIELD_LABELS: Record<string, string> = {
   features: "Features", sale_price_cents: "Sale Price", regular_price_cents: "Regular Price",
   plr_price_cents: "PLR Price", is_active: "Active", is_plr_available: "PLR Available",
   video_url: "Preview Video", download_url: "Download File", images: "Images",
+  creator_refund_terms: "Creator Refund Terms",
 };
 
 const ATTR_LABELS: Record<string, string> = {
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   // Plain fields — applied only if their exact path was approved
   const plainFields = [
     "name", "slug", "category", "description", "features",
-    "is_active", "is_plr_available", "video_url", "download_url",
+    "is_active", "is_plr_available", "video_url", "download_url", "creator_refund_terms",
   ];
   for (const field of plainFields) {
     if (field in pending && approvedPaths.has(field)) {

@@ -225,21 +225,48 @@ export async function POST(req: NextRequest) {
     let vendorId: string | null = null;
     let payoutInfo: { stripeAccountId: string } | null = null;
 
+    // Seller disclosure info — fetched independent of the payout split
+    // above, since even a vendor who hasn't connected Stripe yet is still
+    // the Creator of this product and the buyer should still see who
+    // they're actually buying from.
+    let sellerName: string | null = null;
+    let creatorRefundTerms: string | null = null;
+
     if (productId) {
+      const { data: productInfo } = await supabaseAdmin
+        .from("products")
+        .select("vendor_id, creator_refund_terms")
+        .eq("id", productId)
+        .single();
+      creatorRefundTerms = productInfo?.creator_refund_terms ?? null;
+      if (productInfo?.vendor_id) {
+        vendorId = productInfo.vendor_id;
+        const { data: vendorProfile } = await supabaseAdmin
+          .from("vendor_profiles")
+          .select("display_name")
+          .eq("id", productInfo.vendor_id)
+          .single();
+        sellerName = vendorProfile?.display_name ?? null;
+      }
+
       payoutInfo = await getVendorPayoutInfo(productId as string);
       if (payoutInfo) {
-        const { data: product } = await supabaseAdmin
-          .from("products")
-          .select("vendor_id")
-          .eq("id", productId)
-          .single();
-        vendorId = product?.vendor_id ?? null;
-
         const totalCents = Math.round(Number(priceInDollars ?? productPrice) * 100);
         const commissionPercent = getPlatformCommissionPercent();
         platformFeeCents = Math.round(totalCents * (commissionPercent / 100));
       }
     }
+
+    const disclosureMessage = sellerName
+      ? (
+          `You're purchasing a digital product from ${sellerName}. The Creator is responsible ` +
+          `for this product and its refund terms` +
+          (creatorRefundTerms ? ` (${creatorRefundTerms})` : "") +
+          `. If you experience a problem, contact the Creator first — Creators must respond ` +
+          `within 48 hours. If they don't respond or the issue can't be resolved, you may ` +
+          `escalate to AI Digital Products support. Your statutory consumer rights are not affected.`
+        ).slice(0, 1200)
+      : undefined;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -253,6 +280,7 @@ export async function POST(req: NextRequest) {
         platformFeeCents: platformFeeCents !== null ? String(platformFeeCents) : "",
       },
       automatic_tax: { enabled: false },
+      ...(disclosureMessage ? { custom_text: { submit: { message: disclosureMessage } } } : {}),
       ...(payoutInfo && platformFeeCents !== null
         ? {
             payment_intent_data: {

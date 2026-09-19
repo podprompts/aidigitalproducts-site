@@ -1,3 +1,9 @@
+# Final piece of the marketplace disclosure system: product page now shows
+# a refund policy link and any Creator-set refund terms, in two places
+# (near the buy button, and in the full Seller section).
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import { getProducts } from "@/lib/products";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -794,3 +800,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
     </>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\products\[slug]\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\products\[slug]\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

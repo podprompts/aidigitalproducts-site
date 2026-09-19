@@ -19,7 +19,7 @@ export default async function EditVendorProductPage({
 
   const { data: product } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, review_status, review_rejected_reason, last_approved_changes, last_approved_at")
+    .select("id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, review_status, review_rejected_reason, last_approved_changes, last_approved_at, creator_refund_terms")
     .eq("id", id)
     .single();
 

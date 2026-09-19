@@ -19,6 +19,7 @@ interface PendingProduct {
   video_url: string | null;
   download_url: string | null;
   attributes: Record<string, unknown> | null;
+  creator_refund_terms: string | null;
   vendor_name: string;
   pending_changes: Record<string, unknown>;
   review_submitted_at: string;
@@ -105,6 +106,13 @@ function buildDiffs(p: PendingProduct): FieldDiff[] {
   }
   if ("download_url" in pending && pending.download_url !== p.download_url) {
     push("download_url", "Download File", p.download_url ? "Has a file" : "No file", "New file uploaded");
+  }
+  if ("creator_refund_terms" in pending) {
+    push(
+      "creator_refund_terms", "Creator Refund Terms",
+      p.creator_refund_terms || "None set",
+      (pending.creator_refund_terms as string) || "None set"
+    );
   }
 
   if ("attributes" in pending && pending.attributes && typeof pending.attributes === "object") {

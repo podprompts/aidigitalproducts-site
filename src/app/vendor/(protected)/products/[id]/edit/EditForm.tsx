@@ -93,6 +93,7 @@ interface Props {
     review_rejected_reason?: string | null;
     last_approved_changes?: { label: string; oldValue: string; newValue: string }[] | null;
     last_approved_at?: string | null;
+    creator_refund_terms?: string | null;
   };
   initialImages: UIImage[];
 }
@@ -111,6 +112,7 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
     product.regular_price_cents ? (product.regular_price_cents / 100).toFixed(2) : ""
   );
   const [isPlrAvailable, setIsPlrAvailable] = useState(product.is_plr_available ?? false);
+  const [creatorRefundTerms, setCreatorRefundTerms] = useState(product.creator_refund_terms ?? "");
   const [plrPrice, setPlrPrice] = useState(
     product.plr_price_cents ? (product.plr_price_cents / 100).toFixed(2) : ""
   );
@@ -248,6 +250,11 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
       const newAttributes = buildAttributesPayload(attrs);
       if (JSON.stringify(newAttributes) !== JSON.stringify(product.attributes ?? {})) {
         payload.attributes = newAttributes;
+      }
+
+      const newRefundTerms = creatorRefundTerms.trim() || null;
+      if (newRefundTerms !== (product.creator_refund_terms ?? null)) {
+        payload.creator_refund_terms = newRefundTerms;
       }
 
       // Upload any new files to storage first — this does NOT make them
@@ -441,6 +448,25 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
             </p>
           </div>
         )}
+      </div>
+
+      {/* Creator Refund Terms */}
+      <div>
+        <label style={labelStyle}>Refund Terms (optional)</label>
+        <textarea
+          style={{ ...inputStyle, minHeight: "70px", resize: "vertical" }}
+          value={creatorRefundTerms}
+          onChange={(e) => setCreatorRefundTerms(e.target.value)}
+          placeholder="e.g. 14-day satisfaction guarantee, free revisions on request…"
+        />
+        <p style={{ fontSize: "11px", color: "var(--ink-mute)", marginTop: "4px" }}>
+          Optional. Shown to buyers on the product page and at checkout, alongside the
+          platform&apos;s standard{" "}
+          <a href="/refund-buyer-protection" target="_blank" rel="noreferrer" style={{ color: "var(--ink)" }}>
+            Refund &amp; Buyer Protection Policy
+          </a>
+          . This can only add to what buyers are offered, never take anything away.
+        </p>
       </div>
 
       {/* Product Images */}
