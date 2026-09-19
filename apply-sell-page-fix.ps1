@@ -1,3 +1,8 @@
+# Fixes /sell page copy: 30% -> 20% commission, removes the invented
+# weekly/$50/Friday payout claim in favor of accurate generic language.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
@@ -215,3 +220,7 @@ export default function SellPage() {
     </>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\sell\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\sell\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
