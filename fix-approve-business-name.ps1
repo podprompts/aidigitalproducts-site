@@ -1,3 +1,8 @@
+# Fixes the missing business_name field (root cause of the failure) and
+# makes the whole approval flow safely retryable end to end.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -127,3 +132,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   return NextResponse.json({ ok: true });
 }
+'@
+Set-Content -LiteralPath "src\app\api\admin\seller-applications\[id]\approve\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\admin\seller-applications\[id]\approve\route.ts" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
