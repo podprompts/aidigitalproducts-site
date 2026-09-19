@@ -1,3 +1,8 @@
+# Final Resend migration for email.ts, now with replyTo wired in to match
+# what the email templates already promise.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -355,3 +360,7 @@ export async function sendVendorRefundNotification(data: VendorRefundEmailData):
     throw new Error(`Resend failed to send vendor refund notification: ${error.message}`);
   }
 }
+'@
+Set-Content -LiteralPath "src\lib\email.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\lib\email.ts" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
