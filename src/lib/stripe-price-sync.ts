@@ -24,6 +24,8 @@ function logStripeError(step: string, err: unknown) {
     statusCode?: number;
     requestId?: string;
     message?: string;
+    detail?: unknown;
+    cause?: unknown;
   };
   console.error(`[syncStripePrice] Failed at step: ${step}`, {
     type: e?.type,
@@ -31,6 +33,10 @@ function logStripeError(step: string, err: unknown) {
     statusCode: e?.statusCode,
     requestId: e?.requestId,
     message: e?.message,
+    // The actual underlying network error (DNS/TLS/timeout) for a
+    // StripeConnectionError lives here, not in the fields above.
+    detail: e?.detail,
+    cause: e?.cause,
   });
 }
 
