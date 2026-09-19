@@ -9,6 +9,7 @@ import PasswordInput from "@/components/PasswordInput";
 const NAV = [
   { label: "Dashboard",           href: "/admin" },
   { label: "Products",            href: "/admin/products" },
+  { label: "Pending Reviews",     href: "/admin/pending-reviews" },
   { label: "Orders",              href: "/admin/orders" },
   { label: "Subscribers",         href: "/admin/subscribers" },
   { label: "Contacts",            href: "/admin/contacts" },

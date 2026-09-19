@@ -35,23 +35,11 @@ export async function POST(req: NextRequest) {
     .single();
   if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { data, error } = await supabaseAdmin
-    .from("product_images")
-    .insert({
-      product_id: productId,
-      url: publicUrl,
-      is_primary: !!isPrimary,
-      display_order: displayOrder ?? 0,
-      storage_path: path ?? null,
-    })
-    .select()
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  if (isPrimary) {
-    await supabaseAdmin.from("products").update({ thumbnail_url: publicUrl }).eq("id", productId);
-  }
-
-  return NextResponse.json({ image: data });
+  // No longer inserts into product_images or updates thumbnail_url live —
+  // the main product PUT route stages this into pending_changes.images
+  // instead, so a new image doesn't appear on the live site until an
+  // admin approves the submission.
+  return NextResponse.json({
+    image: { url: publicUrl, is_primary: !!isPrimary, display_order: displayOrder ?? 0, storage_path: path ?? null },
+  });
 }

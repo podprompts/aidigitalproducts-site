@@ -21,15 +21,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing productId or publicUrl" }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  // Ownership check only — no longer writes video_url live. The main
+  // product PUT route stages this URL into pending_changes instead, so
+  // it doesn't take effect until an admin approves it.
+  const { data: owned } = await supabaseAdmin
     .from("products")
-    .update({ video_url: publicUrl })
+    .select("id")
     .eq("id", productId)
-    .eq("vendor_id", user.id) // ownership enforced directly in the filter
-    .select();
+    .eq("vendor_id", user.id)
+    .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data || data.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   return NextResponse.json({ url: publicUrl });
 }

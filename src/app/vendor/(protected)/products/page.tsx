@@ -13,7 +13,7 @@ export default async function VendorProductsPage() {
 
   const { data: products } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, sale_price_cents, purchases, is_active")
+    .select("id, name, slug, sale_price_cents, purchases, is_active, review_status")
     .eq("vendor_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -57,6 +57,12 @@ export default async function VendorProductsPage() {
               <div style={{ color: "var(--ink-mute)", fontSize: "12px", marginTop: "2px" }}>
                 ${((p.sale_price_cents ?? 0) / 100).toFixed(2)} · {p.purchases ?? 0} purchases ·{" "}
                 {p.is_active ? "Active" : "Inactive"}
+                {p.review_status === "pending" && (
+                  <span style={{ marginLeft: "8px", color: "#8a6d1a", fontWeight: 600 }}>· Pending review</span>
+                )}
+                {p.review_status === "rejected" && (
+                  <span style={{ marginLeft: "8px", color: "#c0392b", fontWeight: 600 }}>· Edit rejected</span>
+                )}
               </div>
             </div>
             <Link href={`/vendor/products/${p.id}/edit`} className="btn btn-ghost btn-sm">

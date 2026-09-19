@@ -1,3 +1,263 @@
+# Content moderation, part 1: stages every vendor edit for admin review
+# instead of writing live. Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+async function getVendorUser() {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+export async function GET(req: NextRequest, { params }: Ctx) {
+  const user = await getVendorUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const { id } = await params;
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .select(
+      "id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, pending_changes, review_status, review_rejected_reason"
+    )
+    .eq("id", id)
+    .eq("vendor_id", user.id) // scoped — a vendor can only ever fetch their own product
+    .single();
+
+  if (error || !data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ product: data });
+}
+
+/**
+ * Every vendor edit is staged, never written live. This route only ever
+ * touches pending_changes / review_status / review_submitted_at — the
+ * actual product columns (and product_images) are only updated when an
+ * admin approves the submission, via the separate admin approval route.
+ * Stripe price syncing also happens at approval time, not here, so a
+ * price change never takes effect until it's actually approved either.
+ */
+export async function PUT(req: NextRequest, { params }: Ctx) {
+  const user = await getVendorUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  const { id } = await params;
+
+  // Verify ownership BEFORE allowing any update — never trust the client's
+  // claim about which product this is.
+  const { data: existing } = await supabaseAdmin
+    .from("products")
+    .select("id, vendor_id")
+    .eq("id", id)
+    .single();
+
+  if (!existing || existing.vendor_id !== user.id) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Same field whitelist as before — a vendor can propose changes to their
+  // own listing's content, pricing amounts, images, video, and file, but
+  // never Stripe price IDs directly, site-level curation flags, the
+  // coming-soon/archived states, or is_not_ai. Those stay admin-only.
+  // "images" is a full array of { url, is_primary, display_order } — the
+  // vendor's complete desired image set, not an incremental change.
+  const proposed: Record<string, unknown> = {};
+  if (typeof body.name === "string") proposed.name = body.name;
+  if (typeof body.slug === "string") proposed.slug = body.slug;
+  if (typeof body.category === "string") proposed.category = body.category;
+  if (typeof body.description === "string") proposed.description = body.description;
+  if (Array.isArray(body.features)) proposed.features = body.features;
+  if (typeof body.sale_price_cents === "number" || body.sale_price_cents === null) {
+    proposed.sale_price_cents = body.sale_price_cents;
+  }
+  if (typeof body.regular_price_cents === "number" || body.regular_price_cents === null) {
+    proposed.regular_price_cents = body.regular_price_cents;
+  }
+  if (typeof body.is_active === "boolean") proposed.is_active = body.is_active;
+  if (typeof body.is_plr_available === "boolean") proposed.is_plr_available = body.is_plr_available;
+  if (typeof body.plr_price_cents === "number" || body.plr_price_cents === null) {
+    proposed.plr_price_cents = body.plr_price_cents;
+  }
+  if (body.attributes && typeof body.attributes === "object") {
+    proposed.attributes = body.attributes;
+  }
+  if (typeof body.video_url === "string" || body.video_url === null) {
+    proposed.video_url = body.video_url;
+  }
+  if (typeof body.download_url === "string" || body.download_url === null) {
+    proposed.download_url = body.download_url;
+  }
+  if (Array.isArray(body.images)) {
+    proposed.images = body.images;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .update({
+      pending_changes: proposed,
+      review_status: "pending",
+      review_submitted_at: new Date().toISOString(),
+      review_rejected_reason: null,
+    })
+    .eq("id", id)
+    .eq("vendor_id", user.id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ product: data });
+}
+'@
+Set-Content -LiteralPath "src\app\api\vendor\products\[id]\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\vendor\products\[id]\route.ts" -ForegroundColor Green
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export async function POST(req: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  let body: { productId?: string; publicUrl?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { productId, publicUrl } = body;
+  if (!productId || !publicUrl) {
+    return NextResponse.json({ error: "Missing productId or publicUrl" }, { status: 400 });
+  }
+
+  // Ownership check only — no longer writes video_url live. The main
+  // product PUT route stages this URL into pending_changes instead, so
+  // it doesn't take effect until an admin approves it.
+  const { data: owned } = await supabaseAdmin
+    .from("products")
+    .select("id")
+    .eq("id", productId)
+    .eq("vendor_id", user.id)
+    .single();
+
+  if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  return NextResponse.json({ url: publicUrl });
+}
+'@
+Set-Content -LiteralPath "src\app\api\vendor\upload-video\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\vendor\upload-video\route.ts" -ForegroundColor Green
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export async function POST(req: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  let body: { productId?: string; path?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { productId, path } = body;
+  if (!productId || !path) {
+    return NextResponse.json({ error: "Missing productId or path" }, { status: 400 });
+  }
+
+  // Ownership check only — no longer writes download_url live. The main
+  // product PUT route stages this path into pending_changes instead, so
+  // it doesn't take effect until an admin approves it.
+  const { data: owned } = await supabaseAdmin
+    .from("products")
+    .select("id")
+    .eq("id", productId)
+    .eq("vendor_id", user.id)
+    .single();
+
+  if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  return NextResponse.json({ path });
+}
+'@
+Set-Content -LiteralPath "src\app\api\vendor\upload-file\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\vendor\upload-file\route.ts" -ForegroundColor Green
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export async function POST(req: NextRequest) {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  let body: {
+    productId?: string;
+    publicUrl?: string;
+    path?: string;
+    isPrimary?: boolean;
+    displayOrder?: number;
+  };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { productId, publicUrl, path, isPrimary, displayOrder } = body;
+  if (!productId || !publicUrl) {
+    return NextResponse.json({ error: "Missing productId or publicUrl" }, { status: 400 });
+  }
+
+  const { data: owned } = await supabaseAdmin
+    .from("products")
+    .select("id")
+    .eq("id", productId)
+    .eq("vendor_id", user.id)
+    .single();
+  if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // No longer inserts into product_images or updates thumbnail_url live —
+  // the main product PUT route stages this into pending_changes.images
+  // instead, so a new image doesn't appear on the live site until an
+  // admin approves the submission.
+  return NextResponse.json({
+    image: { url: publicUrl, is_primary: !!isPrimary, display_order: displayOrder ?? 0, storage_path: path ?? null },
+  });
+}
+'@
+Set-Content -LiteralPath "src\app\api\vendor\images\confirm\route.ts" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\api\vendor\images\confirm\route.ts" -ForegroundColor Green
+
+$content = @'
 "use client";
 
 import { useState } from "react";
@@ -573,3 +833,131 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
     </form>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\[id]\edit\EditForm.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\[id]\edit\EditForm.tsx" -ForegroundColor Green
+
+$content = @'
+import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import VendorProductEditForm from "./EditForm";
+
+export const dynamic = "force-dynamic";
+
+export default async function EditVendorProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
+
+  const { data: product } = await supabaseAdmin
+    .from("products")
+    .select("id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url, review_status, review_rejected_reason")
+    .eq("id", id)
+    .single();
+
+  // Ownership check — a vendor can only ever land here for their own product
+  if (!product || product.vendor_id !== user.id) notFound();
+
+  const { data: images } = await supabaseAdmin
+    .from("product_images")
+    .select("id, url, is_primary, display_order")
+    .eq("product_id", id)
+    .order("display_order", { ascending: true });
+
+  return <VendorProductEditForm product={product} initialImages={images ?? []} />;
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\[id]\edit\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\[id]\edit\page.tsx" -ForegroundColor Green
+
+$content = @'
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { createSessionClient } from "@/lib/supabase/server-session";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function VendorProductsPage() {
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: products } = await supabaseAdmin
+    .from("products")
+    .select("id, name, slug, sale_price_cents, purchases, is_active, review_status")
+    .eq("vendor_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const list = products ?? [];
+  const totalRevenueCents = list.reduce(
+    (sum, p) => sum + (p.sale_price_cents ?? 0) * (p.purchases ?? 0),
+    0
+  );
+
+  return (
+    <div>
+      <h1 className="display" style={{ fontSize: "28px", color: "var(--ink)", marginBottom: "8px" }}>
+        Your Products
+      </h1>
+      <p style={{ fontSize: "13px", color: "var(--ink-mute)", marginBottom: "24px", maxWidth: "560px" }}>
+        Estimated revenue: <strong>${(totalRevenueCents / 100).toFixed(2)}</strong> — based on
+        current price × total purchases. This is an estimate, not a precise historical figure,
+        since it doesn't account for past price changes or license type.
+      </p>
+
+      <div style={{ display: "flex", flexDirection: "column", border: "1px solid var(--line)" }}>
+        {list.length === 0 && (
+          <div style={{ padding: "20px", fontSize: "14px", color: "var(--ink-faded)" }}>
+            No products linked to your account yet.
+          </div>
+        )}
+        {list.map((p) => (
+          <div
+            key={p.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--line)",
+              fontSize: "14px",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, color: "var(--ink)" }}>{p.name}</div>
+              <div style={{ color: "var(--ink-mute)", fontSize: "12px", marginTop: "2px" }}>
+                ${((p.sale_price_cents ?? 0) / 100).toFixed(2)} · {p.purchases ?? 0} purchases ·{" "}
+                {p.is_active ? "Active" : "Inactive"}
+                {p.review_status === "pending" && (
+                  <span style={{ marginLeft: "8px", color: "#8a6d1a", fontWeight: 600 }}>· Pending review</span>
+                )}
+                {p.review_status === "rejected" && (
+                  <span style={{ marginLeft: "8px", color: "#c0392b", fontWeight: 600 }}>· Edit rejected</span>
+                )}
+              </div>
+            </div>
+            <Link href={`/vendor/products/${p.id}/edit`} className="btn btn-ghost btn-sm">
+              Edit
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+'@
+Set-Content -LiteralPath "src\app\vendor\(protected)\products\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\vendor\(protected)\products\page.tsx" -ForegroundColor Green
+
+Write-Host "`nAll 7 files replaced." -ForegroundColor Cyan
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
