@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createSessionClient } from "@/lib/supabase/server-session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { signOutAction } from "./actions";
@@ -6,7 +7,8 @@ import { signOutAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 export default async function VendorLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createSessionClient();
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

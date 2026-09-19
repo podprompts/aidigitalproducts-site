@@ -1,15 +1,16 @@
+import { cookies } from "next/headers";
 import { createSessionClient } from "@/lib/supabase/server-session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function VendorDashboardPage() {
-  const supabase = await createSessionClient();
+  const cookieStore = await cookies();
+  const supabase = createSessionClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
 
   // The layout already redirects to /vendor/login when there's no user,
-  // but guard here too rather than asserting non-null — safer, and avoids
-  // the exact crash that broke the build (prerendering with no real session).
+  // but guard here too rather than asserting non-null.
   if (!user) return null;
 
   const { data: vendorProfile } = await supabaseAdmin
