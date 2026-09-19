@@ -11,7 +11,11 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/make-offer.html' || pathname === '/terms.html') {
+  if (
+    pathname === '/make-offer.html' ||
+    pathname === '/terms.html' ||
+    pathname.startsWith('/vendor')
+  ) {
     return NextResponse.next();
   }
 
@@ -41,10 +45,12 @@ export const config = {
   //                        login route itself, so you can always log in)
   // - /admin              (the admin UI itself always loads, so the
   //                        login screen and dashboard are always reachable)
+  // - /vendor             (real vendors need to reach login/dashboard
+  //                        regardless of maintenance mode, same as /admin)
   // - /make-offer.html    (the page itself, so it doesn't rewrite in a loop)
   // - /terms.html         (linked from the offer form, must load directly)
   // - favicon.ico and common static asset extensions
   matcher: [
-    '/((?!_next/|api/|admin|make-offer\\.html|terms\\.html|favicon\\.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$).*)',
+    '/((?!_next/|api/|admin|vendor|make-offer\\.html|terms\\.html|favicon\\.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js)$).*)',
   ],
 };
