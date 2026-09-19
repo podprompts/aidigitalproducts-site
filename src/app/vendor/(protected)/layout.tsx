@@ -42,11 +42,16 @@ export default async function VendorLayout({ children }: { children: React.React
         <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
           Vendor Portal — {vendorProfile.display_name}
         </div>
-        <form action={signOutAction}>
-          <button type="submit" className="btn btn-ghost btn-sm">
-            Sign Out
-          </button>
-        </form>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <a href="/vendor/products" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            Products
+          </a>
+          <form action={signOutAction}>
+            <button type="submit" className="btn btn-ghost btn-sm">
+              Sign Out
+            </button>
+          </form>
+        </div>
       </div>
       <div style={{ padding: "32px" }}>{children}</div>
     </div>

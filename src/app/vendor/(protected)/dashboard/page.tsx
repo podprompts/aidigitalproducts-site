@@ -34,6 +34,13 @@ export default async function VendorDashboardPage() {
         <p>Email: {vendorProfile?.email}</p>
         <p>Products linked to your account: {productCount ?? 0}</p>
       </div>
+      <a
+        href="/vendor/products"
+        className="btn btn-primary"
+        style={{ marginTop: "24px", display: "inline-block" }}
+      >
+        View & Manage Products
+      </a>
     </div>
   );
 }
