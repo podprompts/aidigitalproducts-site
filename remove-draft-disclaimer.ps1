@@ -1,3 +1,7 @@
+# Removes the draft/attorney-review disclaimer from the Refund & Buyer
+# Protection Policy page. Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
@@ -171,3 +175,7 @@ function ContactBlock() {
     </div>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\refund-buyer-protection\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\refund-buyer-protection\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
