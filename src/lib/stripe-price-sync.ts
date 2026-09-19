@@ -122,6 +122,18 @@ export async function syncStripePrice(params: SyncPriceParams): Promise<SyncPric
     throw err;
   }
 
+  // Stripe won't let you archive a price that's still the product's default,
+  // so promote the new one first. This also keeps the product's own
+  // dashboard/Inspector view showing the current price, not a stale one.
+  try {
+    await stripe.products.update(stripeProductId, { default_price: newPrice.id });
+  } catch (err) {
+    logStripeError("set new price as product default", err);
+    // Non-fatal — the new price still works for checkout even if this
+    // cosmetic step fails; but it will likely also cause the deactivation
+    // below to fail for the same reason, which is itself non-fatal too.
+  }
+
   if (currentStripePriceId) {
     try {
       await stripe.prices.update(currentStripePriceId, { active: false });
