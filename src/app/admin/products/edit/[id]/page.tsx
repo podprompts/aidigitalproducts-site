@@ -42,7 +42,8 @@ function EditProductContent({ id }: { id: string }) {
           plr_price:            product.plr_price_cents ? (product.plr_price_cents / 100).toFixed(2) : "",
           plr_stripe_price_id:  product.plr_stripe_price_id ?? "",
           is_plr_available:     product.is_plr_available ?? false,
-          seller:           product.seller ?? "",
+          vendor_id:            product.vendor_id ?? "",
+
           features:         Array.isArray(product.features) ? product.features.join("\n") : (product.features ?? ""),
           status:           product.status ?? "active",
           is_featured:      product.is_featured ?? false,

@@ -1,6 +1,6 @@
 "use client";
  
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin, adminHeaders } from "@/app/admin/AdminContext";
 import ImageUploader, { type UIImage } from "./ImageUploader";
@@ -21,7 +21,7 @@ export interface AdminProductData {
   plr_price: string;
   plr_stripe_price_id: string;
   is_plr_available: boolean;
-  seller: string;
+  vendor_id: string;
   features: string;
   status: "active" | "coming_soon" | "archived";
   is_featured: boolean;
@@ -125,7 +125,7 @@ const EMPTY: AdminProductData = {
   name: "", slug: "", description: "", category: mockCategories[0]?.name ?? "",
   price: "", regular_price: "", sale_stripe_price_id: "", regular_stripe_price_id: "",
   plr_price: "", plr_stripe_price_id: "", is_plr_available: false,
-  seller: "AI Digital Products", features: "",
+  vendor_id: "", features: "",
   status: "active", is_featured: false, is_favorite: false, is_not_ai: false,
   video_url: "",
 };
@@ -182,8 +182,24 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
       : DEFAULT_ATTRS
   );
   const [showAttrs, setShowAttrs] = useState(false);
- 
+  const [vendors, setVendors] = useState<{ id: string; display_name: string }[]>([]);
+
   const isEdit = !!initial.id;
+
+  useEffect(() => {
+    fetch("/api/admin/vendors", { headers: adminHeaders(token) })
+      .then((r) => r.json())
+      .then((data) => {
+        const list = data.vendors ?? [];
+        setVendors(list);
+        // Default new products to the first (currently only) vendor
+        if (!isEdit && !initial.vendor_id && list.length > 0) {
+          setForm((prev) => (prev.vendor_id ? prev : { ...prev, vendor_id: list[0].id }));
+        }
+      })
+      .catch(() => setVendors([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
  
   function set(key: keyof AdminProductData, value: unknown) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -312,6 +328,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         plr_price_cents:         form.plr_price ? Math.round(parseFloat(form.plr_price) * 100) : null,
         plr_stripe_price_id:     form.plr_stripe_price_id || null,
         is_plr_available:        form.is_plr_available,
+        vendor_id:               form.vendor_id || null,
         is_active:               form.status === "active",
         is_featured:             form.is_featured,
         is_favorite:             form.is_favorite,
@@ -441,8 +458,17 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
               {mockCategories.map((c) => <option key={c.slug} value={c.name}>{c.name}</option>)}
             </select>
           </Field>
-          <Field label="Seller">
-            <input style={inputStyle} value={form.seller} onChange={(e) => set("seller", e.target.value)} placeholder="Seller name" />
+          <Field label="Vendor">
+            <select
+              style={{ ...inputStyle, appearance: "auto" }}
+              value={form.vendor_id}
+              onChange={(e) => set("vendor_id", e.target.value)}
+            >
+              <option value="">— No vendor —</option>
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>{v.display_name}</option>
+              ))}
+            </select>
           </Field>
           <Field label="Status">
             <select style={{ ...inputStyle, appearance: "auto" }} value={form.status} onChange={(e) => set("status", e.target.value as AdminProductData["status"])}>
