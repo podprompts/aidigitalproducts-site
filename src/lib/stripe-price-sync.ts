@@ -122,25 +122,30 @@ export async function syncStripePrice(params: SyncPriceParams): Promise<SyncPric
     throw err;
   }
 
-  // Stripe won't let you archive a price that's still the product's default,
-  // so promote the new one first. This also keeps the product's own
-  // dashboard/Inspector view showing the current price, not a stale one.
-  try {
-    await stripe.products.update(stripeProductId, { default_price: newPrice.id });
-  } catch (err) {
-    logStripeError("set new price as product default", err);
-    // Non-fatal — the new price still works for checkout even if this
-    // cosmetic step fails; but it will likely also cause the deactivation
-    // below to fail for the same reason, which is itself non-fatal too.
-  }
-
   if (currentStripePriceId) {
     try {
       await stripe.prices.update(currentStripePriceId, { active: false });
     } catch (err) {
-      logStripeError("deactivate old price (after creating new one)", err);
-      // Non-fatal — an old Price staying active doesn't break anything;
-      // new checkouts will use the new Price ID we're about to store.
+      const stripeErr = err as { message?: string };
+      const blockedByDefault = stripeErr?.message?.includes(
+        "cannot be archived because it is the default price"
+      );
+
+      if (blockedByDefault) {
+        // Only promote the new price to default when it's actually needed to
+        // unblock archiving — not unconditionally on every save. This keeps
+        // two different price fields on the same product (e.g. regular and
+        // PLR) from stomping each other's default status when both change
+        // in the same request.
+        try {
+          await stripe.products.update(stripeProductId, { default_price: newPrice.id });
+          await stripe.prices.update(currentStripePriceId, { active: false });
+        } catch (retryErr) {
+          logStripeError("deactivate old price (after promoting new one to default)", retryErr);
+        }
+      } else {
+        logStripeError("deactivate old price (after creating new one)", err);
+      }
     }
   }
 
