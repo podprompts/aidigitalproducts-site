@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const { id } = await params;
   const { data, error } = await supabaseAdmin
     .from("products")
-    .select("id, name, description, sale_price_cents, is_active, vendor_id")
+    .select("id, name, description, sale_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url")
     .eq("id", id)
     .eq("vendor_id", user.id) // scoped — a vendor can only ever fetch their own product
     .single();
@@ -63,6 +63,9 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     allowed.sale_price_cents = body.sale_price_cents;
   }
   if (typeof body.is_active === "boolean") allowed.is_active = body.is_active;
+  if (body.attributes && typeof body.attributes === "object") {
+    allowed.attributes = body.attributes;
+  }
 
   const { data, error } = await supabaseAdmin
     .from("products")

@@ -19,12 +19,18 @@ export default async function EditVendorProductPage({
 
   const { data: product } = await supabaseAdmin
     .from("products")
-    .select("id, name, description, sale_price_cents, is_active, vendor_id")
+    .select("id, name, description, sale_price_cents, is_active, vendor_id, video_url, download_url, attributes, thumbnail_url")
     .eq("id", id)
     .single();
 
   // Ownership check — a vendor can only ever land here for their own product
   if (!product || product.vendor_id !== user.id) notFound();
 
-  return <VendorProductEditForm product={product} />;
+  const { data: images } = await supabaseAdmin
+    .from("product_images")
+    .select("id, url, is_primary, display_order")
+    .eq("product_id", id)
+    .order("display_order", { ascending: true });
+
+  return <VendorProductEditForm product={product} initialImages={images ?? []} />;
 }
