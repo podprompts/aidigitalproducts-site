@@ -18,6 +18,7 @@ interface PendingProduct {
   is_active: boolean;
   video_url: string | null;
   download_url: string | null;
+  attributes: Record<string, unknown> | null;
   vendor_name: string;
   pending_changes: Record<string, unknown>;
   review_submitted_at: string;
@@ -32,13 +33,53 @@ function formatBool(v: unknown): string {
   return v ? "Yes" : "No";
 }
 
+const ATTR_LABELS: Record<string, string> = {
+  promptsIncluded: "Prompts Included",
+  worksWith: "Works With",
+  license: "License",
+  format: "Format",
+  lastUpdated: "Last Updated",
+  version: "Version",
+  instantDownload: "Instant Download",
+  support: "Support",
+  difficultyLevel: "Difficulty Level",
+  builtWith: "Built With",
+  requirements: "Requirements",
+  aiModel: "AI Model",
+};
+
+function formatAttrValue(v: unknown): string {
+  if (v == null || v === "") return "—";
+  if (Array.isArray(v)) return v.length ? v.join(", ") : "—";
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  return String(v);
+}
+
 interface FieldDiff {
   label: string;
   oldValue: string;
   newValue: string;
 }
 
-/** Only returns fields the vendor actually touched AND that genuinely changed. */
+/** Real per-key diff of the attributes object, not a generic placeholder — this
+ * is what actually surfaces something like "License: Commercial Use → Personal Use". */
+function buildAttributeDiffs(current: Record<string, unknown> | null, pending: Record<string, unknown>): FieldDiff[] {
+  const cur = current ?? {};
+  const diffs: FieldDiff[] = [];
+  const keys = new Set([...Object.keys(cur), ...Object.keys(pending)]);
+  for (const key of keys) {
+    const oldStr = formatAttrValue(cur[key]);
+    const newStr = formatAttrValue(pending[key]);
+    if (oldStr !== newStr) {
+      diffs.push({ label: ATTR_LABELS[key] ?? key, oldValue: oldStr, newValue: newStr });
+    }
+  }
+  return diffs;
+}
+
+/** Only returns fields the vendor actually touched AND that genuinely changed
+ * in value — presence alone in pending_changes is not enough, since a
+ * submission may include a field that happens to match the current value. */
 function buildDiffs(p: PendingProduct): FieldDiff[] {
   const pending = p.pending_changes || {};
   const diffs: FieldDiff[] = [];
@@ -59,15 +100,36 @@ function buildDiffs(p: PendingProduct): FieldDiff[] {
   if ("plr_price_cents" in pending) push("PLR Price", formatPrice(p.plr_price_cents), formatPrice(pending.plr_price_cents));
   if ("is_active" in pending) push("Active", formatBool(p.is_active), formatBool(pending.is_active));
   if ("is_plr_available" in pending) push("PLR Available", formatBool(p.is_plr_available), formatBool(pending.is_plr_available));
-  if ("video_url" in pending) push("Preview Video", p.video_url ? "Has a video" : "No video", pending.video_url ? "New video uploaded" : "Removed");
-  if ("download_url" in pending) push("Download File", p.download_url ? "Has a file" : "No file", pending.download_url ? "New file uploaded" : "Removed");
-  if ("attributes" in pending) diffs.push({ label: "Attributes", oldValue: "(see current listing)", newValue: "Updated" });
+
+  // Compare the actual URL, not just presence — an unchanged submission
+  // shouldn't be reported as "New video uploaded" just because video_url
+  // was included in the payload.
+  if ("video_url" in pending && pending.video_url !== p.video_url) {
+    push("Preview Video", p.video_url ? "Has a video" : "No video", "New video uploaded");
+  }
+  if ("download_url" in pending && pending.download_url !== p.download_url) {
+    push("Download File", p.download_url ? "Has a file" : "No file", "New file uploaded");
+  }
+
+  if ("attributes" in pending && pending.attributes && typeof pending.attributes === "object") {
+    diffs.push(...buildAttributeDiffs(p.attributes, pending.attributes as Record<string, unknown>));
+  }
 
   return diffs;
 }
 
+/** Compares the actual proposed image set against the current one — not
+ * just whether "images" happens to be present in pending_changes. */
 function imagesChanged(p: PendingProduct): boolean {
-  return "images" in (p.pending_changes || {});
+  const pending = p.pending_changes || {};
+  if (!("images" in pending)) return false;
+  const proposed = (pending.images as { url: string; is_primary?: boolean }[]) ?? [];
+  const current = p.current_images ?? [];
+  if (proposed.length !== current.length) return true;
+  for (let i = 0; i < proposed.length; i++) {
+    if (proposed[i].url !== current[i].url || !!proposed[i].is_primary !== !!current[i].is_primary) return true;
+  }
+  return false;
 }
 
 export default function PendingReviewsPage() {

@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const { data: products, error } = await supabaseAdmin
     .from("products")
     .select(
-      "id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, video_url, download_url, vendor_id, pending_changes, review_status, review_submitted_at"
+      "id, name, slug, category, description, features, sale_price_cents, regular_price_cents, is_plr_available, plr_price_cents, is_active, video_url, download_url, attributes, vendor_id, pending_changes, review_status, review_submitted_at"
     )
     .eq("review_status", "pending")
     .order("review_submitted_at", { ascending: true });
