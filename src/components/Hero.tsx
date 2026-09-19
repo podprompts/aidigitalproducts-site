@@ -59,7 +59,7 @@ export default function Hero() {
         }}
       >
         Skip the Build.{" "}
-        <span style={{ color: "var(--ink-mute)" }}>Buy the Solution.</span>
+        <span style={{ color: "var(--ink-mute)" }}>Buy the Outcome.</span>
       </h1>
 
       {/* Subtext */}

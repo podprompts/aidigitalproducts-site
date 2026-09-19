@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createSessionClient } from "@/lib/supabase/server-session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { signOutAction } from "../actions";
+import OnboardingWelcomeModal from "@/components/OnboardingWelcomeModal";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function VendorLayout({ children }: { children: React.React
   // real vendors should get past this point.
   const { data: vendorProfile } = await supabaseAdmin
     .from("vendor_profiles")
-    .select("display_name, is_active")
+    .select("display_name, is_active, stripe_onboarding_complete")
     .eq("id", user.id)
     .single();
 
@@ -30,6 +31,10 @@ export default async function VendorLayout({ children }: { children: React.React
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <OnboardingWelcomeModal
+        showByDefault={!vendorProfile.stripe_onboarding_complete}
+        vendorName={vendorProfile.display_name ?? "there"}
+      />
       <div
         style={{
           display: "flex",

@@ -30,11 +30,11 @@ export const metadata: Metadata = {
     template: '%s | AiDigitalProducts.com',
   },
   description:
-    'Ready-made AI products that work out of the box. Skip the build — buy the solution. Built by experts, deployed in minutes.',
+    'Ready-made AI products that work out of the box. Skip the build — buy the outcome. Built by experts, deployed in minutes.',
   openGraph: {
     title: 'AiDigitalProducts.com — The AI Marketplace',
     description:
-      'Ready-made AI products that work out of the box. Skip the build — buy the solution. Built by experts, deployed in minutes.',
+      'Ready-made AI products that work out of the box. Skip the build — buy the outcome. Built by experts, deployed in minutes.',
     url: 'https://aidigitalproducts.com',
     siteName: 'AiDigitalProducts.com',
     images: [
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AiDigitalProducts.com — Skip the Build. Buy the Solution.',
+        alt: 'AiDigitalProducts.com — Skip the Build. Buy the Outcome.',
       },
     ],
     locale: 'en_US',
