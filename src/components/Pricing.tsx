@@ -53,10 +53,11 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
     <div
       style={{
         background: "var(--bg)",
-        padding: "56px 40px",
+        padding: "56px clamp(20px, 5vw, 40px)",
         textAlign: "left",
         display: "flex",
         flexDirection: "column",
+        minWidth: 0,
       }}
     >
       <div
@@ -66,7 +67,6 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
           textTransform: "uppercase",
           letterSpacing: "0.18em",
           color: "var(--ink-faded)",
-          whiteSpace: "nowrap",
         }}
       >
         {tier.tier}
@@ -80,7 +80,7 @@ function PriceCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
           letterSpacing: "-0.04em",
           color: "var(--ink)",
           lineHeight: 1,
-          whiteSpace: "nowrap",
+          overflowWrap: "break-word",
         }}
       >
         {tier.amount}
