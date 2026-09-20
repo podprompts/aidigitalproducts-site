@@ -6,6 +6,7 @@ import { mockProducts, type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import ViewingBadge from "@/components/ViewingBadge";
 import ProductMeta from "@/components/ProductMeta";
+import VendorAvatarBadge from "@/components/VendorAvatarBadge";
 import { useInfiniteCarousel } from "@/hooks/useInfiniteCarousel";
 
 export default function RecentlyAddedCarousel({ products }: { products?: Product[] }) {
@@ -151,7 +152,10 @@ export default function RecentlyAddedCarousel({ products }: { products?: Product
               <div style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.2 }}>
                 {product.title}
               </div>
-              <div className="card-seller">Seller · {product.seller}</div>
+              <div className="card-seller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <VendorAvatarBadge url={product.sellerAvatarUrl ?? null} size={26} alt={product.seller ?? "Seller"} />
+                <span>Seller · {product.seller}</span>
+              </div>
 
               {/* ── Review / price / purchases meta row ── */}
               <ProductMeta
