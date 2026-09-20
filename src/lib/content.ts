@@ -87,7 +87,7 @@ export const pricingTiers: PricingTier[] = [
   },
   {
     tier: "Professional",
-    amount: "$	$499–$1,499",
+    amount: "$499–$1,499",
     period: "/+retainer",
     desc: "Full-stack systems built for real business results.",
     features: [

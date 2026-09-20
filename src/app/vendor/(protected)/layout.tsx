@@ -21,12 +21,20 @@ export default async function VendorLayout({ children }: { children: React.React
   // real vendors should get past this point.
   const { data: vendorProfile } = await supabaseAdmin
     .from("vendor_profiles")
-    .select("display_name, is_active, stripe_onboarding_complete, avatar_url")
+    .select("display_name, is_active, stripe_onboarding_complete, avatar_url, agreed_to_seller_agreement_at")
     .eq("id", user.id)
     .single();
 
   if (!vendorProfile || !vendorProfile.is_active) {
     redirect("/vendor/login");
+  }
+
+  // Hard gate — unlike Stripe Connect/avatar (which nag via a dismissable
+  // modal), the Seller Agreement is a legal requirement. Applies to every
+  // vendor, including those approved before this feature existed, since
+  // the column is simply NULL for them until they explicitly accept.
+  if (!vendorProfile.agreed_to_seller_agreement_at) {
+    redirect("/vendor/agreement");
   }
 
   return (
