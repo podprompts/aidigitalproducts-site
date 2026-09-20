@@ -767,7 +767,10 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                         <div style={{ fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.25 }}>
                           {p.title}
                         </div>
-                        <div className="card-seller">Seller · {p.seller}</div>
+                        <div className="card-seller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <VendorAvatarBadge url={p.sellerAvatarUrl ?? null} size={26} alt={p.seller ?? "Seller"} />
+                          <span>Seller · {p.seller}</span>
+                        </div>
 
                         <ProductMeta
                           rating={p.rating}

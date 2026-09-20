@@ -5,6 +5,7 @@ import Link from "next/link";
 import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import ViewingBadge from "@/components/ViewingBadge";
+import VendorAvatarBadge from "@/components/VendorAvatarBadge";
 
 const ALL = "All";
 
@@ -180,7 +181,10 @@ export default function ProductsClient({
                     <div style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.2 }}>
                       {product.title}
                     </div>
-                    <div className="card-seller">Seller · {product.seller}</div>
+                    <div className="card-seller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <VendorAvatarBadge url={product.sellerAvatarUrl ?? null} size={26} alt={product.seller ?? "Seller"} />
+                      <span>Seller · {product.seller}</span>
+                    </div>
                     <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)" }}>
                       ${product.price}
                       {(product.purchases ?? 0) > 0 && (
