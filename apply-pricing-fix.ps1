@@ -1,3 +1,8 @@
+# Fixes pricing page: 30% -> 20% commission, and removes the same invented
+# weekly/$50/Friday payout claim already fixed on the /sell page.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
@@ -200,3 +205,7 @@ export default function PricingPage() {
     </>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\pricing\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\pricing\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

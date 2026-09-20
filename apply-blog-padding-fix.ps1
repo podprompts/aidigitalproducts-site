@@ -1,3 +1,8 @@
+# Fixes the blog grid's flat, non-responsive side padding to match the
+# responsive convention used elsewhere on the site.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
@@ -146,3 +151,7 @@ export default function BlogPage() {
     </>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\blog\page.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\blog\page.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

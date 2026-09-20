@@ -1,3 +1,219 @@
+# Adds a Vendors page to the admin panel showing every vendor's live
+# Stripe Connect status, with a direct link into their Stripe dashboard.
+# Run from the root of your aidigitalproducts-site repo.
+
+New-Item -ItemType Directory -Force -Path "src\app\admin\vendors" | Out-Null
+New-Item -ItemType Directory -Force -Path "src\app\api\admin\vendors-connect-status" | Out-Null
+New-Item -ItemType Directory -Force -Path "src\app\api\admin\vendors-connect-status\[id]\login-link" | Out-Null
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
+import { stripe } from "@/lib/stripe";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export async function GET(req: NextRequest) {
+  if (!(await isAdminAuthed(req))) return unauthorized();
+
+  const { data: vendors, error } = await supabaseAdmin
+    .from("vendor_profiles")
+    .select("id, display_name, business_name, email, is_active, stripe_account_id");
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const enriched = await Promise.all(
+    (vendors ?? []).map(async (v) => {
+      if (!v.stripe_account_id) {
+        return { ...v, connected: false, chargesEnabled: false, payoutsEnabled: false };
+      }
+      try {
+        const account = await stripe.accounts.retrieve(v.stripe_account_id);
+        return {
+          ...v,
+          connected: true,
+          chargesEnabled: !!account.charges_enabled,
+          payoutsEnabled: !!account.payouts_enabled,
+        };
+      } catch (err) {
+        console.error(`[admin/vendors-connect-status] Failed to retrieve ${v.stripe_account_id}`, err);
+        return { ...v, connected: true, chargesEnabled: false, payoutsEnabled: false, retrieveFailed: true };
+      }
+    })
+  );
+
+  return NextResponse.json({ vendors: enriched });
+}
+'@
+Set-Content -LiteralPath "src\app\api\admin\vendors-connect-status\route.ts" -Value $content -NoNewline
+Write-Host "NEW: src\app\api\admin\vendors-connect-status\route.ts" -ForegroundColor Green
+
+$content = @'
+import { NextRequest, NextResponse } from "next/server";
+import { isAdminAuthed, unauthorized } from "@/lib/admin-auth";
+import { stripe } from "@/lib/stripe";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+export async function POST(req: NextRequest, { params }: Ctx) {
+  if (!(await isAdminAuthed(req))) return unauthorized();
+  const { id } = await params;
+
+  const { data: vendor } = await supabaseAdmin
+    .from("vendor_profiles")
+    .select("stripe_account_id")
+    .eq("id", id)
+    .single();
+
+  if (!vendor?.stripe_account_id) {
+    return NextResponse.json({ error: "This vendor hasn't connected a Stripe account" }, { status: 400 });
+  }
+
+  try {
+    // Single-use, short-lived — generated fresh on every click, never cached.
+    const loginLink = await stripe.accounts.createLoginLink(vendor.stripe_account_id);
+    return NextResponse.json({ url: loginLink.url });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to create login link" },
+      { status: 502 }
+    );
+  }
+}
+'@
+Set-Content -LiteralPath "src\app\api\admin\vendors-connect-status\[id]\login-link\route.ts" -Value $content -NoNewline
+Write-Host "NEW: src\app\api\admin\vendors-connect-status\[id]\login-link\route.ts" -ForegroundColor Green
+
+$content = @'
+"use client";
+
+import { useEffect, useState } from "react";
+import AdminShell from "../AdminShell";
+import { useAdmin, adminHeaders } from "../AdminContext";
+
+interface Vendor {
+  id: string;
+  display_name: string | null;
+  business_name: string | null;
+  email: string | null;
+  is_active: boolean;
+  stripe_account_id: string | null;
+  connected: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  retrieveFailed?: boolean;
+}
+
+function VendorsContent() {
+  const { token } = useAdmin();
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openingId, setOpeningId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/vendors-connect-status", { headers: adminHeaders(token) })
+      .then((r) => r.json())
+      .then((d) => setVendors(d.vendors ?? []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  async function handleOpenStripe(vendor: Vendor) {
+    setOpeningId(vendor.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/vendors-connect-status/${vendor.id}/login-link`, {
+        method: "POST",
+        headers: adminHeaders(token),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to open Stripe");
+      window.open(data.url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setOpeningId(null);
+    }
+  }
+
+  function statusBadge(v: Vendor) {
+    if (!v.connected) {
+      return <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase" }}>Not connected</span>;
+    }
+    if (v.retrieveFailed) {
+      return <span style={{ fontSize: "11px", fontWeight: 700, color: "#c0392b", textTransform: "uppercase" }}>Error checking status</span>;
+    }
+    if (v.chargesEnabled && v.payoutsEnabled) {
+      return <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534", textTransform: "uppercase" }}>Fully connected</span>;
+    }
+    return <span style={{ fontSize: "11px", fontWeight: 700, color: "#8a6d1a", textTransform: "uppercase" }}>Onboarding incomplete</span>;
+  }
+
+  return (
+    <div style={{ maxWidth: "900px" }}>
+      <div style={{ fontSize: "12px", color: "var(--ink-mute)", marginBottom: "16px" }}>
+        {loading ? "Loading…" : `${vendors.length} vendor${vendors.length !== 1 ? "s" : ""}`}
+      </div>
+
+      {error && <p style={{ color: "#e53e3e", fontSize: "13px", marginBottom: "16px" }}>{error}</p>}
+
+      <div style={{ border: "1px solid var(--line)", overflow: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid var(--line)", background: "var(--bg-alt)" }}>
+              {["Vendor", "Email", "Stripe Connect Status", ""].map((h) => (
+                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: "var(--ink-mute)" }}>Loading…</td></tr>
+            ) : vendors.length === 0 ? (
+              <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: "var(--ink-mute)" }}>No vendors yet.</td></tr>
+            ) : vendors.map((v, i) => (
+              <tr key={v.id} style={{ borderBottom: "1px solid var(--line-soft)", background: i % 2 === 0 ? "var(--bg)" : "var(--bg-alt)" }}>
+                <td style={{ padding: "10px 14px", color: "var(--ink)", fontWeight: 600 }}>
+                  {v.business_name || v.display_name || "—"}
+                  {!v.is_active && <span style={{ marginLeft: "6px", fontSize: "10px", color: "var(--ink-mute)" }}>(inactive)</span>}
+                </td>
+                <td style={{ padding: "10px 14px", color: "var(--ink-faded)" }}>{v.email ?? "—"}</td>
+                <td style={{ padding: "10px 14px" }}>{statusBadge(v)}</td>
+                <td style={{ padding: "10px 14px" }}>
+                  {v.connected && (
+                    <button
+                      onClick={() => handleOpenStripe(v)}
+                      disabled={openingId === v.id}
+                      className="btn btn-ghost btn-sm"
+                    >
+                      {openingId === v.id ? "Opening…" : "View in Stripe →"}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default function VendorsPage() {
+  return (
+    <AdminShell title="Vendors">
+      <VendorsContent />
+    </AdminShell>
+  );
+}
+'@
+Set-Content -LiteralPath "src\app\admin\vendors\page.tsx" -Value $content -NoNewline
+Write-Host "NEW: src\app\admin\vendors\page.tsx" -ForegroundColor Green
+
+$content = @'
 "use client";
 
 import { useState, useEffect } from "react";
@@ -260,3 +476,9 @@ export default function AdminShell({ title, children }: Props) {
     </AdminContext.Provider>
   );
 }
+'@
+Set-Content -LiteralPath "src\app\admin\AdminShell.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\app\admin\AdminShell.tsx" -ForegroundColor Green
+
+Write-Host "`nAll 4 files written." -ForegroundColor Cyan
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
