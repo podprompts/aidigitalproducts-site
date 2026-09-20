@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 import { useAdmin, adminHeaders } from "../AdminContext";
 
-interface Sub { id: string; email: string; source_page: string | null; created_at: string; }
+interface Sub { id: string; email: string; source_page: string | null; subscribed_at: string; }
 
 function SubsContent() {
   const { token } = useAdmin();
@@ -42,7 +42,7 @@ function SubsContent() {
               <tr key={s.id} style={{ borderBottom: "1px solid var(--line-soft)", background: i % 2 === 0 ? "var(--bg)" : "var(--bg-alt)" }}>
                 <td style={{ padding: "10px 14px", fontWeight: 500, color: "var(--ink)" }}>{s.email}</td>
                 <td style={{ padding: "10px 14px", color: "var(--ink-faded)" }}>{s.source_page ?? "—"}</td>
-                <td style={{ padding: "10px 14px", color: "var(--ink-faded)" }}>{new Date(s.created_at).toLocaleDateString()}</td>
+                <td style={{ padding: "10px 14px", color: "var(--ink-faded)" }}>{new Date(s.subscribed_at).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>
