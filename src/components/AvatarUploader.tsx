@@ -3,13 +3,13 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 
-const MIN_DIMENSION = 400; // px — rejects small/low-quality images
+const MIN_DIMENSION = 400; // px â€” rejects small/low-quality images
 const MAX_BYTES = 3 * 1024 * 1024; // 3MB
-const DISPLAY_SIZE = 96; // px — fixed modern avatar size regardless of source dimensions
+const DISPLAY_SIZE = 96; // px â€” fixed modern avatar size regardless of source dimensions
 
 interface Props {
   currentAvatarUrl: string | null;
-  /** "vendor" (default) or "admin" — determines which presign/confirm routes to call */
+  /** "vendor" (default) or "admin" â€” determines which presign/confirm routes to call */
   role?: "vendor" | "admin";
   /** Called with the new URL right after a successful upload */
   onUploaded?: (url: string) => void;
@@ -52,11 +52,11 @@ export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUp
     try {
       const { width, height } = await checkImageDimensions(file);
       if (width < MIN_DIMENSION || height < MIN_DIMENSION) {
-        setError(`Image is too small (${width}×${height}px). Please use at least ${MIN_DIMENSION}×${MIN_DIMENSION}px for a clear, high-quality picture.`);
+        setError(`Image is too small (${width}Ã—${height}px). Please use at least ${MIN_DIMENSION}Ã—${MIN_DIMENSION}px for a clear, high-quality picture.`);
         return;
       }
     } catch {
-      setError("Couldn't read that image — please try a different file.");
+      setError("Couldn't read that image â€” please try a different file.");
       return;
     }
 
@@ -119,7 +119,7 @@ export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUp
         )}
         {uploading && (
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#fff" }}>
-            Uploading…
+            Uploadingâ€¦
           </div>
         )}
       </div>
@@ -133,7 +133,7 @@ export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUp
           {avatarUrl ? "Change photo" : "Upload photo"}
         </button>
         <p style={{ fontSize: "11px", color: "var(--ink-mute)", marginTop: "6px", maxWidth: "260px" }}>
-          At least {MIN_DIMENSION}×{MIN_DIMENSION}px, under 3MB.
+          At least {MIN_DIMENSION}Ã—{MIN_DIMENSION}px, under 3MB.
         </p>
         {error && <p style={{ fontSize: "12px", color: "#e53e3e", marginTop: "6px" }}>{error}</p>}
         <input

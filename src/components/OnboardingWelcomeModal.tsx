@@ -56,7 +56,7 @@ export default function OnboardingWelcomeModal({ stripeConnected, vendorName, av
             padding: "4px",
           }}
         >
-          ×
+          Ã—
         </button>
 
         <div
@@ -73,7 +73,7 @@ export default function OnboardingWelcomeModal({ stripeConnected, vendorName, av
             ? "Two steps left to finish setting up."
             : needsStripe
             ? "One step left before you can get paid."
-            : "One step left — add your photo."}
+            : "One step left â€” add your photo."}
         </h2>
 
         {needsAvatar && (
@@ -82,7 +82,7 @@ export default function OnboardingWelcomeModal({ stripeConnected, vendorName, av
               1. Add a profile picture
             </div>
             <p style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6, marginBottom: "16px" }}>
-              Buyers see this next to your products — every seller needs one.
+              Buyers see this next to your products â€” every seller needs one.
             </p>
             <AvatarUploader currentAvatarUrl={avatarUrl} role="vendor" onUploaded={setAvatarUrl} />
           </div>
@@ -96,7 +96,7 @@ export default function OnboardingWelcomeModal({ stripeConnected, vendorName, av
             <p style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.65, marginBottom: "20px" }}>
               You&apos;re fully set up to list and manage products. But to actually receive your share
               of each sale, you need to connect a Stripe account. Until this is done, sales are still
-              recorded normally — your payouts just can&apos;t be sent to you yet.
+              recorded normally â€” your payouts just can&apos;t be sent to you yet.
             </p>
             <p style={{ fontSize: "12px", color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: "20px" }}>
               The platform keeps a 20% commission on each sale; the rest is transferred directly to
