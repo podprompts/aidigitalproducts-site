@@ -1,3 +1,8 @@
+# Fixes ProductForm's uploadNewImages to use the new presigned R2 pattern
+# instead of routing image bytes through the Vercel function.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 "use client";
  
 import { useState, useEffect } from "react";
@@ -714,3 +719,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     </form>
   );
 }
+'@
+Set-Content -LiteralPath "src\components\admin\ProductForm.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\components\admin\ProductForm.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

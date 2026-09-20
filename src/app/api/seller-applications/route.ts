@@ -6,7 +6,7 @@ const MIN_MESSAGE_LENGTH = 30;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, name, business_name, portfolio_url, product_types, message } = body;
+    const { email, name, business_name, portfolio_url, product_types, message, agreed_to_terms } = body;
 
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -19,6 +19,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (agreed_to_terms !== true) {
+      return NextResponse.json({ error: "You must agree to the Terms of Service to apply" }, { status: 400 });
+    }
+
     const { error } = await supabaseAdmin.from("seller_waitlist").insert({
       email: email.trim().toLowerCase(),
       name: name?.trim() ?? null,
@@ -26,6 +30,7 @@ export async function POST(req: NextRequest) {
       portfolio_url: portfolio_url?.trim() || null,
       product_types: product_types ?? [],
       message: message.trim(),
+      agreed_to_terms_at: new Date().toISOString(),
     });
 
     if (error) {

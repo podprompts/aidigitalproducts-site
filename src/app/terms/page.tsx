@@ -310,9 +310,13 @@ export default function TermsPage() {
               <SubHeading>Commission Structure</SubHeading>
               <p>
                 The Company charges a commission percentage on each transaction processed through
-                the Platform for third-party seller products. The applicable commission rate will be
-                disclosed during the seller onboarding process and may be updated with advance
-                notice to sellers.
+                the Platform for third-party seller products. The current commission rate is
+                published on our{" "}
+                <Link href="/pricing" style={{ color: "var(--ink)", fontWeight: 600 }}>
+                  Pricing page
+                </Link>{" "}
+                and will also be disclosed during the seller onboarding process. The rate may be
+                updated with advance notice to sellers.
               </p>
               <p>
                 Sellers are responsible for any applicable taxes on their earnings. The Company does
