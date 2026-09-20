@@ -13,9 +13,16 @@ interface Props {
   role?: "vendor" | "admin";
   /** Called with the new URL right after a successful upload */
   onUploaded?: (url: string) => void;
+  /**
+   * Extra headers merged into every request — required for role="admin",
+   * since admin auth is a token that must be explicitly attached to each
+   * request (unlike vendor auth, which rides along on the session cookie
+   * automatically). Pass adminHeaders(token) here for admin usage.
+   */
+  extraHeaders?: Record<string, string>;
 }
 
-export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUploaded }: Props) {
+export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUploaded, extraHeaders = {} }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl);
   const [uploading, setUploading] = useState(false);
@@ -64,7 +71,7 @@ export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUp
     try {
       const presignRes = await fetch(presignUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...extraHeaders },
         body: JSON.stringify({ fileName: file.name, contentType: file.type, fileSize: file.size }),
       });
       const presignData = await presignRes.json();
@@ -79,7 +86,7 @@ export default function AvatarUploader({ currentAvatarUrl, role = "vendor", onUp
 
       const confirmRes = await fetch(confirmUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...extraHeaders },
         body: JSON.stringify({ publicUrl: presignData.publicUrl }),
       });
       const confirmData = await confirmRes.json();

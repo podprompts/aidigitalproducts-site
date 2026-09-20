@@ -25,7 +25,7 @@ function SettingsContent() {
       <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "16px" }}>
         Profile Picture
       </div>
-      <AvatarUploader currentAvatarUrl={avatarUrl} role="admin" onUploaded={setAvatarUrl} />
+      <AvatarUploader currentAvatarUrl={avatarUrl} role="admin" onUploaded={setAvatarUrl} extraHeaders={adminHeaders(token)} />
     </div>
   );
 }
