@@ -24,9 +24,18 @@ body {
   background: var(--bg);
   color: var(--ink);
   overflow-x: hidden;
-  overscroll-behavior: none;
-  touch-action: pan-y;
   -webkit-font-smoothing: antialiased;
+}
+
+/* ── Mobile-only: prevent whole-page drag/bounce on touch devices ───────────── */
+/* Scoped to mobile specifically — applying this globally previously broke   */
+/* desktop trackpad scrolling on Windows, where touch-action restrictions    */
+/* can interfere with how precision-trackpad gestures get interpreted.       */
+@media (max-width: 600px) {
+  body {
+    overscroll-behavior: none;
+    touch-action: pan-y;
+  }
 }
 
 /* ── Display type — text-stroke gives us the "900" punch Jakarta lacks ──────── */
