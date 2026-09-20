@@ -19,14 +19,17 @@ async function getSupabaseProducts(): Promise<Product[]> {
   // (keyed to the same id) and merged in code — same pattern used below
   // for thumbnails/video URLs.
   const vendorIds = [...new Set(data.map((p) => p.vendor_id).filter(Boolean))];
-  const vendorMap: Record<string, string> = {};
+  const vendorMap: Record<string, { name: string; avatarUrl: string | null }> = {};
   if (vendorIds.length > 0) {
     const { data: vendorData } = await supabaseAdmin
       .from("vendor_profiles")
-      .select("id, display_name")
+      .select("id, display_name, avatar_url")
       .in("id", vendorIds);
     for (const v of vendorData ?? []) {
-      vendorMap[v.id as string] = v.display_name as string;
+      vendorMap[v.id as string] = {
+        name: v.display_name as string,
+        avatarUrl: (v.avatar_url as string | null) ?? null,
+      };
     }
   }
 
@@ -38,7 +41,8 @@ async function getSupabaseProducts(): Promise<Product[]> {
     price: p.sale_price_cents / 100,
     regularPrice: p.regular_price_cents ? p.regular_price_cents / 100 : undefined,
     description: p.description ?? "",
-    seller: (p.vendor_id && vendorMap[p.vendor_id]) || "AI Digital Products",
+    seller: (p.vendor_id && vendorMap[p.vendor_id]?.name) || "AI Digital Products",
+    sellerAvatarUrl: (p.vendor_id && vendorMap[p.vendor_id]?.avatarUrl) || undefined,
     thumbnailUrl: p.thumbnail_url ?? undefined,
     videoUrl: p.video_url ?? undefined,
     priceId: p.sale_stripe_price_id ?? undefined,

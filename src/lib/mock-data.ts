@@ -6,6 +6,8 @@ export interface Product {
   price: number;
   /** "Sold by" name — resolved from the real vendor relationship at query time; falls back to a default if unset */
   seller?: string;
+  /** Vendor's profile picture URL — resolved alongside seller at query time */
+  sellerAvatarUrl?: string;
   description: string;
   /** Stripe Price ID — present means the product is purchasable (sale price when on sale) */
   priceId?: string;
