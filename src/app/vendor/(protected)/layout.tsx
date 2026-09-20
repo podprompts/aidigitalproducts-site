@@ -53,8 +53,13 @@ export default async function VendorLayout({ children }: { children: React.React
           borderBottom: "1px solid var(--line)",
         }}
       >
-        <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
-          Vendor Portal — {vendorProfile.display_name}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <a href="/" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-mute)", textDecoration: "none" }}>
+            ← Home
+          </a>
+          <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
+            Vendor Portal — {vendorProfile.display_name}
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <a href="/vendor/products" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
