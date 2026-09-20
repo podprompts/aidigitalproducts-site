@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = mockProducts.find((p) => p.slug === slug);
   if (!product) return {};
   return {
-    title: `${product.title} — AI Digital Products`,
+    title: `${product.title} â€” AI Digital Products`,
     description: product.description,
   };
 }
@@ -117,7 +117,7 @@ export default async function ProductDetailPage({ params }: Props) {
   if (!product) notFound();
 
   // Resolve the real "Sold by" name from the vendor relationship. dbProduct
-  // is only populated when a real Supabase row exists — mock-only products
+  // is only populated when a real Supabase row exists â€” mock-only products
   // have no vendor_id and fall back to the site default.
   let sellerName = "AI Digital Products";
   let sellerAvatarUrl: string | null = null;
@@ -430,7 +430,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 >
                   <VendorAvatarBadge url={sellerAvatarUrl} size={22} alt={product.seller} />
                   <span>Sold by {product.seller}</span>
-                  <span style={{ color: "var(--ink-soft)" }}>·</span>
+                  <span style={{ color: "var(--ink-soft)" }}>Â·</span>
                   <Link href="/refund-buyer-protection" style={{ color: "var(--ink-mute)", textDecoration: "underline" }}>
                     Refund policy
                   </Link>
@@ -473,7 +473,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 marginBottom: "24px",
               }}
             >
-              — About this product —
+              â€” About this product â€”
             </div>
             <h2
               className="display"
@@ -525,7 +525,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 marginBottom: "24px",
               }}
             >
-              — How to use —
+              â€” How to use â€”
             </div>
             <h2
               className="display"
@@ -593,7 +593,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 marginBottom: "24px",
               }}
             >
-              — Seller —
+              â€” Seller â€”
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
               <VendorAvatarBadge url={sellerAvatarUrl} size={48} alt={product.seller} />
@@ -640,7 +640,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
               href="/refund-buyer-protection"
               style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", textDecoration: "underline" }}
             >
-              View the full Refund &amp; Buyer Protection Policy ?
+              View the full Refund &amp; Buyer Protection Policy â†’
             </Link>
           </div>
         </section>
@@ -663,7 +663,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 textAlign: "center",
               }}
             >
-              — Related —
+              â€” Related â€”
             </div>
             <h2
               className="display"
@@ -767,7 +767,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                         <div style={{ fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.25 }}>
                           {p.title}
                         </div>
-                        <div className="card-seller">Seller · {p.seller}</div>
+                        <div className="card-seller">Seller Â· {p.seller}</div>
 
                         <ProductMeta
                           rating={p.rating}
@@ -778,7 +778,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
 
                         <ViewingBadge productId={p.id} />
                       </div>
-                      <span className="card-arrow" style={{ marginTop: "20px" }}>?</span>
+                      <span className="card-arrow" style={{ marginTop: "20px" }}>â†’</span>
                     </div>
                   </div>
                 </Link>

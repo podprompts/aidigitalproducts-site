@@ -84,7 +84,7 @@ export default function AdminShell({ title, children }: Props) {
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)" }}>
         <div style={{ width: "100%", maxWidth: "360px", padding: "0 24px" }}>
           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.22em", marginBottom: "24px", textAlign: "center" }}>
-            ó Admin ó
+            ‚Äî Admin ‚Äî
           </div>
           <h1 className="display" style={{ fontSize: "36px", lineHeight: 1, color: "var(--ink)", textAlign: "center", marginBottom: "40px" }}>
             Sign in.
@@ -114,7 +114,7 @@ export default function AdminShell({ title, children }: Props) {
             </div>
             {error && <p style={{ fontSize: "13px", fontWeight: 600, color: "#e53e3e", marginTop: "-8px" }}>{error}</p>}
             <button type="submit" className="btn btn-primary" disabled={loggingIn} style={{ opacity: loggingIn ? 0.6 : 1 }}>
-              {loggingIn ? "Signing inÖ" : "Sign In"}
+              {loggingIn ? "Signing in‚Ä¶" : "Sign In"}
             </button>
           </form>
         </div>
@@ -166,7 +166,7 @@ export default function AdminShell({ title, children }: Props) {
               href="/"
               style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.18em", textDecoration: "none", display: "block", marginBottom: "4px" }}
             >
-              ? Store
+              ‚Üê Store
             </Link>
             <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
               Admin Panel
@@ -230,7 +230,7 @@ export default function AdminShell({ title, children }: Props) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {/* Hamburger ó mobile only */}
+              {/* Hamburger ‚Äî mobile only */}
               {isMobile && (
                 <button
                   onClick={() => setSidebarOpen((o) => !o)}

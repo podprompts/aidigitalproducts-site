@@ -18,7 +18,7 @@ function SettingsContent() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  if (loading) return <p style={{ color: "var(--ink-faded)", fontSize: "14px" }}>Loading…</p>;
+  if (loading) return <p style={{ color: "var(--ink-faded)", fontSize: "14px" }}>Loadingâ€¦</p>;
 
   return (
     <div style={{ maxWidth: "600px" }}>
