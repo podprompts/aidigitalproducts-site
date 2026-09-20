@@ -9,7 +9,6 @@ import { signOutAction } from "@/app/vendor/actions";
 const navLinks = [
   { label: "Home",            href: "/"         },
   { label: "Browse Products", href: "/products" },
-  { label: "Start Selling",   href: "/sell"     },
 ];
 
 export interface VendorNavInfo {
@@ -236,7 +235,8 @@ export default function NavClient({ vendorInfo }: Props) {
               </form>
             </li>
           ) : (
-            <li>
+            <li style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+              <Link href="/vendor/login" className="nav-link nav-mobile-hide">Log In</Link>
               <Link href="/sell" className="nav-cta-link">Get Started</Link>
             </li>
           )}
@@ -339,14 +339,23 @@ export default function NavClient({ vendorInfo }: Props) {
             </form>
           </>
         ) : (
-          <Link
-            href="/sell"
-            className="btn btn-primary"
-            style={{ marginTop: "8px" }}
-            onClick={close}
-          >
-            Get Started
-          </Link>
+          <>
+            <Link
+              href="/vendor/login"
+              className="nav-overlay-link"
+              onClick={close}
+            >
+              Log In
+            </Link>
+            <Link
+              href="/sell"
+              className="btn btn-primary"
+              style={{ marginTop: "8px" }}
+              onClick={close}
+            >
+              Get Started
+            </Link>
+          </>
         )}
       </div>
     </>
