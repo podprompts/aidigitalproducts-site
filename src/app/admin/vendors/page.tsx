@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 import { useAdmin, adminHeaders } from "../AdminContext";
+import VendorAvatarBadge from "@/components/VendorAvatarBadge";
 
 interface Vendor {
   id: string;
@@ -11,6 +12,7 @@ interface Vendor {
   email: string | null;
   is_active: boolean;
   stripe_account_id: string | null;
+  avatar_url: string | null;
   connected: boolean;
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
@@ -66,7 +68,7 @@ function VendorsContent() {
   return (
     <div style={{ maxWidth: "900px" }}>
       <div style={{ fontSize: "12px", color: "var(--ink-mute)", marginBottom: "16px" }}>
-        {loading ? "Loadingâ€¦" : `${vendors.length} vendor${vendors.length !== 1 ? "s" : ""}`}
+        {loading ? "Loading…" : `${vendors.length} vendor${vendors.length !== 1 ? "s" : ""}`}
       </div>
 
       {error && <p style={{ color: "#e53e3e", fontSize: "13px", marginBottom: "16px" }}>{error}</p>}
@@ -84,16 +86,21 @@ function VendorsContent() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: "var(--ink-mute)" }}>Loadingâ€¦</td></tr>
+              <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: "var(--ink-mute)" }}>Loading…</td></tr>
             ) : vendors.length === 0 ? (
               <tr><td colSpan={4} style={{ padding: "40px", textAlign: "center", color: "var(--ink-mute)" }}>No vendors yet.</td></tr>
             ) : vendors.map((v, i) => (
               <tr key={v.id} style={{ borderBottom: "1px solid var(--line-soft)", background: i % 2 === 0 ? "var(--bg)" : "var(--bg-alt)" }}>
                 <td style={{ padding: "10px 14px", color: "var(--ink)", fontWeight: 600 }}>
-                  {v.business_name || v.display_name || "â€”"}
-                  {!v.is_active && <span style={{ marginLeft: "6px", fontSize: "10px", color: "var(--ink-mute)" }}>(inactive)</span>}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <VendorAvatarBadge url={v.avatar_url} size={28} alt={v.business_name || v.display_name || "Vendor"} />
+                    <span>
+                      {v.business_name || v.display_name || "—"}
+                      {!v.is_active && <span style={{ marginLeft: "6px", fontSize: "10px", color: "var(--ink-mute)" }}>(inactive)</span>}
+                    </span>
+                  </div>
                 </td>
-                <td style={{ padding: "10px 14px", color: "var(--ink-faded)" }}>{v.email ?? "â€”"}</td>
+                <td style={{ padding: "10px 14px", color: "var(--ink-faded)" }}>{v.email ?? "—"}</td>
                 <td style={{ padding: "10px 14px" }}>{statusBadge(v)}</td>
                 <td style={{ padding: "10px 14px" }}>
                   {v.connected && (
@@ -102,7 +109,7 @@ function VendorsContent() {
                       disabled={openingId === v.id}
                       className="btn btn-ghost btn-sm"
                     >
-                      {openingId === v.id ? "Openingâ€¦" : "View in Stripe â†’"}
+                      {openingId === v.id ? "Opening…" : "View in Stripe ?"}
                     </button>
                   )}
                 </td>

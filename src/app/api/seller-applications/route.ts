@@ -12,6 +12,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
     if (typeof message !== "string" || message.trim().length < MIN_MESSAGE_LENGTH) {
       return NextResponse.json(
         { error: `Please write at least ${MIN_MESSAGE_LENGTH} characters describing yourself and what you plan to sell` },

@@ -13,6 +13,7 @@ import { mockProducts, mockCategories } from "@/lib/mock-data";
 import ViewTracker from "@/components/ViewTracker";
 import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
 import ProductAttributes from "@/components/ProductAttributes";
+import VendorAvatarBadge from "@/components/VendorAvatarBadge";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const dynamicParams = true;
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = mockProducts.find((p) => p.slug === slug);
   if (!product) return {};
   return {
-    title: `${product.title} â€” AI Digital Products`,
+    title: `${product.title} — AI Digital Products`,
     description: product.description,
   };
 }
@@ -116,16 +117,18 @@ export default async function ProductDetailPage({ params }: Props) {
   if (!product) notFound();
 
   // Resolve the real "Sold by" name from the vendor relationship. dbProduct
-  // is only populated when a real Supabase row exists â€” mock-only products
+  // is only populated when a real Supabase row exists — mock-only products
   // have no vendor_id and fall back to the site default.
   let sellerName = "AI Digital Products";
+  let sellerAvatarUrl: string | null = null;
   if (dbProduct?.vendor_id) {
     const { data: vendorRow } = await supabaseAdmin
       .from("vendor_profiles")
-      .select("display_name")
+      .select("display_name, avatar_url")
       .eq("id", dbProduct.vendor_id)
       .single();
     if (vendorRow?.display_name) sellerName = vendorRow.display_name;
+    sellerAvatarUrl = vendorRow?.avatar_url ?? null;
   }
   product.seller = sellerName;
   const creatorRefundTerms = dbProduct?.creator_refund_terms ?? null;
@@ -425,8 +428,9 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                     flexWrap: "wrap",
                   }}
                 >
+                  <VendorAvatarBadge url={sellerAvatarUrl} size={22} alt={product.seller} />
                   <span>Sold by {product.seller}</span>
-                  <span style={{ color: "var(--ink-soft)" }}>Â·</span>
+                  <span style={{ color: "var(--ink-soft)" }}>·</span>
                   <Link href="/refund-buyer-protection" style={{ color: "var(--ink-mute)", textDecoration: "underline" }}>
                     Refund policy
                   </Link>
@@ -469,7 +473,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 marginBottom: "24px",
               }}
             >
-              â€” About this product â€”
+              — About this product —
             </div>
             <h2
               className="display"
@@ -521,7 +525,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 marginBottom: "24px",
               }}
             >
-              â€” How to use â€”
+              — How to use —
             </div>
             <h2
               className="display"
@@ -589,18 +593,20 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 marginBottom: "24px",
               }}
             >
-              â€” Seller â€”
+              — Seller —
             </div>
-            <div
-              style={{
-                fontSize: "24px",
-                fontWeight: 800,
-                letterSpacing: "-0.025em",
-                color: "var(--ink)",
-                marginBottom: "16px",
-              }}
-            >
-              {product.seller}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
+              <VendorAvatarBadge url={sellerAvatarUrl} size={48} alt={product.seller} />
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.025em",
+                  color: "var(--ink)",
+                }}
+              >
+                {product.seller}
+              </div>
             </div>
             <p
               style={{
@@ -634,7 +640,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
               href="/refund-buyer-protection"
               style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", textDecoration: "underline" }}
             >
-              View the full Refund &amp; Buyer Protection Policy â†’
+              View the full Refund &amp; Buyer Protection Policy ?
             </Link>
           </div>
         </section>
@@ -657,7 +663,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                 textAlign: "center",
               }}
             >
-              â€” Related â€”
+              — Related —
             </div>
             <h2
               className="display"
@@ -761,7 +767,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                         <div style={{ fontSize: "16px", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--ink)", marginTop: "8px", lineHeight: 1.25 }}>
                           {p.title}
                         </div>
-                        <div className="card-seller">Seller Â· {p.seller}</div>
+                        <div className="card-seller">Seller · {p.seller}</div>
 
                         <ProductMeta
                           rating={p.rating}
@@ -772,7 +778,7 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
 
                         <ViewingBadge productId={p.id} />
                       </div>
-                      <span className="card-arrow" style={{ marginTop: "20px" }}>â†’</span>
+                      <span className="card-arrow" style={{ marginTop: "20px" }}>?</span>
                     </div>
                   </div>
                 </Link>

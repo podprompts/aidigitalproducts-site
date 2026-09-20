@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import AvatarUploader from "./AvatarUploader";
 
 interface Props {
-  showByDefault: boolean;
+  stripeConnected: boolean;
   vendorName: string;
+  avatarUrl: string | null;
 }
 
-export default function OnboardingWelcomeModal({ showByDefault, vendorName }: Props) {
-  const [open, setOpen] = useState(showByDefault);
+export default function OnboardingWelcomeModal({ stripeConnected, vendorName, avatarUrl: initialAvatarUrl }: Props) {
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const needsStripe = !stripeConnected;
+  const needsAvatar = !avatarUrl;
+  const [dismissed, setDismissed] = useState(false);
 
-  if (!open) return null;
+  if (dismissed || (!needsStripe && !needsAvatar)) return null;
 
   return (
     <div
@@ -36,7 +41,7 @@ export default function OnboardingWelcomeModal({ showByDefault, vendorName }: Pr
         }}
       >
         <button
-          onClick={() => setOpen(false)}
+          onClick={() => setDismissed(true)}
           aria-label="Remind me later"
           style={{
             position: "absolute",
@@ -51,7 +56,7 @@ export default function OnboardingWelcomeModal({ showByDefault, vendorName }: Pr
             padding: "4px",
           }}
         >
-          Ã—
+          ×
         </button>
 
         <div
@@ -64,42 +69,47 @@ export default function OnboardingWelcomeModal({ showByDefault, vendorName }: Pr
         </div>
 
         <h2 className="display" style={{ fontSize: "24px", color: "var(--ink)", marginBottom: "16px", lineHeight: 1.2 }}>
-          One step left before you can get paid.
+          {needsStripe && needsAvatar
+            ? "Two steps left to finish setting up."
+            : needsStripe
+            ? "One step left before you can get paid."
+            : "One step left — add your photo."}
         </h2>
 
-        <p style={{ fontSize: "14px", color: "var(--ink-faded)", lineHeight: 1.65, marginBottom: "20px" }}>
-          You&apos;re fully set up to list and manage products. But to actually receive your share
-          of each sale, you need to connect a Stripe account. Until this is done, sales are still
-          recorded normally â€” your payouts just can&apos;t be sent to you yet.
-        </p>
-
-        <div style={{ border: "1px solid var(--line)", padding: "18px 20px", marginBottom: "20px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "12px" }}>
-            How it works
+        {needsAvatar && (
+          <div style={{ marginBottom: "24px", paddingBottom: "24px", borderBottom: needsStripe ? "1px solid var(--line)" : "none" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", marginBottom: "12px" }}>
+              1. Add a profile picture
+            </div>
+            <p style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6, marginBottom: "16px" }}>
+              Buyers see this next to your products — every seller needs one.
+            </p>
+            <AvatarUploader currentAvatarUrl={avatarUrl} role="vendor" onUploaded={setAvatarUrl} />
           </div>
-          <ol style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px" }}>
-            <li style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6 }}>
-              Click <strong style={{ color: "var(--ink)" }}>Connect Stripe Account</strong> below
-            </li>
-            <li style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6 }}>
-              Complete Stripe&apos;s short setup form â€” your business details and bank account
-            </li>
-            <li style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6 }}>
-              Once approved, payouts happen automatically on every future sale â€” no further action needed
-            </li>
-          </ol>
-        </div>
+        )}
 
-        <p style={{ fontSize: "12px", color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: "28px" }}>
-          The platform keeps a 20% commission on each sale; the rest is transferred directly to
-          your connected account by Stripe.
-        </p>
+        {needsStripe && (
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", marginBottom: "12px" }}>
+              {needsAvatar ? "2. " : ""}Connect Stripe to get paid
+            </div>
+            <p style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.65, marginBottom: "20px" }}>
+              You&apos;re fully set up to list and manage products. But to actually receive your share
+              of each sale, you need to connect a Stripe account. Until this is done, sales are still
+              recorded normally — your payouts just can&apos;t be sent to you yet.
+            </p>
+            <p style={{ fontSize: "12px", color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: "20px" }}>
+              The platform keeps a 20% commission on each sale; the rest is transferred directly to
+              your connected account by Stripe.
+            </p>
+            <a href="/vendor/connect" className="btn btn-primary">
+              Connect Stripe Account
+            </a>
+          </div>
+        )}
 
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <a href="/vendor/connect" className="btn btn-primary">
-            Connect Stripe Account
-          </a>
-          <button onClick={() => setOpen(false)} className="btn btn-ghost">
+        <div style={{ marginTop: "24px" }}>
+          <button onClick={() => setDismissed(true)} className="btn btn-ghost">
             Remind Me Later
           </button>
         </div>

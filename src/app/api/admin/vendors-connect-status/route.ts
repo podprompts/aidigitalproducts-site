@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
 
   const { data: vendors, error } = await supabaseAdmin
     .from("vendor_profiles")
-    .select("id, display_name, business_name, email, is_active, stripe_account_id");
+    .select("id, display_name, business_name, email, is_active, stripe_account_id, avatar_url");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

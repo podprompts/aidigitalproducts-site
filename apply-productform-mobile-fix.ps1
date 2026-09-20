@@ -1,3 +1,9 @@
+# Fixes mobile overlap on the Product Edit form: all three fixed 1fr-1fr
+# grids now use auto-fit/minmax, collapsing to one column automatically
+# when there isn't enough width for two, with no media query needed.
+# Run from the root of your aidigitalproducts-site repo.
+
+$content = @'
 "use client";
  
 import { useState, useEffect } from "react";
@@ -141,14 +147,13 @@ function slugify(s: string) {
  
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", minWidth: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       <label style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
         {label}
       </label>
       {children}
     </div>
   );
-
 }
  
 const inputStyle: React.CSSProperties = {
@@ -638,7 +643,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
                 <input style={inputStyle} value={attrs.version} onChange={(e) => setAttrs((a) => ({ ...a, version: e.target.value }))} placeholder="e.g. 1.0" />
               </Field>
               <Field label="Last Updated">
-                <input style={{ ...inputStyle, minWidth: 0 }} type="date" value={attrs.lastUpdated} onChange={(e) => setAttrs((a) => ({ ...a, lastUpdated: e.target.value }))} />
+                <input style={inputStyle} type="date" value={attrs.lastUpdated} onChange={(e) => setAttrs((a) => ({ ...a, lastUpdated: e.target.value }))} />
               </Field>
               <Field label="Instant Download">
                 <select style={{ ...inputStyle, appearance: "auto" }} value={attrs.instantDownload} onChange={(e) => setAttrs((a) => ({ ...a, instantDownload: e.target.value }))}>
@@ -715,3 +720,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
     </form>
   );
 }
+'@
+Set-Content -LiteralPath "src\components\admin\ProductForm.tsx" -Value $content -NoNewline
+Write-Host "REPLACED: src\components\admin\ProductForm.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan

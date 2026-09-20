@@ -5,6 +5,7 @@ import { useState, FormEvent } from "react";
 const PRODUCT_TYPES = [
   "Prompt Packs",
   "AI Templates",
+  "AI Operating System",
   "Chatbots / AI Agents",
   "Automation / Workflows",
   "Notion / Docs",
@@ -26,6 +27,7 @@ export default function SellerApplicationForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   function toggleType(type: string) {
@@ -35,11 +37,17 @@ export default function SellerApplicationForm() {
   }
 
   const messageValid = message.trim().length >= MIN_MESSAGE_LENGTH;
-  const canSubmit = messageValid && agreedToTerms;
+  const nameValid = name.trim().length > 0;
+  const canSubmit = messageValid && nameValid && agreedToTerms;
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    if (!nameValid) {
+      setErrorMsg("Please enter your name.");
+      setStatus("error");
+      return;
+    }
     if (!messageValid) {
       setErrorMsg(`Please write at least ${MIN_MESSAGE_LENGTH} characters — this is what we use to review your application.`);
       setStatus("error");
@@ -59,7 +67,7 @@ export default function SellerApplicationForm() {
 
     const payload = {
       email: data.get("email"),
-      name: data.get("name"),
+      name: name.trim(),
       business_name: data.get("business_name"),
       portfolio_url: data.get("portfolio_url"),
       product_types: selectedTypes,
@@ -149,11 +157,16 @@ export default function SellerApplicationForm() {
     <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Name */}
       <div>
-        <label htmlFor="app-name" style={labelStyle}>Name</label>
+        <label htmlFor="app-name" style={labelStyle}>
+          Name <span style={{ color: "var(--ink)" }}>*</span>
+        </label>
         <input
           id="app-name"
           name="name"
           type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Your name"
           style={inputStyle}
         />

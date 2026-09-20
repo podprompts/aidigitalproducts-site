@@ -5,9 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { signOutAction } from "../actions";
 import OnboardingWelcomeModal from "@/components/OnboardingWelcomeModal";
 
-export const dynamic = "force-dynamic";
-
-export default async function VendorLayout({ children }: { children: React.ReactNode }) {
+export default async function VendorProtectedLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const supabase = createSessionClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
@@ -16,12 +14,12 @@ export default async function VendorLayout({ children }: { children: React.React
     redirect("/vendor/login");
   }
 
-  // Confirm this logged-in user actually has a vendor_profiles row —
+  // Confirm this logged-in user actually has a vendor_profiles row �
   // being a valid Supabase Auth user isn't enough on its own; only
   // real vendors should get past this point.
   const { data: vendorProfile } = await supabaseAdmin
     .from("vendor_profiles")
-    .select("display_name, is_active, stripe_onboarding_complete")
+    .select("display_name, is_active, stripe_onboarding_complete, avatar_url")
     .eq("id", user.id)
     .single();
 
@@ -32,39 +30,37 @@ export default async function VendorLayout({ children }: { children: React.React
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <OnboardingWelcomeModal
-        showByDefault={!vendorProfile.stripe_onboarding_complete}
+        stripeConnected={!!vendorProfile.stripe_onboarding_complete}
+        avatarUrl={vendorProfile.avatar_url ?? null}
         vendorName={vendorProfile.display_name ?? "there"}
       />
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "20px 32px",
-          borderBottom: "1px solid var(--line)",
+          maxWidth: "1000px",
+          margin: "0 auto",
+          padding: "40px 24px",
         }}
       >
-        <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
-          Vendor Portal — {vendorProfile.display_name}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <a href="/vendor/products" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
-            Products
-          </a>
-          <a href="/vendor/connect" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
-            Payouts
-          </a>
-          <a href="/vendor/history" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
-            History
-          </a>
-          <form action={signOutAction}>
-            <button type="submit" className="btn btn-ghost btn-sm">
+        <nav
+          style={{
+            display: "flex",
+            gap: "24px",
+            marginBottom: "32px",
+            paddingBottom: "16px",
+            borderBottom: "1px solid var(--line)",
+          }}
+        >
+          <a href="/vendor/products" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>Products</a>
+          <a href="/vendor/connect" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>Payouts</a>
+          <a href="/vendor/history" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>History</a>
+          <form action={signOutAction} style={{ marginLeft: "auto" }}>
+            <button type="submit" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
               Sign Out
             </button>
           </form>
-        </div>
+        </nav>
+        {children}
       </div>
-      <div style={{ padding: "32px" }}>{children}</div>
     </div>
   );
 }

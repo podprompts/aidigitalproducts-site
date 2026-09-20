@@ -20,6 +20,7 @@ interface Application {
 function SellerApplicationsContent() {
   const { token } = useAdmin();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [activeTab, setActiveTab] = useState<"pending" | "approved" | "rejected">("pending");
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
@@ -139,10 +140,37 @@ function SellerApplicationsContent() {
     }
   }
 
+  const filteredApplications = applications.filter((a) => a.status === activeTab);
+  const counts = {
+    pending: applications.filter((a) => a.status === "pending").length,
+    approved: applications.filter((a) => a.status === "approved").length,
+    rejected: applications.filter((a) => a.status === "rejected").length,
+  };
+
   return (
     <div style={{ maxWidth: "900px" }}>
-      <div style={{ fontSize: "12px", color: "var(--ink-mute)", marginBottom: "16px" }}>
-        {loading ? "Loading…" : `${applications.length} application${applications.length !== 1 ? "s" : ""}`}
+      <div style={{ display: "flex", gap: "4px", marginBottom: "20px", borderBottom: "1px solid var(--line)" }}>
+        {(["pending", "approved", "rejected"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              padding: "10px 16px",
+              fontSize: "13px",
+              fontWeight: 700,
+              fontFamily: "inherit",
+              textTransform: "capitalize",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === tab ? "2px solid var(--ink)" : "2px solid transparent",
+              color: activeTab === tab ? "var(--ink)" : "var(--ink-mute)",
+              cursor: "pointer",
+              marginBottom: "-1px",
+            }}
+          >
+            {tab} ({counts[tab]})
+          </button>
+        ))}
       </div>
 
       {notice && (
@@ -151,10 +179,10 @@ function SellerApplicationsContent() {
       {error && <p style={{ color: "#e53e3e", fontSize: "13px", marginBottom: "16px" }}>{error}</p>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        {!loading && applications.length === 0 && (
-          <p style={{ fontSize: "14px", color: "var(--ink-faded)" }}>No applications yet.</p>
+        {!loading && filteredApplications.length === 0 && (
+          <p style={{ fontSize: "14px", color: "var(--ink-faded)" }}>No {activeTab} applications.</p>
         )}
-        {applications.map((app) => (
+        {filteredApplications.map((app) => (
           <div key={app.id} style={{ border: "1px solid var(--line)", padding: "20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
               <div>
