@@ -1,3 +1,8 @@
+# Fixes the invisible password field: adds an explicit border matching
+# every other input on the site. This is a shared component, so it fixes
+# every password field everywhere at once (vendor login, admin login, set-password).
+
+$content = @'
 "use client";
 
 import { useState } from "react";
@@ -77,3 +82,7 @@ export default function PasswordInput({
     </div>
   );
 }
+'@
+Set-Content -LiteralPath "src\components\PasswordInput.tsx" -Value $content -NoNewline
+Write-Host "UPDATED: src\components\PasswordInput.tsx" -ForegroundColor Green
+Write-Host "Now run: npx tsc --noEmit" -ForegroundColor Cyan
