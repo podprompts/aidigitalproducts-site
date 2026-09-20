@@ -12,6 +12,7 @@ interface Application {
   product_types: string[] | null;
   message: string | null;
   status: string;
+  rejection_reason: string | null;
   created_at: string;
 }
 
@@ -20,6 +21,8 @@ function SellerApplicationsContent() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -64,19 +67,41 @@ function SellerApplicationsContent() {
     }
   }
 
-  async function handleReject(app: Application) {
-    const confirmed = window.confirm(`Reject ${app.name ?? app.email}? No account will be created.`);
-    if (!confirmed) return;
+  function startReject(app: Application) {
+    setRejectingId(app.id);
+    setRejectReason("");
+    setError("");
+  }
+
+  function cancelReject() {
+    setRejectingId(null);
+    setRejectReason("");
+  }
+
+  async function submitReject(app: Application) {
+    if (!rejectReason.trim()) {
+      setError("A rejection reason is required — it's sent directly to the applicant.");
+      return;
+    }
 
     setActingId(app.id);
     setError("");
+    setNotice("");
     try {
       const res = await fetch(`/api/admin/seller-applications/${app.id}/reject`, {
         method: "POST",
-        headers: adminHeaders(token),
+        headers: { ...adminHeaders(token), "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: rejectReason.trim() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to reject");
+      if (data.warning) {
+        setNotice(data.warning);
+      } else {
+        setNotice(`Rejection sent to ${app.email}.`);
+      }
+      setRejectingId(null);
+      setRejectReason("");
       load();
     } catch (err) {
       setError((err as Error).message);
@@ -161,8 +186,13 @@ function SellerApplicationsContent() {
                 <strong style={{ color: "var(--ink)" }}>Message:</strong> {app.message}
               </div>
             )}
+            {app.status === "rejected" && app.rejection_reason && (
+              <div style={{ fontSize: "13px", color: "#c0392b", marginBottom: "12px", background: "#fdecea", padding: "10px 14px" }}>
+                <strong>Rejection reason sent:</strong> {app.rejection_reason}
+              </div>
+            )}
 
-            {app.status === "pending" && (
+            {app.status === "pending" && rejectingId !== app.id && (
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
                   onClick={() => handleApprove(app)}
@@ -172,13 +202,45 @@ function SellerApplicationsContent() {
                   {actingId === app.id ? "Working…" : "Approve"}
                 </button>
                 <button
-                  onClick={() => handleReject(app)}
+                  onClick={() => startReject(app)}
                   disabled={actingId === app.id}
                   className="btn btn-ghost btn-sm"
                   style={{ color: "#c0392b" }}
                 >
                   Reject
                 </button>
+              </div>
+            )}
+
+            {app.status === "pending" && rejectingId === app.id && (
+              <div style={{ marginTop: "8px" }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" }}>
+                  Rejection reason — this is emailed directly to the applicant
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. We're not currently accepting products in this category, or your samples didn't meet our quality guidelines. Be specific about what they'd need to change to reapply successfully."
+                  style={{
+                    width: "100%", padding: "10px 12px", fontSize: "13px", fontFamily: "inherit",
+                    border: "1px solid var(--ink-mute)", background: "var(--bg)", color: "var(--ink)",
+                    resize: "vertical", boxSizing: "border-box", marginBottom: "10px",
+                  }}
+                />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => submitReject(app)}
+                    disabled={actingId === app.id}
+                    className="btn btn-primary btn-sm"
+                    style={{ background: "#c0392b", borderColor: "#c0392b" }}
+                  >
+                    {actingId === app.id ? "Sending…" : "Send Rejection"}
+                  </button>
+                  <button onClick={cancelReject} disabled={actingId === app.id} className="btn btn-ghost btn-sm">
+                    Cancel
+                  </button>
+                </div>
               </div>
             )}
 
