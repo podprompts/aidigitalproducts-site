@@ -203,7 +203,7 @@ export default function SellPage() {
             List today. Earn from the first sale.
           </p>
           <Link
-            href="/sell/waitlist"
+            href="/sell/apply"
             className="btn btn-primary"
             style={{ marginTop: "44px", display: "inline-block" }}
           >

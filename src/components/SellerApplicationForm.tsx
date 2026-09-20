@@ -5,20 +5,27 @@ import { useState, FormEvent } from "react";
 const PRODUCT_TYPES = [
   "Prompt Packs",
   "AI Templates",
+  "Chatbots / AI Agents",
+  "Automation / Workflows",
   "Notion / Docs",
   "Image / Art Packs",
   "Audio / Music",
   "Video / Motion",
   "Courses / Guides",
+  "Code / Scripts",
+  "Datasets",
   "Other",
 ];
 
+const MIN_MESSAGE_LENGTH = 30;
+
 type Status = "idle" | "loading" | "success" | "error";
 
-export default function SellerWaitlistForm() {
+export default function SellerApplicationForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [message, setMessage] = useState("");
 
   function toggleType(type: string) {
     setSelectedTypes((prev) =>
@@ -26,8 +33,17 @@ export default function SellerWaitlistForm() {
     );
   }
 
+  const messageValid = message.trim().length >= MIN_MESSAGE_LENGTH;
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (!messageValid) {
+      setErrorMsg(`Please write at least ${MIN_MESSAGE_LENGTH} characters — this is what we use to review your application.`);
+      setStatus("error");
+      return;
+    }
+
     setStatus("loading");
     setErrorMsg("");
 
@@ -38,12 +54,13 @@ export default function SellerWaitlistForm() {
       email: data.get("email"),
       name: data.get("name"),
       business_name: data.get("business_name"),
+      portfolio_url: data.get("portfolio_url"),
       product_types: selectedTypes,
-      message: data.get("message"),
+      message: message.trim(),
     };
 
     try {
-      const res = await fetch("/api/waitlist", {
+      const res = await fetch("/api/seller-applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -81,7 +98,7 @@ export default function SellerWaitlistForm() {
             marginBottom: "20px",
           }}
         >
-          — You&apos;re in —
+          — Application received —
         </div>
         <h2
           className="display"
@@ -90,7 +107,8 @@ export default function SellerWaitlistForm() {
           Thanks for applying.
         </h2>
         <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--ink-faded)", lineHeight: 1.6 }}>
-          We&apos;re onboarding sellers in waves and will reach out when your spot opens.
+          We review every application personally and will email you either way — approved or not
+          — usually within a few days.
         </p>
       </div>
     );
@@ -123,9 +141,9 @@ export default function SellerWaitlistForm() {
     <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       {/* Name */}
       <div>
-        <label htmlFor="wl-name" style={labelStyle}>Name</label>
+        <label htmlFor="app-name" style={labelStyle}>Name</label>
         <input
-          id="wl-name"
+          id="app-name"
           name="name"
           type="text"
           placeholder="Your name"
@@ -135,11 +153,11 @@ export default function SellerWaitlistForm() {
 
       {/* Email */}
       <div>
-        <label htmlFor="wl-email" style={labelStyle}>
+        <label htmlFor="app-email" style={labelStyle}>
           Email <span style={{ color: "var(--ink)" }}>*</span>
         </label>
         <input
-          id="wl-email"
+          id="app-email"
           name="email"
           type="email"
           required
@@ -150,12 +168,24 @@ export default function SellerWaitlistForm() {
 
       {/* Business / Brand */}
       <div>
-        <label htmlFor="wl-business" style={labelStyle}>Business / Brand name</label>
+        <label htmlFor="app-business" style={labelStyle}>Business / Brand name</label>
         <input
-          id="wl-business"
+          id="app-business"
           name="business_name"
           type="text"
           placeholder="Optional"
+          style={inputStyle}
+        />
+      </div>
+
+      {/* Portfolio / sample link */}
+      <div>
+        <label htmlFor="app-portfolio" style={labelStyle}>Portfolio or sample link</label>
+        <input
+          id="app-portfolio"
+          name="portfolio_url"
+          type="url"
+          placeholder="A link to your existing work, shop, or samples (optional, but it helps)"
           style={inputStyle}
         />
       </div>
@@ -198,16 +228,24 @@ export default function SellerWaitlistForm() {
         </div>
       </div>
 
-      {/* Message */}
+      {/* Message - now required, min length enforced */}
       <div>
-        <label htmlFor="wl-message" style={labelStyle}>Anything else?</label>
+        <label htmlFor="app-message" style={labelStyle}>
+          Tell us about yourself and what you plan to sell <span style={{ color: "var(--ink)" }}>*</span>
+        </label>
         <textarea
-          id="wl-message"
+          id="app-message"
           name="message"
           rows={4}
-          placeholder="Tell us about your products, audience, or anything relevant."
+          required
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Your background, what you're planning to list, your audience — anything that helps us review your application."
           style={{ ...inputStyle, resize: "vertical" }}
         />
+        <p style={{ fontSize: "11px", color: messageValid ? "var(--ink-mute)" : "#e53e3e", marginTop: "6px" }}>
+          {message.trim().length}/{MIN_MESSAGE_LENGTH} characters minimum
+        </p>
       </div>
 
       {/* Error */}
@@ -218,9 +256,9 @@ export default function SellerWaitlistForm() {
       {/* Submit */}
       <button
         type="submit"
-        disabled={status === "loading"}
+        disabled={status === "loading" || !messageValid}
         className="btn btn-primary"
-        style={{ alignSelf: "flex-start", opacity: status === "loading" ? 0.6 : 1 }}
+        style={{ alignSelf: "flex-start", opacity: status === "loading" || !messageValid ? 0.6 : 1 }}
       >
         {status === "loading" ? "Submitting…" : "Apply to Sell"}
       </button>

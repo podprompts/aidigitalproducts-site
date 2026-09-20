@@ -9,6 +9,7 @@ interface Application {
   email: string;
   name: string | null;
   business_name: string | null;
+  portfolio_url: string | null;
   product_types: string[] | null;
   message: string | null;
   status: string;
@@ -179,6 +180,14 @@ function SellerApplicationsContent() {
             {app.product_types && app.product_types.length > 0 && (
               <div style={{ fontSize: "13px", color: "var(--ink-faded)", marginBottom: "8px" }}>
                 <strong style={{ color: "var(--ink)" }}>Sells:</strong> {app.product_types.join(", ")}
+              </div>
+            )}
+            {app.portfolio_url && (
+              <div style={{ fontSize: "13px", color: "var(--ink-faded)", marginBottom: "8px" }}>
+                <strong style={{ color: "var(--ink)" }}>Portfolio:</strong>{" "}
+                <a href={app.portfolio_url} target="_blank" rel="noreferrer" style={{ color: "var(--ink)" }}>
+                  {app.portfolio_url}
+                </a>
               </div>
             )}
             {app.message && (
