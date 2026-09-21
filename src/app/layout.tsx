@@ -14,7 +14,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://aidigitalproducts.com"),
+  metadataBase: new URL("https://www.aidigitalproducts.com"),
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: 'AiDigitalProducts.com — The AI Marketplace',
     description:
       'Ready-made AI products that work out of the box. Skip the build — buy the outcome. Built by experts, deployed in minutes.',
-    url: 'https://aidigitalproducts.com',
+    url: 'https://www.aidigitalproducts.com',
     siteName: 'AiDigitalProducts.com',
     images: [
       {
