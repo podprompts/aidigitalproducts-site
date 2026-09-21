@@ -1,24 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { recalculateProductRating } from "@/lib/reviews";
 
-async function recalculateProductRating(productId: string): Promise<void> {
-  // Only non-hidden reviews count toward the public aggregate — this
-  // matters once admin moderation (hiding a review) exists, and getting
-  // it right now avoids having to revisit this logic later.
-  const { data: reviews } = await supabaseAdmin
-    .from("product_reviews")
-    .select("rating")
-    .eq("product_id", productId)
-    .eq("is_hidden", false);
-
-  const count = reviews?.length ?? 0;
-  const avg = count > 0 ? reviews!.reduce((sum, r) => sum + r.rating, 0) / count : null;
-
-  await supabaseAdmin
-    .from("products")
-    .update({ rating: avg, review_count: count })
-    .eq("id", productId);
-}
 
 export async function POST(req: NextRequest) {
   let body: { token?: string; rating?: number; comment?: string };
