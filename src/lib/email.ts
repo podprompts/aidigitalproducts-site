@@ -596,3 +596,116 @@ export async function sendApplicationRejectionEmail(data: ApplicationRejectionEm
     throw new Error(`Resend failed to send application rejection email: ${error.message}`);
   }
 }
+
+export interface ReviewRequestEmailData {
+  toEmail: string;
+  toName?: string;
+  productName: string;
+  reviewUrl: string;
+}
+
+function buildReviewRequestHtml(data: ReviewRequestEmailData): string {
+  const { toName, productName, reviewUrl } = data;
+  const greeting = toName ? `Hi ${toName.split(" ")[0]},` : "Hi there,";
+  const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
+  const year     = new Date().getFullYear();
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How was your purchase?</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #1a1a1a; }
+    .wrapper { max-width: 580px; margin: 0 auto; padding: 40px 16px; }
+    .card { background: #ffffff; border: 1px solid #e5e5e3; }
+    .header { padding: 40px 40px 32px; border-bottom: 1px solid #e5e5e3; }
+    .logo { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #1a1a1a; text-decoration: none; }
+    .body { padding: 40px; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+    h1 { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1.25; margin-bottom: 20px; }
+    p { font-size: 15px; color: #555; line-height: 1.65; margin-bottom: 16px; }
+    .cta-section { text-align: center; padding: 28px 0; border-top: 1px solid #e5e5e3; border-bottom: 1px solid #e5e5e3; margin: 28px 0; }
+    .cta-btn { display: inline-block; background: #1a1a1a; color: #ffffff !important; text-decoration: none; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 36px; }
+    .cta-note { font-size: 12px; color: #999; margin-top: 16px; margin-bottom: 0; }
+    .support { font-size: 13px; color: #888; line-height: 1.6; }
+    .support a { color: #1a1a1a; }
+    .footer { padding: 24px 40px; border-top: 1px solid #e5e5e3; background: #f9f9f8; }
+    .footer p { font-size: 11px; color: #aaa; line-height: 1.7; margin: 0; }
+    .footer a { color: #888; text-decoration: none; }
+    @media (max-width: 480px) {
+      .header, .body, .footer { padding-left: 24px; padding-right: 24px; }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <a href="${siteUrl}" class="logo">AI Digital Products</a>
+      </div>
+      <div class="body">
+        <div class="label">Quick Question</div>
+        <h1>How was ${productName}?</h1>
+        <p>${greeting} you picked up ${productName} a few days ago — we'd love to hear what you thought. It only takes a minute, and it genuinely helps other buyers (and the seller) know what's working.</p>
+        <div class="cta-section">
+          <a href="${reviewUrl}" class="cta-btn">Leave a Quick Review</a>
+          <p class="cta-note">This link is unique to your order.</p>
+        </div>
+        <p class="support">
+          Questions? Reply to this email or reach us at
+          <a href="mailto:support@aidigitalproducts.com">support@aidigitalproducts.com</a>.
+        </p>
+      </div>
+      <div class="footer">
+        <p>
+          &copy; ${year} AI Digital Products, LLC &nbsp;·&nbsp;
+          <a href="${siteUrl}/privacy">Privacy Policy</a> &nbsp;·&nbsp;
+          <a href="${siteUrl}/terms">Terms of Service</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+function buildReviewRequestText(data: ReviewRequestEmailData): string {
+  const { toName, productName, reviewUrl } = data;
+  const greeting = toName ? `Hi ${toName.split(" ")[0]},` : "Hi there,";
+  const year     = new Date().getFullYear();
+
+  return `
+${greeting}
+
+You picked up ${productName} a few days ago — we'd love to hear what you thought. It only takes a minute, and it genuinely helps other buyers (and the seller) know what's working.
+
+Leave a quick review: ${reviewUrl}
+
+This link is unique to your order.
+
+Questions? Contact support@aidigitalproducts.com.
+
+© ${year} AI Digital Products, LLC
+  `.trim();
+}
+
+export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Promise<void> {
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: data.toEmail,
+    replyTo: "support@aidigitalproducts.com",
+    subject: `How was ${data.productName}?`,
+    html: buildReviewRequestHtml(data),
+    text: buildReviewRequestText(data),
+  });
+
+  if (error) {
+    throw new Error(`Resend failed to send review request email: ${error.message}`);
+  }
+}
