@@ -38,14 +38,54 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = mockProducts.find((p) => p.slug === slug);
-  if (!product) return {};
+  const mockMatch = mockProducts.find((p) => p.slug === slug);
+
+  // Vendor products exist only in Supabase, so look there as well.
+  const { data: dbProduct } = await supabaseAdmin
+    .from("products")
+    .select("name, description, thumbnail_url")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const name = mockMatch?.title ?? dbProduct?.name;
+  if (!name) return {};
+
+  const rawDescription = mockMatch?.description || dbProduct?.description || "";
+  const clean = String(rawDescription).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const description = clean
+    ? clean.length > 160
+      ? clean.slice(0, 157).trimEnd() + "..."
+      : clean
+    : `${name} on AI Digital Products.`;
+
+  const url = `https://www.aidigitalproducts.com/products/${slug}`;
+  const title = `${name} \u2014 AI Digital Products`;
+  const image =
+    typeof dbProduct?.thumbnail_url === "string" && dbProduct.thumbnail_url.startsWith("http")
+      ? dbProduct.thumbnail_url
+      : null;
+
   return {
-    title: `${product.title} — AI Digital Products`,
-    description: product.description,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "AI Digital Products",
+      type: "website",
+      ...(image ? { images: [{ url: image }] } : {}),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
   };
 }
-
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
 
