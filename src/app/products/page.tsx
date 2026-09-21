@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import ProductsClient from "./ProductsClient";
 import { getProducts, getCategoryNames } from "@/lib/products";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Browse Products — AI Digital Products",
   description:

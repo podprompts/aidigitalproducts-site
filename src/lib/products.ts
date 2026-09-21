@@ -57,8 +57,15 @@ async function getSupabaseProducts(): Promise<Product[]> {
     isFeatured: p.is_featured ?? false,
     isNotAi: p.is_not_ai ?? false,
     purchases: p.purchases ?? 0,
-    rating: p.rating ?? undefined,
-    reviewCount: p.review_count ?? undefined,
+    // rating is a numeric(2,1) column — Postgres numeric types often come
+    // back through Supabase as a string (e.g. "5.0") rather than a real
+    // number, to avoid floating-point precision loss. Coerced to a real
+    // number here, once, so every consumer downstream can trust the type
+    // the Product interface actually promises rather than each having to
+    // defensively re-check it. review_count is a plain integer and doesn't
+    // have this issue, but Number() on it is harmless.
+    rating: p.rating != null ? Number(p.rating) : undefined,
+    reviewCount: p.review_count != null ? Number(p.review_count) : undefined,
   }));
 }
 
