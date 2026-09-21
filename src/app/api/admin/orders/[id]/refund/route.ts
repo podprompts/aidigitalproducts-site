@@ -59,11 +59,11 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       ...(hasVendorSplit ? { reverse_transfer: true, refund_application_fee: true } : {}),
     });
 
-    await supabaseAdmin.from("orders").update({ status: "refunded" }).eq("id", id);
+    const { data: flipped } = await supabaseAdmin.from("orders").update({ status: "refunded" }).eq("id", id).or("status.is.null,status.neq.refunded").select("id");
 
     // Vendor notification is intentionally non-fatal — a failed email
     // should never make the refund itself look like it failed.
-    if (hasVendorSplit && order.vendor_id) {
+    if (flipped && flipped.length > 0 && hasVendorSplit && order.vendor_id) {
       try {
         const { data: vendorProfile } = await supabaseAdmin
           .from("vendor_profiles")

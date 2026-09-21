@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { sendOrderConfirmation } from "@/lib/email";
+import { sendOrderConfirmation, sendAdminDisputeAlert } from "@/lib/email";
+import { notifyVendorOfRefund } from "@/lib/refund-notifications";
 import Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -187,24 +188,93 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Track disputes on orders — matched by payment intent, since a Dispute
+  // Refunds issued outside the admin Orders page (for example directly in
+// Stripe). Full refunds only. The status flip is conditional so the admin
+// refund route and this handler never both email the vendor.
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId =
+      typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+
+    if (paymentIntentId && charge.refunded) {
+      const { data: flipped, error: refundUpdateError } = await supabaseAdmin
+        .from("orders")
+        .update({ status: "refunded" })
+        .eq("stripe_payment_intent_id", paymentIntentId)
+        .or("status.is.null,status.neq.refunded")
+        .select("id, vendor_id, platform_fee_cents, vendor_payout_cents, amount_cents, currency, metadata");
+
+      if (refundUpdateError) {
+        console.error("[webhook] failed to record refund", refundUpdateError);
+      } else {
+        for (const o of flipped ?? []) {
+          await notifyVendorOfRefund(o);
+        }
+      }
+    }
+  }
+
+  // Track disputes on orders - matched by payment intent, since a Dispute
   // object references the charge, not the checkout session directly.
+  // A lost dispute marks the order as a chargeback (excluded from vendor
+  // totals). There is deliberately NO automatic vendor clawback.
   if (event.type === "charge.dispute.created" || event.type === "charge.dispute.closed") {
     const dispute = event.data.object as Stripe.Dispute;
     const paymentIntentId =
       typeof dispute.payment_intent === "string" ? dispute.payment_intent : dispute.payment_intent?.id;
 
     if (paymentIntentId) {
+      const patch: { dispute_status: string; disputed_at?: string } = { dispute_status: dispute.status };
+      if (event.type === "charge.dispute.created") patch.disputed_at = new Date().toISOString();
+
       const { error: disputeUpdateError } = await supabaseAdmin
         .from("orders")
-        .update({
-          dispute_status: dispute.status,
-          disputed_at: event.type === "charge.dispute.created" ? new Date().toISOString() : undefined,
-        })
+        .update(patch)
         .eq("stripe_payment_intent_id", paymentIntentId);
-
       if (disputeUpdateError) {
         console.error("[webhook] failed to record dispute", disputeUpdateError);
+      }
+
+      if (event.type === "charge.dispute.closed" && dispute.status === "lost") {
+        const { error: chargebackError } = await supabaseAdmin
+          .from("orders")
+          .update({ status: "chargeback" })
+          .eq("stripe_payment_intent_id", paymentIntentId)
+          .or("status.is.null,status.neq.refunded");
+        if (chargebackError) {
+          console.error("[webhook] failed to mark chargeback", chargebackError);
+        }
+      }
+
+      const kind =
+        event.type === "charge.dispute.created"
+          ? "opened"
+          : dispute.status === "won"
+          ? "won"
+          : dispute.status === "lost"
+          ? "lost"
+          : null;
+
+      if (kind) {
+        try {
+          const { data: disputedOrder } = await supabaseAdmin
+            .from("orders")
+            .select("order_number")
+            .eq("stripe_payment_intent_id", paymentIntentId)
+            .limit(1)
+            .maybeSingle();
+          await sendAdminDisputeAlert({
+            kind,
+            orderNumber: disputedOrder?.order_number ?? null,
+            amountCents: dispute.amount,
+            currency: dispute.currency,
+            reason: dispute.reason ?? null,
+            evidenceDueBy: dispute.evidence_details?.due_by ?? null,
+            disputeId: dispute.id,
+          });
+        } catch (alertErr) {
+          console.error("[webhook] failed to send dispute alert (non-fatal)", alertErr);
+        }
       }
     }
   }

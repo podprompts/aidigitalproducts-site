@@ -892,3 +892,70 @@ export async function sendReviewModerationEmail(data: ReviewModerationEmailData)
     throw new Error(`Resend failed to send review moderation email: ${error.message}`);
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Admin alert for Stripe disputes (chargebacks)
+// ---------------------------------------------------------------------------
+
+export interface AdminDisputeAlertData {
+  kind: "opened" | "won" | "lost";
+  orderNumber?: string | null;
+  amountCents: number;
+  currency: string;
+  reason?: string | null;
+  evidenceDueBy?: number | null; // unix seconds
+  disputeId: string;
+}
+
+function escapeDisputeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export async function sendAdminDisputeAlert(data: AdminDisputeAlertData): Promise<void> {
+  const to = process.env.ADMIN_ALERT_EMAIL ?? "support@aidigitalproducts.com";
+  const amount = formatCurrency(data.amountCents, data.currency);
+  const link = `https://dashboard.stripe.com/disputes/${data.disputeId}`;
+  const due = data.evidenceDueBy
+    ? new Date(data.evidenceDueBy * 1000).toUTCString()
+    : "not provided";
+
+  const headline =
+    data.kind === "opened"
+      ? "A customer opened a dispute"
+      : data.kind === "won"
+      ? "You won a dispute"
+      : "You lost a dispute";
+
+  const note =
+    data.kind === "opened"
+      ? `Evidence is due by: ${due}. Respond in the Stripe dashboard before then.`
+      : data.kind === "won"
+      ? "No further action needed. The order counts normally again."
+      : "The disputed amount and any dispute fee are debited from the platform. The vendor payout is NOT reversed automatically - decide manually. The order is now marked as a chargeback and excluded from vendor totals.";
+
+  const lines = [
+    `Amount: ${amount}`,
+    data.orderNumber ? `Order: ${data.orderNumber}` : null,
+    data.reason ? `Reason: ${data.reason}` : null,
+    note,
+    `Stripe: ${link}`,
+  ].filter(Boolean) as string[];
+
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1a1a1a;line-height:1.6;max-width:560px">
+<h2 style="font-size:18px;margin:0 0 12px">${escapeDisputeHtml(headline)}</h2>
+${lines.map((l) => `<p style="margin:0 0 8px">${escapeDisputeHtml(l)}</p>`).join("")}
+</div>`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to,
+    subject: `[Dispute ${data.kind}] ${amount} - AI Digital Products`,
+    html,
+    text: `${headline}\n\n${lines.join("\n")}`,
+  });
+
+  if (error) {
+    throw new Error(`Resend failed to send admin dispute alert: ${error.message}`);
+  }
+}

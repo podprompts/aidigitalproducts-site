@@ -10,9 +10,12 @@ interface VendorOrder {
   amount_cents: number | null;
   vendor_payout_cents: number | null;
   status: string | null;
+  dispute_status: string | null;
   created_at: string;
   metadata: { product_id?: string } | null;
 }
+
+const OPEN_DISPUTE_STATUSES = ["needs_response", "under_review", "warning_needs_response", "warning_under_review"];
 
 function formatCents(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
@@ -58,13 +61,13 @@ export default async function VendorDashboardPage() {
   // confirmed — flagged here rather than guessed at.
   const { data: ordersData } = await supabaseAdmin
     .from("orders")
-    .select("id, amount_cents, vendor_payout_cents, status, created_at, metadata")
+    .select("id, amount_cents, vendor_payout_cents, status, dispute_status, created_at, metadata")
     .eq("vendor_id", user.id)
     .order("created_at", { ascending: false });
 
   const allOrders: VendorOrder[] = ordersData ?? [];
   // Refunded orders are excluded from all totals; they still appear in Recent Sales, marked as refunded.
-  const orders = allOrders.filter((o) => o.status !== "refunded");
+  const orders = allOrders.filter((o) => o.status !== "refunded" && o.status !== "chargeback");
 
   const totalOrders = orders.length;
   const totalPayoutCents = orders.reduce((sum, o) => sum + (o.vendor_payout_cents ?? 0), 0);
@@ -161,7 +164,7 @@ export default async function VendorDashboardPage() {
               </thead>
               <tbody>
                 {recentOrders.map((o) => (
-                  <tr key={o.id} style={{ borderBottom: "1px solid var(--line-soft)", opacity: o.status === "refunded" ? 0.5 : 1 }}>
+                  <tr key={o.id} style={{ borderBottom: "1px solid var(--line-soft)", opacity: o.status === "refunded" || o.status === "chargeback" ? 0.5 : 1 }}>
                     <td style={{ padding: "10px 14px", fontWeight: 500, color: "var(--ink)" }}>
                       {productNameMap.get(o.metadata?.product_id ?? "") ?? "—"}
                     </td>
@@ -172,7 +175,7 @@ export default async function VendorDashboardPage() {
                       {formatCents(o.amount_cents ?? 0)}
                     </td>
                     <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600, color: "var(--ink)" }}>
-                      {o.status === "refunded" ? "Refunded" : formatCents(o.vendor_payout_cents ?? 0)}
+                      {o.status === "refunded" ? "Refunded" : o.status === "chargeback" ? "Chargeback" : formatCents(o.vendor_payout_cents ?? 0) + (o.dispute_status && OPEN_DISPUTE_STATUSES.includes(o.dispute_status) ? " (Disputed)" : "")}
                     </td>
                   </tr>
                 ))}
