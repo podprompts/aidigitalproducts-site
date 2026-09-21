@@ -3,6 +3,7 @@ import { createSessionClient } from "@/lib/supabase/server-session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import SupportThread, { type ThreadMessage } from "@/components/SupportThread";
 import SupportReply from "./SupportReply";
+import ApproveRefund from "./ApproveRefund";
 import { REASON_LABELS, firstName, isOverdue } from "@/lib/support-constants";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function VendorSupportPage() {
   // Deliberately excludes buyer_email: sellers reply through the platform.
   const { data: requestsData } = await supabaseAdmin
     .from("support_requests")
-    .select("id, order_id, product_id, buyer_name, reason, status, first_response_at, created_at")
+    .select("id, order_id, product_id, buyer_name, reason, status, first_response_at, seller_refund_approved_at, created_at")
     .eq("vendor_id", user.id)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -92,6 +93,11 @@ export default async function VendorSupportPage() {
                         Escalated
                       </span>
                     )}
+                    {r.seller_refund_approved_at && !closed && (
+                      <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", padding: "4px 10px", color: "#166534", background: "#eaf6ec" }}>
+                        Refund approved
+                      </span>
+                    )}
                     {closed && (
                       <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", padding: "4px 10px", color: "#555", background: "#eee" }}>
                         {r.status === "resolved" ? "Resolved" : "Closed"}
@@ -103,7 +109,12 @@ export default async function VendorSupportPage() {
                   messages={byRequest.get(r.id) ?? []}
                   labels={{ buyer: firstName(r.buyer_name), seller: "You", admin: "AI Digital Products team" }}
                 />
-                {!closed && <SupportReply requestId={r.id} />}
+                {!closed && (
+                  <>
+                    <ApproveRefund requestId={r.id} approved={!!r.seller_refund_approved_at} />
+                    <SupportReply requestId={r.id} />
+                  </>
+                )}
               </div>
             );
           })}

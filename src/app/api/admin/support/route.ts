@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     ? await supabaseAdmin.from("support_messages").select("id, request_id, author_role, body, created_at").in("request_id", ids).order("created_at", { ascending: true })
     : { data: [] };
   const { data: orders } = orderIds.length
-    ? await supabaseAdmin.from("orders").select("id, order_number").in("id", orderIds)
+    ? await supabaseAdmin.from("orders").select("id, order_number, status").in("id", orderIds)
     : { data: [] };
   const { data: products } = productIds.length
     ? await supabaseAdmin.from("products").select("id, name").in("id", productIds)
@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     : { data: [] };
 
   const orderNo = new Map((orders ?? []).map((o) => [o.id as string, o.order_number as string]));
+  const orderStatus = new Map((orders ?? []).map((o) => [o.id as string, o.status as string]));
   const prodName = new Map((products ?? []).map((p) => [p.id as string, p.name as string]));
   const vendName = new Map((vendors ?? []).map((v) => [v.id as string, v.display_name as string]));
   const byRequest = new Map<string, unknown[]>();
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
       ...r,
       overdue: isOverdue(r),
       order_number: orderNo.get(r.order_id) ?? "",
+      order_status: orderStatus.get(r.order_id) ?? "",
       product_name: prodName.get(r.product_id) ?? "Unknown product",
       vendor_name: r.vendor_id ? vendName.get(r.vendor_id) ?? "Unknown seller" : "Platform (no creator)",
       messages: byRequest.get(r.id) ?? [],

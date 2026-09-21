@@ -14,6 +14,9 @@ interface AdminRequest {
   buyer_name: string;
   buyer_email: string;
   overdue: boolean;
+  order_id: string;
+  order_status: string;
+  seller_refund_approved_at: string | null;
   order_number: string;
   product_name: string;
   vendor_name: string;
@@ -74,15 +77,46 @@ function SupportContent() {
     }
   }
 
+  async function refundNow(r: AdminRequest) {
+    if (!window.confirm("Issue a full refund for order " + r.order_number + "? This refunds the buyer on Stripe, reverses the seller's payout, and cannot be undone.")) return;
+    setActingId(r.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/orders/${r.order_id}/refund`, {
+        method: "POST",
+        headers: adminHeaders(token),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Refund failed");
+
+      const msg = (drafts[r.id] ?? "").trim() || "Your refund has been issued to your original payment method. It can take 5 to 10 business days to appear.";
+      const res2 = await fetch(`/api/admin/support/${r.id}`, {
+        method: "POST",
+        headers: adminHeaders(token),
+        body: JSON.stringify({ action: "resolve", message: msg }),
+      });
+      if (!res2.ok) {
+        const d2 = await res2.json().catch(() => ({}));
+        throw new Error("The refund was issued, but closing the request failed: " + (d2.error ?? "unknown error"));
+      }
+      setDrafts((d) => ({ ...d, [r.id]: "" }));
+      load();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setActingId(null);
+    }
+  }
+
   const isClosed = (r: AdminRequest) => r.status === "resolved" || r.status === "denied";
   const counts = {
-    attention: items.filter((r) => r.status === "escalated" || r.overdue).length,
+    attention: items.filter((r) => (r.status === "escalated" || r.overdue || (!!r.seller_refund_approved_at && !isClosed(r)))).length,
     open: items.filter((r) => !isClosed(r)).length,
     closed: items.filter(isClosed).length,
     all: items.length,
   };
   const shown = items.filter((r) =>
-    tab === "all" ? true : tab === "closed" ? isClosed(r) : tab === "open" ? !isClosed(r) : r.status === "escalated" || r.overdue
+    tab === "all" ? true : tab === "closed" ? isClosed(r) : tab === "open" ? !isClosed(r) : (r.status === "escalated" || r.overdue || (!!r.seller_refund_approved_at && !isClosed(r)))
   );
   const tabLabel: Record<Tab, string> = { attention: "Needs attention", open: "Open", closed: "Closed", all: "All" };
 
@@ -123,6 +157,9 @@ function SupportContent() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "6px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                {r.seller_refund_approved_at && !isClosed(r) && (
+                  <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", padding: "4px 10px", color: "#166534", background: "#eaf6ec" }}>Seller approved refund</span>
+                )}
                 {r.overdue && (
                   <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", padding: "4px 10px", color: "#c0392b", background: "#fdecea" }}>Overdue</span>
                 )}
@@ -162,7 +199,17 @@ function SupportContent() {
                   <button className="btn btn-ghost btn-sm" style={{ color: "#c0392b" }} disabled={actingId === r.id} onClick={() => act(r, "deny")}>
                     Deny
                   </button>
-                  <a href="/admin/orders" className="btn btn-ghost btn-sm">Issue refund on Orders page</a>
+                  {r.order_status === "refunded" || r.order_status === "chargeback" ? (
+                    <span style={{ fontSize: "12px", color: "var(--ink-mute)", alignSelf: "center" }}>Order already refunded</span>
+                  ) : (
+                    <button
+                      className={r.seller_refund_approved_at ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
+                      disabled={actingId === r.id}
+                      onClick={() => refundNow(r)}
+                    >
+                      Issue refund now
+                    </button>
+                  )}
                 </div>
               </div>
             )}
