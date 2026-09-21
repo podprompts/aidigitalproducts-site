@@ -636,6 +636,17 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
               An independent builder specialising in AI digital products. All products are tested,
               documented, and supported directly by the seller.
             </p>
+
+            {dbProduct?.vendor_id && (
+              <p style={{ marginBottom: "16px" }}>
+                <Link
+                  href={`/sellers/${dbProduct.vendor_id}`}
+                  style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", textDecoration: "underline" }}
+                >
+                  View all products from {product.seller} &rarr;
+                </Link>
+              </p>
+            )}
             {creatorRefundTerms && (
               <p
                 style={{
