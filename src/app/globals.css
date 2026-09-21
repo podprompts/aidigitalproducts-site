@@ -599,7 +599,7 @@ body {
   .related-grid       { grid-template-columns: repeat(2, 1fr); }
   .nav-search-wrapper { display: none; }
   .nav-hamburger      { display: flex; }
-  .nav-mobile-hide    { display: none; }
+  .nav-mobile-hide { display: none !important; }
 
   .sticky-buy-bar {
     display: flex;
