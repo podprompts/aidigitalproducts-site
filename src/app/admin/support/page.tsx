@@ -85,6 +85,7 @@ function SupportContent() {
       const res = await fetch(`/api/admin/orders/${r.order_id}/refund`, {
         method: "POST",
         headers: adminHeaders(token),
+        body: JSON.stringify({ source: "support_request" }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Refund failed");

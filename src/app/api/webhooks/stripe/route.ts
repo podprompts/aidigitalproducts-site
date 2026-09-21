@@ -200,7 +200,12 @@ export async function POST(req: NextRequest) {
     if (paymentIntentId && charge.refunded) {
       const { data: flipped, error: refundUpdateError } = await supabaseAdmin
         .from("orders")
-        .update({ status: "refunded" })
+        .update({
+          status: "refunded",
+          refunded_at: new Date().toISOString(),
+          refund_source: "stripe_dashboard",
+          refunded_amount_cents: charge.amount_refunded,
+        })
         .eq("stripe_payment_intent_id", paymentIntentId)
         .or("status.is.null,status.neq.refunded")
         .select("id, vendor_id, platform_fee_cents, vendor_payout_cents, amount_cents, currency, metadata");

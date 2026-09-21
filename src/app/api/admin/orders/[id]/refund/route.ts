@@ -49,6 +49,15 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   // tool for digital goods isn't the industry norm and isn't built here.
   const hasVendorSplit = !!order.vendor_id && order.platform_fee_cents != null;
 
+  // Where did this refund come from? The support queue sends source: "support_request".
+  let refundSource = "admin_orders";
+  try {
+    const b = await req.json();
+    if (b?.source === "support_request") refundSource = "admin_support";
+  } catch {
+    // no body - refunded from the Orders page
+  }
+
   try {
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
@@ -59,7 +68,18 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       ...(hasVendorSplit ? { reverse_transfer: true, refund_application_fee: true } : {}),
     });
 
-    const { data: flipped } = await supabaseAdmin.from("orders").update({ status: "refunded" }).eq("id", id).or("status.is.null,status.neq.refunded").select("id");
+    const { data: flipped } = await supabaseAdmin
+      .from("orders")
+      .update({
+        status: "refunded",
+        refunded_at: new Date().toISOString(),
+        refund_source: refundSource,
+        refund_stripe_id: refund.id,
+        refunded_amount_cents: refund.amount,
+      })
+      .eq("id", id)
+      .or("status.is.null,status.neq.refunded")
+      .select("id");
 
     // Vendor notification is intentionally non-fatal — a failed email
     // should never make the refund itself look like it failed.
