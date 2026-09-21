@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       platform_fee_cents: platformFeeCents,
       vendor_payout_cents: vendorPayoutCents,
       metadata: { product_id: productId, license_type: licenseType },
-    }).select("id").single();
+    }).select("id, order_number").single();
 
     if (error) {
       console.error("[webhook] failed to insert order", error);
@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
             currency:     session.currency ?? "usd",
             downloadFiles,
             orderId:      order.id,
+            orderNumber:  order.order_number ?? undefined,
             licenseType,
             licenseUrl: licenseType === "plr" ? `${siteUrl}/plr-license` : undefined,
           }).catch((err) => {

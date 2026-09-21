@@ -15,6 +15,7 @@ export interface OrderEmailData {
   downloadUrl?: string;                                        // legacy single-file fallback
   downloadFiles?: { file_name: string; url: string }[];      // multi-file (new)
   orderId: string;
+  orderNumber?: string;
   licenseType?: "personal" | "plr";
   licenseUrl?: string;
 }
@@ -122,6 +123,7 @@ function buildOrderConfirmationHtml(data: OrderEmailData): string {
 
         ${plrNotice}
 
+        ${data.orderNumber ? `<p style="font-size:13px; color:#555; text-align:center; margin-bottom:8px;">Order number: <strong>${data.orderNumber}</strong> &nbsp;&middot;&nbsp; <a href="${siteUrl}/support/order?order=${data.orderNumber}" style="color:#1a1a1a;">Need help with this order?</a></p>` : ""}
         <div class="download-section">
           ${downloadButtons}
           <p class="download-note">
@@ -183,6 +185,7 @@ ORDER SUMMARY
 Product: ${productName}
 Amount:  ${amount}
 ${plrNoticeText}
+${data.orderNumber ? `ORDER NUMBER: ${data.orderNumber}\nNeed help with this order? ${process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com"}/support/order?order=${data.orderNumber}\n` : ""}
 YOUR DOWNLOAD LINKS
 ───────────────────
 ${linksText}
@@ -957,5 +960,129 @@ ${lines.map((l) => `<p style="margin:0 0 8px">${escapeDisputeHtml(l)}</p>`).join
 
   if (error) {
     throw new Error(`Resend failed to send admin dispute alert: ${error.message}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Support request emails (buyer, seller and admin notifications)
+// ---------------------------------------------------------------------------
+
+export interface SupportEmailData {
+  toEmail: string;
+  subject: string;
+  label: string;
+  heading: string;
+  paragraphs: string[];
+  quote?: string | null;
+  ctaLabel?: string;
+  ctaUrl?: string;
+}
+
+function escapeSupportHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export async function sendSupportNotification(data: SupportEmailData): Promise<void> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
+  const year = new Date().getFullYear();
+  const paras = data.paragraphs.map((p) => `<p>${escapeSupportHtml(p)}</p>`).join("");
+  const quote = data.quote
+    ? `<div class="quote-box"><p class="quote-text">${escapeSupportHtml(data.quote).replace(/\n/g, "<br />")}</p></div>`
+    : "";
+  const cta =
+    data.ctaUrl && data.ctaLabel
+      ? `<div class="cta-section"><a href="${escapeSupportHtml(data.ctaUrl)}" class="cta-btn">${escapeSupportHtml(data.ctaLabel)}</a></div>`
+      : "";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeSupportHtml(data.label)}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #1a1a1a; }
+    .wrapper { max-width: 580px; margin: 0 auto; padding: 40px 16px; }
+    .card { background: #ffffff; border: 1px solid #e5e5e3; }
+    .header { padding: 40px 40px 32px; border-bottom: 1px solid #e5e5e3; }
+    .logo { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #1a1a1a; text-decoration: none; }
+    .body { padding: 40px; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+    h1 { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1.25; margin-bottom: 20px; }
+    p { font-size: 15px; color: #555; line-height: 1.65; margin-bottom: 16px; }
+    .quote-box { background: #f9f9f8; border: 1px solid #e5e5e3; border-left: 3px solid #1a1a1a; padding: 18px 20px; margin: 24px 0; }
+    .quote-text { font-size: 14px; color: #333; line-height: 1.6; margin: 0; }
+    .cta-section { text-align: center; padding: 28px 0; border-top: 1px solid #e5e5e3; margin-top: 8px; }
+    .cta-btn { display: inline-block; background: #1a1a1a; color: #ffffff !important; text-decoration: none; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 36px; }
+    .support { font-size: 13px; color: #888; line-height: 1.6; }
+    .support a { color: #1a1a1a; }
+    .footer { padding: 24px 40px; border-top: 1px solid #e5e5e3; background: #f9f9f8; }
+    .footer p { font-size: 11px; color: #aaa; line-height: 1.7; margin: 0; }
+    .footer a { color: #888; text-decoration: none; }
+    @media (max-width: 480px) {
+      .header, .body, .footer { padding-left: 24px; padding-right: 24px; }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <a href="${siteUrl}" class="logo">AI Digital Products</a>
+      </div>
+      <div class="body">
+        <div class="label">${escapeSupportHtml(data.label)}</div>
+        <h1>${escapeSupportHtml(data.heading)}</h1>
+        ${paras}
+        ${quote}
+        ${cta}
+        <p class="support">
+          Questions? Reply to this email or reach us at
+          <a href="mailto:support@aidigitalproducts.com">support@aidigitalproducts.com</a>.
+        </p>
+      </div>
+      <div class="footer">
+        <p>
+          &copy; ${year} AI Digital Products, LLC &nbsp;&middot;&nbsp;
+          <a href="${siteUrl}/privacy">Privacy Policy</a> &nbsp;&middot;&nbsp;
+          <a href="${siteUrl}/terms">Terms of Service</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = [
+    data.heading,
+    "",
+    ...data.paragraphs,
+    data.quote ? `\n"${data.quote}"\n` : "",
+    data.ctaUrl ? `${data.ctaLabel ?? "Open"}: ${data.ctaUrl}` : "",
+    "",
+    "Questions? Contact support@aidigitalproducts.com.",
+    "",
+    `(c) ${year} AI Digital Products, LLC`,
+  ].join("\n");
+
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: data.toEmail,
+    replyTo: "support@aidigitalproducts.com",
+    subject: data.subject,
+    html,
+    text,
+  });
+
+  if (error) {
+    throw new Error(`Resend failed to send support email: ${error.message}`);
   }
 }

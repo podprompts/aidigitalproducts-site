@@ -35,6 +35,9 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
           <a href="/vendor/connect" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
             Payouts
           </a>
+          <a href="/vendor/support" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            Support
+          </a>
           <a href="/vendor/reviews" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
             Reviews
           </a>
@@ -71,6 +74,9 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
         </a>
         <a href="/vendor/connect" className="nav-overlay-link" onClick={close}>
           Payouts
+        </a>
+        <a href="/vendor/support" className="nav-overlay-link" onClick={close}>
+          Support
         </a>
         <a href="/vendor/reviews" className="nav-overlay-link" onClick={close}>
           Reviews

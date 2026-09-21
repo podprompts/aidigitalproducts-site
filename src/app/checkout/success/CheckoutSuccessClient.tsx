@@ -250,6 +250,14 @@ function SuccessContent() {
             </div>
           )}
 
+          {/* Help link */}
+          <p style={{ marginTop: "28px", fontSize: "13px", color: "var(--ink-mute)" }}>
+            Problem with your order?{" "}
+            <Link href="/support/order" style={{ color: "var(--ink)", fontWeight: 600, textDecoration: "underline" }}>
+              Get help
+            </Link>
+          </p>
+
           {/* Nav buttons */}
           <div style={{ marginTop: "44px", display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/products" className="btn btn-primary">
