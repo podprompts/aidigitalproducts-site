@@ -38,7 +38,13 @@ export async function GET(req: NextRequest) {
 
     console.log(`[cron] Found ${signups.length} pending signups`);
 
-    const productIds = [...new Set(signups.map((s) => s.product_id))];
+    // Only real product UUIDs can have sale timers. Non-UUID values such as the
+// "site-launch" waitlist sentinel are skipped here (never emailed by this cron,
+// and their rows are left untouched) so they don't cause a uuid syntax error.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const productIds = [...new Set(signups.map((s) => s.product_id))].filter(
+      (id) => UUID_RE.test(String(id))
+    );
 
     // ── 2. Check which products have an active sale ───────────────────────────
     const activeProductIds: string[] = [];
