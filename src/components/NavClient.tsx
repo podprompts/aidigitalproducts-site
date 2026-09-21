@@ -101,7 +101,7 @@ export default function NavClient({ vendorInfo }: Props) {
 
   return (
     <>
-      <nav className="nav" style={{ top: pathname === "/" ? "36px" : 0 }}>
+      <nav className="nav" style={{ top: 0 }}>
         {/* Logo */}
         <Link
           href="/"
