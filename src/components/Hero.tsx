@@ -8,13 +8,13 @@ export default function Hero() {
   return (
     <section
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         textAlign: "center",
-        padding: "140px 24px 84px",
+        padding: "clamp(56px, 14vw, 125px) 19px clamp(32px, 8vw, 69px)",
         position: "relative",
       }}
     >
@@ -26,7 +26,7 @@ export default function Hero() {
           color: "var(--ink-faded)",
           letterSpacing: "0.22em",
           textTransform: "uppercase",
-          marginBottom: "32px",
+          marginBottom: "20px",
           display: "flex",
           alignItems: "center",
           gap: "12px",
@@ -65,7 +65,7 @@ export default function Hero() {
       {/* Subtext */}
       <p
         style={{
-          marginTop: "36px",
+          marginTop: "22px",
           fontSize: "clamp(16px, 1.5vw, 18px)",
           fontWeight: 500,
           color: "var(--ink-faded)",
@@ -84,7 +84,7 @@ export default function Hero() {
         style={{
           display: "flex",
           gap: "12px",
-          marginTop: "44px",
+          marginTop: "28px",
           opacity: 0,
           animation: "fadeUp 0.9s ease forwards 0.75s",
         }}
