@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Your support request | AI Digital Products",
   robots: { index: false, follow: false },
+  referrer: "no-referrer",
 };
 
 type Props = { params: Promise<{ token: string }> };

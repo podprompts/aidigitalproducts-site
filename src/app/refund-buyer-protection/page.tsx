@@ -34,7 +34,7 @@ export default function RefundBuyerProtectionPage() {
               Refund &amp; Buyer Protection Policy.
             </h1>
             <p style={{ marginTop: "28px", fontSize: "14px", fontWeight: 500, color: "var(--ink-faded)" }}>
-              Last Updated: September 19, 2026
+              Last Updated: September 21, 2026
             </p>
           </div>
         </section>
@@ -125,7 +125,14 @@ export default function RefundBuyerProtectionPage() {
             </LegalSection>
 
             <LegalSection id="how-to" number="7" title="How to Request a Refund">
-              <p>Reach out to the Creator directly using the contact details on the product page or in your order confirmation email. If you don't hear back within 48 hours, or the issue meets one of the escalation criteria above, contact us directly with your order number.</p>
+              <p>
+                To report a problem, use the{" "}
+                <Link href="/support/order" style={{ color: "var(--ink)", fontWeight: 600 }}>support request form</Link>{" "}
+                with your order number, which is in your order confirmation email. Your request goes to the
+                Creator first, and they are required to respond within 48 hours. If they do not, or the issue
+                meets one of the escalation criteria above, you can ask us to step in from your request page.
+                You can also contact us directly through the Contact page with your order number.
+              </p>
             </LegalSection>
 
             <LegalSection id="contact" number="8" title="Contact Information">

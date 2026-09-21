@@ -5,6 +5,14 @@ import { Resend } from "resend"; // ADD THIS
 const resend = new Resend(process.env.RESEND_API_KEY); // ADD THIS
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export async function POST(req: NextRequest) {
   let body: { name?: string; email?: string; subject?: string; message?: string };
   try {
@@ -38,10 +46,10 @@ export async function POST(req: NextRequest) {
     to: "adrien1@gmail.com", 
     subject: `[Contact] ${subject}`,
     html: `
-      <p><strong>From:</strong> ${name} (${email})</p>
-      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>From:</strong> ${escapeHtml(name)} (${escapeHtml(email)})</p>
+      <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
       <p><strong>Message:</strong></p>
-      <p>${message.replace(/\n/g, "<br/>")}</p>
+      <p>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
     `,
   });
 
