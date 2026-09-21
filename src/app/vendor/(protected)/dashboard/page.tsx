@@ -62,7 +62,9 @@ export default async function VendorDashboardPage() {
     .eq("vendor_id", user.id)
     .order("created_at", { ascending: false });
 
-  const orders: VendorOrder[] = ordersData ?? [];
+  const allOrders: VendorOrder[] = ordersData ?? [];
+  // Refunded orders are excluded from all totals; they still appear in Recent Sales, marked as refunded.
+  const orders = allOrders.filter((o) => o.status !== "refunded");
 
   const totalOrders = orders.length;
   const totalPayoutCents = orders.reduce((sum, o) => sum + (o.vendor_payout_cents ?? 0), 0);
@@ -71,7 +73,7 @@ export default async function VendorDashboardPage() {
     : 0;
 
   // Per-product breakdown — grouped by the product_id tucked inside metadata.
-  const productIds = [...new Set(orders.map((o) => o.metadata?.product_id).filter(Boolean))] as string[];
+  const productIds = [...new Set(allOrders.map((o) => o.metadata?.product_id).filter(Boolean))] as string[];
   const { data: productsData } = productIds.length > 0
     ? await supabaseAdmin.from("products").select("id, name").in("id", productIds)
     : { data: [] };
@@ -92,7 +94,7 @@ export default async function VendorDashboardPage() {
   }
   const productBreakdownList = [...productBreakdown.values()].sort((a, b) => b.payoutCents - a.payoutCents);
 
-  const recentOrders = orders.slice(0, 10);
+  const recentOrders = allOrders.slice(0, 10);
 
   return (
     <div>
@@ -159,7 +161,7 @@ export default async function VendorDashboardPage() {
               </thead>
               <tbody>
                 {recentOrders.map((o) => (
-                  <tr key={o.id} style={{ borderBottom: "1px solid var(--line-soft)" }}>
+                  <tr key={o.id} style={{ borderBottom: "1px solid var(--line-soft)", opacity: o.status === "refunded" ? 0.5 : 1 }}>
                     <td style={{ padding: "10px 14px", fontWeight: 500, color: "var(--ink)" }}>
                       {productNameMap.get(o.metadata?.product_id ?? "") ?? "—"}
                     </td>
@@ -170,7 +172,7 @@ export default async function VendorDashboardPage() {
                       {formatCents(o.amount_cents ?? 0)}
                     </td>
                     <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600, color: "var(--ink)" }}>
-                      {formatCents(o.vendor_payout_cents ?? 0)}
+                      {o.status === "refunded" ? "Refunded" : formatCents(o.vendor_payout_cents ?? 0)}
                     </td>
                   </tr>
                 ))}
