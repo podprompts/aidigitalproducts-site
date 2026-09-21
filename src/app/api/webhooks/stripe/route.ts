@@ -96,19 +96,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate a review token — same pattern as the download token below,
-    // generated now but not emailed until the delayed review-request cron
-    // job picks it up a few days later. Non-fatal if it fails; reviews are
-    // a nice-to-have, not something that should ever block an order.
+    // Generate a review token — matches the review_tokens table's real,
+    // pre-existing schema (customer_email/customer_name denormalized onto
+    // the token row, a plain "used" boolean, an expires_at window) rather
+    // than the schema I originally designed from scratch, which didn't
+    // match what was actually already in the database.
     if (productId && order?.id) {
-      const reviewToken = crypto.randomUUID();
-      const { error: reviewTokenError } = await supabaseAdmin.from("review_tokens").insert({
-        order_id: order.id,
-        product_id: productId,
-        token: reviewToken,
-      });
-      if (reviewTokenError) {
-        console.error("[webhook] failed to create review token", reviewTokenError);
+      const reviewCustomerEmail = session.customer_details?.email;
+      if (reviewCustomerEmail) {
+        const reviewToken = crypto.randomUUID();
+        const reviewExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+        const { error: reviewTokenError } = await supabaseAdmin.from("review_tokens").insert({
+          token: reviewToken,
+          order_id: order.id,
+          product_id: productId,
+          customer_email: reviewCustomerEmail,
+          customer_name: session.customer_details?.name ?? null,
+          expires_at: reviewExpiresAt,
+          used: false,
+        });
+        if (reviewTokenError) {
+          console.error("[webhook] failed to create review token", reviewTokenError);
+        }
       }
     }
 
