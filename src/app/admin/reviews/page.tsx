@@ -72,6 +72,29 @@ function ReviewsContent() {
     }
   }
 
+  async function removeReply(r: AdminReview) {
+    const ok = window.confirm(
+      "Remove the seller's reply? The review and rating stay as they are, and the seller can write a new reply."
+    );
+    if (!ok) return;
+
+    setActingId(r.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/reviews/${r.id}/reply`, {
+        method: "DELETE",
+        headers: adminHeaders(token),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to remove reply");
+      load();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setActingId(null);
+    }
+  }
+
   const counts = {
     all: reviews.length,
     visible: reviews.filter((r) => !r.is_hidden).length,
@@ -140,6 +163,14 @@ function ReviewsContent() {
                 <p style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>
                   {r.vendor_response}
                 </p>
+                <button
+                  onClick={() => removeReply(r)}
+                  disabled={actingId === r.id}
+                  className="btn btn-ghost btn-sm"
+                  style={{ marginTop: "10px", color: "#c0392b" }}
+                >
+                  {actingId === r.id ? "Working..." : "Remove reply"}
+                </button>
               </div>
             )}
 
