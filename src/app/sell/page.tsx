@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { PLATFORM_COMMISSION_PERCENT } from "@/lib/commission";
 
 export const metadata: Metadata = {
   title: "Sell — AI Digital Products",
   description:
-    "List your AI digital products on the fastest-growing AI marketplace. Free to list. 20% per sale. Payouts handled automatically by Stripe.",
+    `List your AI digital products on the fastest-growing AI marketplace. Free to list. ${PLATFORM_COMMISSION_PERCENT}% per sale. Payouts handled automatically by Stripe.`,
 };
 
 const howItWorks = [
@@ -17,7 +18,7 @@ const howItWorks = [
   },
   {
     num: "02",
-    heading: "20% Per Sale",
+    heading: `${PLATFORM_COMMISSION_PERCENT}% Per Sale`,
     body: "We only earn when you earn. One flat rate on every transaction.",
   },
   {

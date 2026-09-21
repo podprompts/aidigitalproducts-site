@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { PLATFORM_COMMISSION_PERCENT } from "@/lib/commission";
 
 export const metadata: Metadata = {
   title: "Pricing — AI Digital Products",
   description:
-    "Free to list. 20% per sale. Payouts handled automatically by Stripe. Simple pricing for sellers on AI Digital Products.",
+    `Free to list. ${PLATFORM_COMMISSION_PERCENT}% per sale. Payouts handled automatically by Stripe. Simple pricing for sellers on AI Digital Products.`,
 };
 
 const pricingCells = [
@@ -17,7 +18,7 @@ const pricingCells = [
   },
   {
     num: "02",
-    heading: "20% Per Sale",
+    heading: `${PLATFORM_COMMISSION_PERCENT}% Per Sale`,
     body: "We only earn when you earn. One flat rate on every transaction. No hidden cuts, no surprise charges.",
   },
   {
@@ -71,7 +72,7 @@ export default function PricingPage() {
                 lineHeight: 1.6,
               }}
             >
-              Free to list. 20% per sale. Payouts handled automatically by Stripe. That&apos;s it.
+              Free to list. {PLATFORM_COMMISSION_PERCENT}% per sale. Payouts handled automatically by Stripe. That&apos;s it.
             </p>
           </div>
         </section>
