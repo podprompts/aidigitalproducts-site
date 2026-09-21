@@ -6,6 +6,7 @@ import { type Product } from "@/lib/mock-data";
 import ProductThumbnail from "@/components/ProductThumbnail";
 import ViewingBadge from "@/components/ViewingBadge";
 import VendorAvatarBadge from "@/components/VendorAvatarBadge";
+import ProductMeta from "@/components/ProductMeta";
 
 const ALL = "All";
 
@@ -185,14 +186,12 @@ export default function ProductsClient({
                       <VendorAvatarBadge url={product.sellerAvatarUrl ?? null} size={26} alt={product.seller ?? "Seller"} />
                       <span>Seller · {product.seller}</span>
                     </div>
-                    <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)" }}>
-                      ${product.price}
-                      {(product.purchases ?? 0) > 0 && (
-                        <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--ink-mute)", marginLeft: "6px" }}>
-                          ({product.purchases})
-                        </span>
-                      )}
-                    </div>
+                    <ProductMeta
+                      rating={product.rating}
+                      reviewCount={product.reviewCount}
+                      price={product.price}
+                      purchases={product.purchases}
+                    />
                     <ViewingBadge productId={product.id} />
                   </div>
                   <span className="card-arrow">→</span>
