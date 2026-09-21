@@ -47,12 +47,19 @@ function ReviewsContent() {
 
   async function toggle(r: AdminReview) {
     const hide = !r.is_hidden;
-    const ok = window.confirm(
-      hide
-        ? "Hide this review? It disappears from the public product page and no longer counts toward the product's rating."
-        : "Unhide this review? It returns to the public product page and counts toward the rating again."
-    );
-    if (!ok) return;
+    let reason = "";
+    if (hide) {
+      const input = window.prompt(
+        "Hide this review? It disappears from the public product page and no longer counts toward the product's rating.\n\nOptional: type a reason to include in the email to the seller, or leave blank."
+      );
+      if (input === null) return;
+      reason = input.trim();
+    } else {
+      const ok = window.confirm(
+        "Unhide this review? It returns to the public product page and counts toward the rating again."
+      );
+      if (!ok) return;
+    }
 
     setActingId(r.id);
     setError("");
@@ -60,7 +67,7 @@ function ReviewsContent() {
       const res = await fetch(`/api/admin/reviews/${r.id}`, {
         method: "PATCH",
         headers: adminHeaders(token),
-        body: JSON.stringify({ hidden: hide }),
+        body: JSON.stringify({ hidden: hide, reason }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to update review");
@@ -73,10 +80,11 @@ function ReviewsContent() {
   }
 
   async function removeReply(r: AdminReview) {
-    const ok = window.confirm(
-      "Remove the seller's reply? The review and rating stay as they are, and the seller can write a new reply."
+    const input = window.prompt(
+      "Remove the seller's reply? The review and rating stay as they are, and the seller can write a new reply.\n\nOptional: type a reason to include in the email to the seller, or leave blank."
     );
-    if (!ok) return;
+    if (input === null) return;
+    const reason = input.trim();
 
     setActingId(r.id);
     setError("");
@@ -84,6 +92,7 @@ function ReviewsContent() {
       const res = await fetch(`/api/admin/reviews/${r.id}/reply`, {
         method: "DELETE",
         headers: adminHeaders(token),
+        body: JSON.stringify({ reason }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to remove reply");

@@ -709,3 +709,186 @@ export async function sendReviewRequestEmail(data: ReviewRequestEmailData): Prom
     throw new Error(`Resend failed to send review request email: ${error.message}`);
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Review moderation notifications (admin hid/unhid a review, removed a reply)
+// ---------------------------------------------------------------------------
+
+export type ReviewModerationAction = "hidden" | "unhidden" | "reply_removed";
+
+export interface ReviewModerationEmailData {
+  toEmail: string;
+  toName?: string;
+  action: ReviewModerationAction;
+  productName: string;
+  rating: number;
+  commentExcerpt?: string | null;
+  reason?: string | null;
+  reviewsUrl: string;
+}
+
+function escapeReviewEmailHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function moderationCopy(action: ReviewModerationAction, productName: string) {
+  if (action === "hidden") {
+    return {
+      label: "Review Hidden",
+      heading: "A review on your product was hidden.",
+      intro: `A review on ${productName} has been hidden by our team. It is no longer visible to the public and no longer counts toward the product's rating. You can still see it, greyed out, on your Reviews page.`,
+      showReason: true,
+      subject: `A review on ${productName} was hidden`,
+    };
+  }
+  if (action === "unhidden") {
+    return {
+      label: "Review Restored",
+      heading: "A hidden review was restored.",
+      intro: `A review on ${productName} that was previously hidden is public again and counts toward the product's rating. You can reply to it from your Reviews page.`,
+      showReason: false,
+      subject: `A review on ${productName} was restored`,
+    };
+  }
+  return {
+    label: "Reply Removed",
+    heading: "One of your review replies was removed.",
+    intro: `Our team removed your reply to a review on ${productName}. The review and its rating are unchanged, and you are welcome to write a new reply.`,
+    showReason: true,
+    subject: `Your reply on ${productName} was removed`,
+  };
+}
+
+function buildReviewModerationHtml(data: ReviewModerationEmailData): string {
+  const siteUrl  = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aidigitalproducts.com";
+  const year     = new Date().getFullYear();
+  const copy     = moderationCopy(data.action, escapeReviewEmailHtml(data.productName));
+  const greeting = data.toName ? `Hi ${escapeReviewEmailHtml(data.toName.split(" ")[0])},` : "Hi there,";
+  const rating   = Math.max(0, Math.min(5, Math.round(data.rating)));
+  const stars    = "\u2605".repeat(rating) + "\u2606".repeat(5 - rating);
+  const excerpt  = data.commentExcerpt
+    ? `<p style="font-size:14px; color:#333; line-height:1.6; margin:8px 0 0;">${escapeReviewEmailHtml(data.commentExcerpt)}</p>`
+    : "";
+  const reasonBlock =
+    copy.showReason && data.reason
+      ? `<div class="reason-box"><div class="reason-label">Reason from our team</div><p class="reason-text">${escapeReviewEmailHtml(data.reason)}</p></div>`
+      : "";
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${copy.label}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #f5f5f3; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #1a1a1a; }
+    .wrapper { max-width: 580px; margin: 0 auto; padding: 40px 16px; }
+    .card { background: #ffffff; border: 1px solid #e5e5e3; }
+    .header { padding: 40px 40px 32px; border-bottom: 1px solid #e5e5e3; }
+    .logo { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #1a1a1a; text-decoration: none; }
+    .body { padding: 40px; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #888; margin-bottom: 16px; }
+    h1 { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1.25; margin-bottom: 20px; }
+    p { font-size: 15px; color: #555; line-height: 1.65; margin-bottom: 16px; }
+    .review-box { background: #f9f9f8; border: 1px solid #e5e5e3; padding: 18px 20px; margin: 24px 0; }
+    .review-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+    .stars { font-size: 16px; color: #c7a24c; letter-spacing: 2px; }
+    .reason-box { background: #f9f9f8; border: 1px solid #e5e5e3; border-left: 3px solid #c0392b; padding: 18px 20px; margin: 24px 0; }
+    .reason-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+    .reason-text { font-size: 14px; color: #333; line-height: 1.6; margin: 0; }
+    .cta-section { text-align: center; padding: 28px 0; border-top: 1px solid #e5e5e3; margin-top: 8px; }
+    .cta-btn { display: inline-block; background: #1a1a1a; color: #ffffff !important; text-decoration: none; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 16px 36px; }
+    .support { font-size: 13px; color: #888; line-height: 1.6; }
+    .support a { color: #1a1a1a; }
+    .footer { padding: 24px 40px; border-top: 1px solid #e5e5e3; background: #f9f9f8; }
+    .footer p { font-size: 11px; color: #aaa; line-height: 1.7; margin: 0; }
+    .footer a { color: #888; text-decoration: none; }
+    @media (max-width: 480px) {
+      .header, .body, .footer { padding-left: 24px; padding-right: 24px; }
+      h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <a href="${siteUrl}" class="logo">AI Digital Products</a>
+      </div>
+      <div class="body">
+        <div class="label">${copy.label}</div>
+        <h1>${copy.heading}</h1>
+        <p>${greeting} ${copy.intro}</p>
+        <div class="review-box">
+          <div class="review-label">The review</div>
+          <div class="stars">${stars}</div>
+          ${excerpt}
+        </div>
+        ${reasonBlock}
+        <div class="cta-section">
+          <a href="${data.reviewsUrl}" class="cta-btn">View Your Reviews</a>
+        </div>
+        <p class="support">
+          Questions? Reply to this email or reach us at
+          <a href="mailto:support@aidigitalproducts.com">support@aidigitalproducts.com</a>.
+        </p>
+      </div>
+      <div class="footer">
+        <p>
+          &copy; ${year} AI Digital Products, LLC &nbsp;&middot;&nbsp;
+          <a href="${siteUrl}/privacy">Privacy Policy</a> &nbsp;&middot;&nbsp;
+          <a href="${siteUrl}/terms">Terms of Service</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+function buildReviewModerationText(data: ReviewModerationEmailData): string {
+  const year     = new Date().getFullYear();
+  const copy     = moderationCopy(data.action, data.productName);
+  const greeting = data.toName ? `Hi ${data.toName.split(" ")[0]},` : "Hi there,";
+  const rating   = Math.max(0, Math.min(5, Math.round(data.rating)));
+  const reasonLine = copy.showReason && data.reason ? `\nReason from our team: ${data.reason}\n` : "";
+  const excerptLine = data.commentExcerpt ? `\nComment: ${data.commentExcerpt}` : "";
+
+  return `
+${greeting}
+
+${copy.intro}
+
+Review rating: ${rating}/5${excerptLine}
+${reasonLine}
+View your reviews: ${data.reviewsUrl}
+
+Questions? Contact support@aidigitalproducts.com.
+
+(c) ${year} AI Digital Products, LLC
+  `.trim();
+}
+
+export async function sendReviewModerationEmail(data: ReviewModerationEmailData): Promise<void> {
+  const copy = moderationCopy(data.action, data.productName);
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: data.toEmail,
+    replyTo: "support@aidigitalproducts.com",
+    subject: copy.subject,
+    html: buildReviewModerationHtml(data),
+    text: buildReviewModerationText(data),
+  });
+
+  if (error) {
+    throw new Error(`Resend failed to send review moderation email: ${error.message}`);
+  }
+}
