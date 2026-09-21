@@ -17,6 +17,16 @@ interface Order {
   vendor_payout_cents: number | null;
   dispute_status: string | null;
   disputed_at: string | null;
+  refunded_at: string | null;
+  refund_source: string | null;
+  refunded_amount_cents: number | null;
+}
+
+function refundSourceLabel(source: string | null): string {
+  if (source === "admin_orders") return "Orders page";
+  if (source === "admin_support") return "support queue";
+  if (source === "stripe_dashboard") return "Stripe dashboard";
+  return "unknown source";
 }
 
 function OrdersContent() {
@@ -109,6 +119,12 @@ function OrdersContent() {
                     <span style={{ fontSize: "11px", fontWeight: 700, color: isRefunded ? "#8a6d1a" : o.status === "paid" ? "#16a34a" : "var(--ink-mute)", textTransform: "uppercase" }}>
                       {o.status ?? "—"}
                     </span>
+                    {isRefunded && o.refunded_at && (
+                      <div style={{ fontSize: "11px", color: "var(--ink-mute)", marginTop: "2px" }}>
+                        Refunded {new Date(o.refunded_at).toLocaleDateString()} via {refundSourceLabel(o.refund_source)}
+                        {o.refunded_amount_cents != null && <> &middot; ${(o.refunded_amount_cents / 100).toFixed(2)}</>}
+                      </div>
+                    )}
                     {isDisputed && (
                       <div style={{ fontSize: "11px", fontWeight: 700, color: "#c0392b", textTransform: "uppercase", marginTop: "2px" }}>
                         Disputed: {o.dispute_status}
