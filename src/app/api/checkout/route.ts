@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mockProducts } from "@/lib/mock-data";
+import { PLATFORM_COMMISSION_PERCENT } from "@/lib/commission";
 import { getActiveOverride } from "@/lib/timer-overrides";
 
 function getIp(req: NextRequest): string {
@@ -158,9 +159,7 @@ async function getVendorPayoutInfo(
 }
 
 function getPlatformCommissionPercent(): number {
-  const raw = process.env.PLATFORM_COMMISSION_PERCENT;
-  const parsed = raw ? parseFloat(raw) : NaN;
-  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100 ? parsed : 20;
+  return PLATFORM_COMMISSION_PERCENT;
 }
 
 export async function POST(req: NextRequest) {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PLATFORM_COMMISSION_PERCENT } from "@/lib/commission";
 
 interface Props {
   alreadyAgreedAt: string | null;
@@ -34,7 +35,7 @@ const SECTIONS = [
         <p>
           The Company retains a{" "}
           <Link href="/pricing" target="_blank" style={{ color: "var(--ink)", fontWeight: 600 }}>
-            20% commission
+            {PLATFORM_COMMISSION_PERCENT}% commission
           </Link>{" "}
           on each sale of your products. The remaining balance is transferred directly to your
           connected Stripe account by Stripe itself — the Company does not hold or manually

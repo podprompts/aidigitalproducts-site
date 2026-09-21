@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PLATFORM_COMMISSION_PERCENT } from "@/lib/commission";
 import AvatarUploader from "./AvatarUploader";
 
 interface Props {
@@ -99,7 +100,7 @@ export default function OnboardingWelcomeModal({ stripeConnected, vendorName, av
               recorded normally — your payouts just can&apos;t be sent to you yet.
             </p>
             <p style={{ fontSize: "12px", color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: "20px" }}>
-              The platform keeps a 20% commission on each sale; the rest is transferred directly to
+              The platform keeps a {PLATFORM_COMMISSION_PERCENT}% commission on each sale; the rest is transferred directly to
               your connected account by Stripe.
             </p>
             <a href="/vendor/connect" className="btn btn-primary">
