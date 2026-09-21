@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-// Set to 'false' (or remove the env var) in Vercel's project settings
-// when you're ready to launch and want the real site back for everyone.
+// Maintenance mode is ON unless MAINTENANCE_MODE is set to exactly 'false'
+// (lowercase) in Vercel's project settings. Removing the variable, leaving it
+// blank, or using 'False', '0' or a typo all keep maintenance mode ON.
+// Set it to 'false' and redeploy when you're ready to launch.
 const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE !== 'false';
 
 function getSecretKey(): Uint8Array | null {
