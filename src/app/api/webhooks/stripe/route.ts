@@ -96,6 +96,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Generate a review token — same pattern as the download token below,
+    // generated now but not emailed until the delayed review-request cron
+    // job picks it up a few days later. Non-fatal if it fails; reviews are
+    // a nice-to-have, not something that should ever block an order.
+    if (productId && order?.id) {
+      const reviewToken = crypto.randomUUID();
+      const { error: reviewTokenError } = await supabaseAdmin.from("review_tokens").insert({
+        order_id: order.id,
+        product_id: productId,
+        token: reviewToken,
+      });
+      if (reviewTokenError) {
+        console.error("[webhook] failed to create review token", reviewTokenError);
+      }
+    }
+
     // Generate download token and send confirmation email — non-fatal if either fails
     if (productId && order?.id) {
       const token     = crypto.randomUUID();
