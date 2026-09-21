@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
-import Ticker from "@/components/Ticker";
+// import Ticker from "@/components/Ticker"; // ticker disabled
 import Hero from "@/components/Hero";
 import StatsCarousel from "@/components/StatsCarousel";
 import ProductGrid from "@/components/ProductGrid";
@@ -21,8 +21,8 @@ export const dynamic = "force-dynamic";
 //   set YOUTUBE_VIDEO_ID = "dQw4w9WgXcQ"
 // To hide the video entirely: set SHOW_HOMEPAGE_VIDEO = false
 // ─────────────────────────────────────────────────────────────────────────────
-const YOUTUBE_VIDEO_ID = "gBV5FT40N_M";
-const SHOW_HOMEPAGE_VIDEO = false;
+const YOUTUBE_VIDEO_ID = "oTXBwOMhetY";
+const SHOW_HOMEPAGE_VIDEO = true;
 
 export default async function Home() {
   const products = await getProducts();
@@ -30,7 +30,7 @@ export default async function Home() {
   return (
     <>
       {/* Ticker — homepage only */}
-      <Ticker />
+      {/* <Ticker /> */}
 
       <Nav />
       <Hero />
