@@ -14,6 +14,8 @@ import ViewTracker from "@/components/ViewTracker";
 import ProductGallery, { type GalleryImage } from "@/components/ProductGallery";
 import ProductAttributes from "@/components/ProductAttributes";
 import VendorAvatarBadge from "@/components/VendorAvatarBadge";
+import ReviewCard from "@/components/ReviewCard";
+import StarRatingDisplay from "@/components/StarRatingDisplay";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 export const dynamicParams = true;
@@ -52,7 +54,7 @@ export default async function ProductDetailPage({ params }: Props) {
   // Always fetch live Supabase data to get purchases, flags, and PLR fields
   const { data: dbProduct } = await supabaseAdmin
     .from("products")
-    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, is_active, purchases, is_favorite, is_featured, is_not_ai, vendor_id, creator_refund_terms")
+    .select("id, name, slug, category, sale_price_cents, regular_price_cents, sale_stripe_price_id, regular_stripe_price_id, plr_price_cents, plr_stripe_price_id, is_plr_available, description, is_active, purchases, is_favorite, is_featured, is_not_ai, vendor_id, creator_refund_terms, rating, review_count")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
@@ -71,6 +73,8 @@ export default async function ProductDetailPage({ params }: Props) {
       plrPrice: dbProduct.plr_price_cents ? dbProduct.plr_price_cents / 100 : undefined,
       plrPriceId: dbProduct.plr_stripe_price_id ?? undefined,
       isPlrAvailable: dbProduct.is_plr_available ?? false,
+      rating: dbProduct.rating ?? undefined,
+      reviewCount: dbProduct.review_count ?? undefined,
     };
   } else if (mockMatch) {
     product = { ...mockMatch, purchases: 0 };
@@ -93,8 +97,8 @@ export default async function ProductDetailPage({ params }: Props) {
       isFavorite: dbProduct.is_favorite ?? false,
       isFeatured: dbProduct.is_featured ?? false,
       isNotAi: dbProduct.is_not_ai ?? false,
-      rating: undefined,
-      reviewCount: undefined,
+      rating: dbProduct.rating ?? undefined,
+      reviewCount: dbProduct.review_count ?? undefined,
     };
     // @ts-ignore
     product = shaped;
@@ -223,6 +227,17 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
     const fallback = dbThumbnailUrl ?? product.thumbnailUrl ?? null;
     galleryImages = fallback ? [{ url: fallback, alt: product.title }] : [];
   }
+
+  // Reviews — hidden ones excluded from the public list entirely (matches
+  // the same exclusion already applied when the aggregate rating/count is
+  // calculated on submission).
+  const { data: reviewsData } = await supabaseAdmin
+    .from("product_reviews")
+    .select("id, reviewer_name, rating, comment, vendor_response, vendor_response_at, created_at")
+    .eq("product_id", dbProductId)
+    .eq("is_hidden", false)
+    .order("created_at", { ascending: false });
+  const reviews = reviewsData ?? [];
 
   return (
     <>
@@ -642,6 +657,46 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
             >
               View the full Refund &amp; Buyer Protection Policy →
             </Link>
+          </div>
+        </section>
+
+        <section className="block">
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            <div
+              style={{
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--ink-faded)",
+                textTransform: "uppercase",
+                letterSpacing: "0.22em",
+                marginBottom: "24px",
+              }}
+            >
+              — Reviews —
+            </div>
+            {reviews.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "40px" }}>
+                <StarRatingDisplay rating={product.rating ?? 0} size={22} />
+                <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--ink)" }}>
+                  {(product.rating ?? 0).toFixed(1)}
+                </span>
+                <span style={{ fontSize: "14px", color: "var(--ink-mute)" }}>
+                  ({reviews.length} review{reviews.length !== 1 ? "s" : ""})
+                </span>
+              </div>
+            )}
+
+            {reviews.length === 0 ? (
+              <p style={{ fontSize: "14px", color: "var(--ink-faded)" }}>
+                No reviews yet — be the first to leave one after your purchase.
+              </p>
+            ) : (
+              <div>
+                {reviews.map((review) => (
+                  <ReviewCard key={review.id} review={review} sellerName={product.seller ?? "the seller"} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
