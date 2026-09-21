@@ -19,11 +19,11 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <a href="/" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-mute)", textDecoration: "none" }}>
+          <a href="/" style={{ whiteSpace: "nowrap", fontSize: "13px", fontWeight: 600, color: "var(--ink-mute)", textDecoration: "none" }}>
             ← Home
           </a>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
-            Vendor Portal — {vendorName}
+          <div style={{ whiteSpace: "nowrap", fontSize: "14px", fontWeight: 700, color: "var(--ink)" }}>
+            Vendor Portal<span className="vendor-name-full"> &mdash; {vendorName}</span>
           </div>
         </div>
 

@@ -877,3 +877,9 @@ body {
     padding: 32px 24px !important;
   }
 }
+
+
+/* Vendor portal header: hide the vendor name on mobile so the title fits on one line */
+@media (max-width: 900px) {
+  .vendor-name-full { display: none; }
+}
