@@ -70,10 +70,13 @@ export default function RefundBuyerProtectionPage() {
 
             <LegalSection id="creator-first" number="2" title="Contact the Creator First">
               <p>
-                If a product doesn't work as described, is missing files, or otherwise has a
-                genuine problem, contact the Creator listed on the product page first. Most issues
-                are resolved quickly this way — a corrected file, a missing download link fixed,
-                or a straightforward refund.
+                If a product doesn&apos;t work as described, is missing files, or otherwise has a
+                genuine problem, start with a support request. Use the{" "}
+                <Link href="/support/order" style={{ color: "var(--ink)", fontWeight: 600 }}>support request form</Link>{" "}
+                with your order number, and your request goes to the Creator listed on the product page.
+                The Creator sees your first name, your order number and your message, but not your email
+                address, and replies to you through the platform. Most issues are resolved quickly this
+                way &mdash; a corrected file, a missing download link fixed, or a straightforward refund.
               </p>
             </LegalSection>
 
@@ -100,9 +103,12 @@ export default function RefundBuyerProtectionPage() {
                 <li>There's evidence of fraud, deception, or abuse</li>
               </ul>
               <p>
-                To escalate, contact us through the{" "}
+                To escalate, open your request page (the link is in the email we send you when you submit
+                a request) and choose &quot;Escalate to AI Digital Products&quot;. If the Creator has not
+                responded within 48 hours, or your problem matches one of the situations above, you can
+                escalate straight away without waiting. You can also contact us through the{" "}
                 <Link href="/contact" style={{ color: "var(--ink)", fontWeight: 600 }}>Contact page</Link>{" "}
-                with your order number and a summary of what's happened so far.
+                with your order number and a summary of what&apos;s happened so far.
               </p>
             </LegalSection>
 
