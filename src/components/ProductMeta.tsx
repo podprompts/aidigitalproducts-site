@@ -36,7 +36,7 @@ export default function ProductMeta({ rating, reviewCount, price, purchases }: P
           style={{
             fontSize: "13px",
             fontWeight: 700,
-            color: "var(--ink-faded)",
+            color: "#c7a24c",
             letterSpacing: "0.04em",
           }}
         >
