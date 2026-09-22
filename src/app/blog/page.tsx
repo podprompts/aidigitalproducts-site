@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { mockBlogPosts } from "@/lib/mock-data";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Blog — AI Digital Products",
@@ -18,7 +20,14 @@ function formatDate(dateStr: string) {
   });
 }
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const { data: postsData } = await supabaseAdmin
+    .from("blog_posts")
+    .select("id, slug, title, category, excerpt, published_at")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
+  const posts = postsData ?? [];
+
   return (
     <>
       <Nav />
@@ -57,88 +66,94 @@ export default function BlogPage() {
         {/* Blog grid */}
         <section style={{ padding: "0 0 clamp(80px, 12vw, 160px)" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 clamp(20px, 4vw, 40px)" }}>
-            <div className="catalog-grid">
-              {mockBlogPosts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/blog/${post.slug}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <div
-                    className="card blog-card"
-                    style={{
-                      padding: "48px 36px",
-                      minHeight: "300px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                    }}
+            {posts.length === 0 ? (
+              <p style={{ textAlign: "center", fontSize: "15px", color: "var(--ink-faded)", fontWeight: 500 }}>
+                No posts yet — check back soon.
+              </p>
+            ) : (
+              <div className="catalog-grid">
+                {posts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/blog/${post.slug}`}
+                    style={{ textDecoration: "none" }}
                   >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: "var(--ink-faded)",
-                          letterSpacing: "0.18em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {post.category}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          color: "var(--ink-mute)",
-                          letterSpacing: "0.04em",
-                        }}
-                      >
-                        {formatDate(post.date)}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: "16px",
-                          fontSize: "18px",
-                          fontWeight: 800,
-                          letterSpacing: "-0.02em",
-                          color: "var(--ink)",
-                          lineHeight: 1.25,
-                        }}
-                      >
-                        {post.title}
-                      </div>
-                      <p
-                        style={{
-                          marginTop: "12px",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "var(--ink-faded)",
-                          lineHeight: 1.6,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {post.excerpt}
-                      </p>
-                    </div>
                     <div
+                      className="card blog-card"
                       style={{
-                        marginTop: "28px",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "var(--ink)",
+                        padding: "48px 36px",
+                        minHeight: "300px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
                       }}
                     >
-                      Read more →
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            color: "var(--ink-faded)",
+                            letterSpacing: "0.18em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {post.category}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            color: "var(--ink-mute)",
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          {formatDate(post.published_at)}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: "16px",
+                            fontSize: "18px",
+                            fontWeight: 800,
+                            letterSpacing: "-0.02em",
+                            color: "var(--ink)",
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {post.title}
+                        </div>
+                        <p
+                          style={{
+                            marginTop: "12px",
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            color: "var(--ink-faded)",
+                            lineHeight: 1.6,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {post.excerpt}
+                        </p>
+                      </div>
+                      <div
+                        style={{
+                          marginTop: "28px",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "var(--ink)",
+                        }}
+                      >
+                        Read more →
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

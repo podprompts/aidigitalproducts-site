@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { mockBlogPosts } from "@/lib/mock-data";
+import { supabaseAdmin } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -15,13 +18,19 @@ function formatDate(dateStr: string) {
   });
 }
 
-export async function generateStaticParams() {
-  return mockBlogPosts.map((p) => ({ slug: p.slug }));
+async function getPost(slug: string) {
+  const { data } = await supabaseAdmin
+    .from("blog_posts")
+    .select("id, slug, title, category, excerpt, body, published_at")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+  return data;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = mockBlogPosts.find((p) => p.slug === slug);
+  const post = await getPost(slug);
   if (!post) return {};
   return {
     title: `${post.title} — AI Digital Products`,
@@ -29,17 +38,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const placeholder = [
-  "The starting point matters more than most people acknowledge. Before any implementation decision, the problem needs to be defined clearly — not loosely, not aspirationally. The specific failure mode you are solving for determines the entire shape of the solution.",
-  "Most failures in this space come from scope creep at the wrong moment. The tools are capable. The challenge is deciding what to build first and holding that line long enough to learn from it.",
-  "The pattern that works, consistently, is to build for the smallest viable use case and expand from there. This is not a limitation. It is a strategy. Narrow scope produces clear feedback. Clear feedback produces better decisions.",
-  "This is the approach that scales. Not because it is fashionable, but because it reflects how durable systems actually get built.",
-];
-
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = mockBlogPosts.find((p) => p.slug === slug);
+  const post = await getPost(slug);
   if (!post) notFound();
+
+  const paragraphs = (post.body as string).split(/\n\s*\n/).filter((p) => p.trim());
 
   return (
     <>
@@ -63,7 +67,7 @@ export default async function BlogPostPage({ params }: Props) {
             >
               <span>{post.category}</span>
               <span style={{ color: "var(--ink-mute)" }}>—</span>
-              <span>{formatDate(post.date)}</span>
+              <span>{formatDate(post.published_at)}</span>
             </div>
             <h1
               className="display"
@@ -81,21 +85,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Prose */}
         <section className="block">
           <div className="prose-inner">
-            <p
-              style={{
-                fontSize: "17px",
-                fontWeight: 500,
-                color: "var(--ink-faded)",
-                lineHeight: 1.75,
-                marginBottom: "28px",
-              }}
-            >
-              {post.excerpt} This piece explores the underlying patterns in more depth.
-            </p>
-
-            <div style={{ height: "1px", background: "var(--line)", margin: "36px 0" }} />
-
-            {placeholder.map((para, i) => (
+            {paragraphs.map((para, i) => (
               <p
                 key={i}
                 style={{
@@ -103,7 +93,7 @@ export default async function BlogPostPage({ params }: Props) {
                   fontWeight: 500,
                   color: "var(--ink-faded)",
                   lineHeight: 1.8,
-                  marginBottom: i < placeholder.length - 1 ? "24px" : "0",
+                  marginBottom: i < paragraphs.length - 1 ? "24px" : "0",
                 }}
               >
                 {para}
