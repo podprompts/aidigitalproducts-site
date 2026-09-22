@@ -65,7 +65,7 @@ export default function BlogPage() {
                   style={{ textDecoration: "none" }}
                 >
                   <div
-                    className="card"
+                    className="card blog-card"
                     style={{
                       padding: "48px 36px",
                       minHeight: "300px",

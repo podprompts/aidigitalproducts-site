@@ -588,6 +588,26 @@ body {
   margin-top: 24px;
 }
 
+/* -- Blog cards reuse .catalog-grid but have no thumbnail; restore even padding -- */
+.catalog-grid .blog-card {
+  padding: 48px 36px !important;
+}
+.catalog-grid .blog-card > :first-child {
+  width: auto !important;
+}
+.catalog-grid .blog-card > :not(:first-child) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.catalog-grid .blog-card > :nth-child(2) {
+  margin-top: 28px !important;
+}
+@media (max-width: 900px) {
+  .catalog-grid .blog-card {
+    padding: 32px 20px !important;
+  }
+}
+
 /* ── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .product-grid       { grid-template-columns: 1fr; }
