@@ -7,29 +7,17 @@ import ProductThumbnail from "@/components/ProductThumbnail";
 import ProductMeta from "@/components/ProductMeta";
 import ViewingBadge from "@/components/ViewingBadge";
 import VendorAvatarBadge from "@/components/VendorAvatarBadge";
+import StarRatingDisplay from "@/components/StarRatingDisplay";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getActiveVendor, weightedVendorRating } from "@/lib/vendor";
 
 export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ vendorId: string }> };
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-async function getVendor(vendorId: string) {
-  // Postgres throws on non-UUID input, so reject bad IDs before querying.
-  if (!UUID_RE.test(vendorId)) return null;
-  const { data } = await supabaseAdmin
-    .from("vendor_profiles")
-    .select("id, display_name, avatar_url, is_active")
-    .eq("id", vendorId)
-    .single();
-  if (!data || !data.is_active) return null;
-  return data;
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { vendorId } = await params;
-  const vendor = await getVendor(vendorId);
+  const vendor = await getActiveVendor(vendorId);
   if (!vendor) return {};
   return {
     title: `${vendor.display_name} | AI Digital Products`,
@@ -39,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SellerStorefrontPage({ params }: Props) {
   const { vendorId } = await params;
-  const vendor = await getVendor(vendorId);
+  const vendor = await getActiveVendor(vendorId);
   if (!vendor) notFound();
 
   const { data: productRows } = await supabaseAdmin
@@ -53,6 +41,7 @@ export default async function SellerStorefrontPage({ params }: Props) {
 
   const products = productRows ?? [];
   const sellerName = vendor.display_name as string;
+  const agg = weightedVendorRating(products);
 
   return (
     <>
@@ -95,6 +84,26 @@ export default async function SellerStorefrontPage({ params }: Props) {
           >
             {products.length} product{products.length !== 1 ? "s" : ""}
           </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap", marginTop: "14px" }}>
+            {agg && (
+              <Link
+                href={`/sellers/${vendorId}/reviews`}
+                style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+              >
+                <StarRatingDisplay rating={agg.avg} size={15} />
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)" }}>{agg.avg.toFixed(1)}</span>
+                <span style={{ fontSize: "13px", color: "var(--ink-mute)", textDecoration: "underline" }}>
+                  ({agg.count} review{agg.count !== 1 ? "s" : ""})
+                </span>
+              </Link>
+            )}
+            <Link
+              href={`/contact-seller/${vendorId}`}
+              style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink)", textDecoration: "underline" }}
+            >
+              Contact Seller
+            </Link>
+          </div>
         </section>
 
         <section style={{ padding: "clamp(40px, 6vw, 80px) 24px" }}>
