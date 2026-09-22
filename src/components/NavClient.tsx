@@ -7,8 +7,9 @@ import VendorAvatarBadge from "@/components/VendorAvatarBadge";
 import { signOutAction } from "@/app/vendor/actions";
 
 const navLinks = [
-  { label: "Home",            href: "/"         },
-  { label: "Browse Products", href: "/products" },
+  { label: "Home",     href: "/"         },
+  { label: "Products", href: "/products" },
+  { label: "Blog",     href: "/blog"     },
 ];
 
 export interface VendorNavInfo {
