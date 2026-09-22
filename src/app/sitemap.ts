@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { mockProducts, mockCategories, mockBlogPosts } from "@/lib/mock-data";
+import { mockProducts, mockCategories } from "@/lib/mock-data";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 // Rebuilt at most once an hour so new products and sellers appear without a redeploy.
@@ -67,8 +67,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE}/categories/${c.slug}`,
   }));
 
-  const blogRoutes: MetadataRoute.Sitemap = mockBlogPosts.map((b) => ({
+  const { data: blogRows } = await supabaseAdmin
+    .from("blog_posts")
+    .select("slug, published_at")
+    .eq("status", "published");
+  const blogRoutes: MetadataRoute.Sitemap = (blogRows ?? []).map((b) => ({
     url: `${BASE}/blog/${b.slug}`,
+    lastModified: b.published_at ? new Date(b.published_at) : undefined,
   }));
 
   return [...staticRoutes, ...productRoutes, ...sellerRoutes, ...categoryRoutes, ...blogRoutes];
