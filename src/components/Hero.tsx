@@ -94,6 +94,7 @@ export default function Hero() {
       </div>
 
       {/* Scroll cue */}
+{/*
       <Link
         href="#recently-added"
         style={{
@@ -114,6 +115,7 @@ export default function Hero() {
       >
         Keep Scrolling
       </Link>
+*/}
     </section>
   );
 }
