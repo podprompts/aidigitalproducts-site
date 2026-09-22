@@ -41,6 +41,9 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
           <a href="/vendor/reviews" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
             Reviews
           </a>
+          <a href="/vendor/messages" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
+            Messages
+          </a>
           <a href="/vendor/history" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
             History
           </a>
@@ -80,6 +83,9 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
         </a>
         <a href="/vendor/reviews" className="nav-overlay-link" onClick={close}>
           Reviews
+        </a>
+        <a href="/vendor/messages" className="nav-overlay-link" onClick={close}>
+          Messages
         </a>
         <a href="/vendor/history" className="nav-overlay-link" onClick={close}>
           History
