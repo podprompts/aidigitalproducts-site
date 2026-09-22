@@ -165,6 +165,7 @@ export default async function ProductDetailPage({ params }: Props) {
   // have no vendor_id and fall back to the site default.
   let sellerName = "AI Digital Products";
   let sellerAvatarUrl: string | null = null;
+  let sellerVendorId: string | null = null;
   if (dbProduct?.vendor_id) {
     const { data: vendorRow } = await supabaseAdmin
       .from("vendor_profiles")
@@ -173,6 +174,7 @@ export default async function ProductDetailPage({ params }: Props) {
       .single();
     if (vendorRow?.display_name) sellerName = vendorRow.display_name;
     sellerAvatarUrl = vendorRow?.avatar_url ?? null;
+    sellerVendorId = dbProduct.vendor_id;
   }
   product.seller = sellerName;
   const creatorRefundTerms = dbProduct?.creator_refund_terms ?? null;
@@ -484,7 +486,13 @@ Example format: ["Step one here", "Step two here", "Step three here"]`,
                   }}
                 >
                   <VendorAvatarBadge url={sellerAvatarUrl} size={22} alt={product.seller} />
-                  <span>Sold by {product.seller}</span>
+                  {sellerVendorId ? (
+                    <Link href={`/sellers/${sellerVendorId}`} style={{ color: "var(--ink-mute)", textDecoration: "underline" }}>
+                      Sold by {product.seller}
+                    </Link>
+                  ) : (
+                    <span>Sold by {product.seller}</span>
+                  )}
                   <span style={{ color: "var(--ink-soft)" }}>·</span>
                   <Link href="/refund-buyer-protection" style={{ color: "var(--ink-mute)", textDecoration: "underline" }}>
                     Refund policy
