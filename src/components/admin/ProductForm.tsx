@@ -172,6 +172,8 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
   const [images,       setImages]       = useState<UIImage[]>(initialImages);
   const [downloadFile, setDownloadFile] = useState<File | null>(null);
   const [videoFile,    setVideoFile]    = useState<File | null>(null);
+  const [removeDownloadFile, setRemoveDownloadFile] = useState(false);
+  const [removeVideo,        setRemoveVideo]        = useState(false);
   const [saving,       setSaving]       = useState(false);
   const [uploading,    setUploading]    = useState(false);
   const [toast,        setToast]        = useState<{ msg: string; ok: boolean } | null>(null);
@@ -343,8 +345,10 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         is_favorite:             form.is_favorite,
         is_not_ai:               form.is_not_ai,
         attributes:              buildAttributesPayload(attrs),
-        // Preserve existing video_url if no new file selected
-        video_url:               form.video_url || null,
+        // Preserve existing video_url unless a new file was picked or it was removed
+        video_url:               removeVideo ? null : (form.video_url || null),
+        // Preserve existing download_file_url unless a new file was picked or it was removed
+        download_file_url:       removeDownloadFile ? null : (initial.download_file_url || undefined),
       };
  
       const productRes = await fetch(
@@ -576,13 +580,36 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         {/* Download file */}
         <div>
           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "12px" }}>Download File</div>
-          {initial.download_file_url && !downloadFile && (
-            <div style={{ fontSize: "12px", color: "var(--ink-faded)", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
-              Current: <span style={{ fontFamily: "monospace" }}>{initial.download_file_url.split("/").pop()}</span>
+{initial.download_file_url && !downloadFile && !removeDownloadFile && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+              <div style={{ flex: 1, minWidth: 0, fontSize: "12px", color: "var(--ink-faded)" }}>
+                Current: <span style={{ fontFamily: "monospace" }}>{initial.download_file_url.split("/").pop()}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRemoveDownloadFile(true)}
+                aria-label="Remove download file"
+                style={{ background: "none", border: "1px solid var(--ink-soft)", borderRadius: "2px", width: "22px", height: "22px", cursor: "pointer", fontSize: "13px", color: "var(--ink-mute)", lineHeight: 1, flexShrink: 0 }}
+              >
+                x
+              </button>
+            </div>
+          )}
+          {removeDownloadFile && !downloadFile && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+              <div style={{ flex: 1, fontSize: "12px", color: "var(--ink-faded)" }}>Will be removed on save.</div>
+              <button
+                type="button"
+                onClick={() => setRemoveDownloadFile(false)}
+                className="btn btn-ghost btn-sm"
+                style={{ flexShrink: 0 }}
+              >
+                Undo
+              </button>
             </div>
           )}
           <label style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", border: "1px dashed var(--ink-soft)", cursor: "pointer", fontSize: "13px", color: "var(--ink-faded)" }}>
-            <input type="file" style={{ display: "none" }} onChange={(e) => setDownloadFile(e.target.files?.[0] ?? null)} />
+            <input type="file" style={{ display: "none" }} onChange={(e) => { setDownloadFile(e.target.files?.[0] ?? null); setRemoveDownloadFile(false); }} />
             {downloadFile
               ? <><strong style={{ color: "var(--ink)" }}>{downloadFile.name}</strong> — {(downloadFile.size / 1024 / 1024).toFixed(2)} MB</>
               : <>{initial.download_file_url ? "Replace file…" : "Choose file to upload…"}</>
@@ -594,13 +621,36 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         {/* Video upload */}
         <div>
           <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "12px" }}>Preview Video — optional (.mp4)</div>
-          {initial.video_url && !videoFile && (
-            <div style={{ fontSize: "12px", color: "var(--ink-faded)", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
-              Current: <span style={{ fontFamily: "monospace" }}>{initial.video_url.split("/").pop()}</span>
+{initial.video_url && !videoFile && !removeVideo && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+              <div style={{ flex: 1, minWidth: 0, fontSize: "12px", color: "var(--ink-faded)" }}>
+                Current: <span style={{ fontFamily: "monospace" }}>{initial.video_url.split("/").pop()}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRemoveVideo(true)}
+                aria-label="Remove preview video"
+                style={{ background: "none", border: "1px solid var(--ink-soft)", borderRadius: "2px", width: "22px", height: "22px", cursor: "pointer", fontSize: "13px", color: "var(--ink-mute)", lineHeight: 1, flexShrink: 0 }}
+              >
+                x
+              </button>
+            </div>
+          )}
+          {removeVideo && !videoFile && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+              <div style={{ flex: 1, fontSize: "12px", color: "var(--ink-faded)" }}>Will be removed on save.</div>
+              <button
+                type="button"
+                onClick={() => setRemoveVideo(false)}
+                className="btn btn-ghost btn-sm"
+                style={{ flexShrink: 0 }}
+              >
+                Undo
+              </button>
             </div>
           )}
           <label style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", border: "1px dashed var(--ink-soft)", cursor: "pointer", fontSize: "13px", color: "var(--ink-faded)" }}>
-            <input type="file" accept="video/mp4" style={{ display: "none" }} onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />
+            <input type="file" accept="video/mp4" style={{ display: "none" }} onChange={(e) => { setVideoFile(e.target.files?.[0] ?? null); setRemoveVideo(false); }} />
             {videoFile
               ? <><strong style={{ color: "var(--ink)" }}>{videoFile.name}</strong> — {(videoFile.size / 1024 / 1024).toFixed(2)} MB</>
               : <>{initial.video_url ? "Replace video…" : "Choose .mp4 to upload…"}</>
