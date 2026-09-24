@@ -147,9 +147,6 @@ export default function AdminShell({ title, children }: Props) {
 
   return (
     <AdminContext.Provider value={{ token, logout }}>
-      <div style={{ position: "fixed", top: "16px", right: "16px", zIndex: 60 }}>
-        <AdminBell />
-      </div>
       <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", position: "relative" }}>
 
         {/* Mobile overlay */}
@@ -270,8 +267,11 @@ export default function AdminShell({ title, children }: Props) {
                 {title}
               </h1>
             </div>
-            <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--ink-mute)", letterSpacing: "0.06em" }}>
-              AI Digital Products
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--ink-mute)", letterSpacing: "0.06em" }}>
+                AI Digital Products
+              </div>
+              <AdminBell />
             </div>
           </div>
 
