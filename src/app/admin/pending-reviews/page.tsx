@@ -102,10 +102,10 @@ function buildDiffs(p: PendingProduct): FieldDiff[] {
   if ("is_plr_available" in pending) push("is_plr_available", "PLR Available", formatBool(p.is_plr_available), formatBool(pending.is_plr_available));
 
   if ("video_url" in pending && pending.video_url !== p.video_url) {
-    push("video_url", "Preview Video", p.video_url ? "Has a video" : "No video", "New video uploaded");
+    push("video_url", "Preview Video", p.video_url ? "Has a video" : "No video", pending.video_url ? "New video uploaded" : "Video removed");
   }
   if ("download_url" in pending && pending.download_url !== p.download_url) {
-    push("download_url", "Download File", p.download_url ? "Has a file" : "No file", "New file uploaded");
+    push("download_url", "Download File", p.download_url ? "Has a file" : "No file", pending.download_url ? "New file uploaded" : "File removed");
   }
   if ("creator_refund_terms" in pending) {
     push(

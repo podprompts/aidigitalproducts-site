@@ -121,9 +121,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     if (field in pending && approvedPaths.has(field)) {
       updates[field] = pending[field];
       if (field === "video_url") {
-        approvedSummary.push({ label: "Preview Video", oldValue: product.video_url ? "Had a video" : "No video", newValue: "New video is now live" });
+        approvedSummary.push({ label: "Preview Video", oldValue: product.video_url ? "Had a video" : "No video", newValue: pending.video_url ? "New video is now live" : "Video removed" });
       } else if (field === "download_url") {
-        approvedSummary.push({ label: "Download File", oldValue: product.download_url ? "Had a file" : "No file", newValue: "New file is now live" });
+        approvedSummary.push({ label: "Download File", oldValue: product.download_url ? "Had a file" : "No file", newValue: pending.download_url ? "New file is now live" : "File removed" });
       } else if (field === "is_active" || field === "is_plr_available") {
         approvedSummary.push({ label: FIELD_LABELS[field], oldValue: formatBool((product as Record<string, unknown>)[field]), newValue: formatBool(pending[field]) });
       } else if (field === "features") {

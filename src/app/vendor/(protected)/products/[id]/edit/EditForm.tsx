@@ -127,6 +127,8 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
   );
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [downloadFile, setDownloadFile] = useState<File | null>(null);
+  const [removeVideo, setRemoveVideo] = useState(false);
+  const [removeDownloadFile, setRemoveDownloadFile] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
@@ -261,12 +263,12 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
       // live. Nothing becomes visible on the site until an admin approves
       // the submission this builds up. Only touched at all if the vendor
       // actually selected something new.
-      setUploading(true);
-      if (videoFile) {
-        payload.video_url = await getVideoUrl();
+setUploading(true);
+      if (videoFile || removeVideo) {
+        payload.video_url = removeVideo ? null : await getVideoUrl();
       }
-      if (downloadFile) {
-        payload.download_url = await getDownloadUrl();
+      if (downloadFile || removeDownloadFile) {
+        payload.download_url = removeDownloadFile ? null : await getDownloadUrl();
       }
 
       const finalImages = await buildFinalImages();
@@ -478,13 +480,29 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
       {/* Download file */}
       <div style={{ borderTop: "1px solid var(--line)", paddingTop: "20px" }}>
         <label style={labelStyle}>Download File</label>
-        {product.download_url && !downloadFile && (
-          <div style={{ fontSize: "12px", color: "var(--ink-faded)", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
-            Current file on record
+{product.download_url && !downloadFile && !removeDownloadFile && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+            <div style={{ flex: 1, fontSize: "12px", color: "var(--ink-faded)" }}>Current file on record</div>
+            <button
+              type="button"
+              onClick={() => setRemoveDownloadFile(true)}
+              aria-label="Remove download file"
+              style={{ background: "none", border: "1px solid var(--ink-soft)", borderRadius: "2px", width: "22px", height: "22px", cursor: "pointer", fontSize: "13px", color: "var(--ink-mute)", lineHeight: 1, flexShrink: 0 }}
+            >
+              x
+            </button>
+          </div>
+        )}
+        {removeDownloadFile && !downloadFile && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+            <div style={{ flex: 1, fontSize: "12px", color: "var(--ink-faded)" }}>Will be removed if this submission is approved.</div>
+            <button type="button" onClick={() => setRemoveDownloadFile(false)} className="btn btn-ghost btn-sm" style={{ flexShrink: 0 }}>
+              Undo
+            </button>
           </div>
         )}
         <label style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", border: "1px dashed var(--ink-soft)", cursor: "pointer", fontSize: "13px", color: "var(--ink-faded)" }}>
-          <input type="file" style={{ display: "none" }} onChange={(e) => setDownloadFile(e.target.files?.[0] ?? null)} />
+          <input type="file" style={{ display: "none" }} onChange={(e) => { setDownloadFile(e.target.files?.[0] ?? null); setRemoveDownloadFile(false); }} />
           {downloadFile
             ? <><strong style={{ color: "var(--ink)" }}>{downloadFile.name}</strong> — {(downloadFile.size / 1024 / 1024).toFixed(2)} MB</>
             : <>{product.download_url ? "Replace file…" : "Choose file to upload…"}</>
@@ -495,13 +513,29 @@ export default function VendorProductEditForm({ product, initialImages }: Props)
       {/* Video */}
       <div>
         <label style={labelStyle}>Preview Video (.mp4)</label>
-        {product.video_url && !videoFile && (
-          <div style={{ fontSize: "12px", color: "var(--ink-faded)", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
-            Current video on record
+{product.video_url && !videoFile && !removeVideo && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+            <div style={{ flex: 1, fontSize: "12px", color: "var(--ink-faded)" }}>Current video on record</div>
+            <button
+              type="button"
+              onClick={() => setRemoveVideo(true)}
+              aria-label="Remove preview video"
+              style={{ background: "none", border: "1px solid var(--ink-soft)", borderRadius: "2px", width: "22px", height: "22px", cursor: "pointer", fontSize: "13px", color: "var(--ink-mute)", lineHeight: 1, flexShrink: 0 }}
+            >
+              x
+            </button>
+          </div>
+        )}
+        {removeVideo && !videoFile && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "8px 12px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+            <div style={{ flex: 1, fontSize: "12px", color: "var(--ink-faded)" }}>Will be removed if this submission is approved.</div>
+            <button type="button" onClick={() => setRemoveVideo(false)} className="btn btn-ghost btn-sm" style={{ flexShrink: 0 }}>
+              Undo
+            </button>
           </div>
         )}
         <label style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", border: "1px dashed var(--ink-soft)", cursor: "pointer", fontSize: "13px", color: "var(--ink-faded)" }}>
-          <input type="file" accept="video/mp4" style={{ display: "none" }} onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)} />
+          <input type="file" accept="video/mp4" style={{ display: "none" }} onChange={(e) => { setVideoFile(e.target.files?.[0] ?? null); setRemoveVideo(false); }} />
           {videoFile
             ? <><strong style={{ color: "var(--ink)" }}>{videoFile.name}</strong> — {(videoFile.size / 1024 / 1024).toFixed(2)} MB</>
             : <>{product.video_url ? "Replace video…" : "Choose .mp4 to upload…"}</>
