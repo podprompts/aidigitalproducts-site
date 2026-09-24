@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AdminContext } from "./AdminContext";
 import PasswordInput from "@/components/PasswordInput";
+import NotificationBell from "@/components/NotificationBell";
+import { useAdmin } from "./AdminContext";
 
 const NAV = [
   { label: "Dashboard",           href: "/admin" },
@@ -127,8 +129,27 @@ export default function AdminShell({ title, children }: Props) {
 
   const showSidebar = !isMobile || sidebarOpen;
 
+  function AdminBell() {
+    const { token: adminToken } = useAdmin();
+    return (
+      <NotificationBell
+        countUrl="/api/admin/notifications/count"
+        headers={{ "x-admin-key": adminToken }}
+        links={[
+          { key: "pendingProducts", label: "Vendor submissions", href: "/admin/pending-reviews" },
+          { key: "pendingWaitlist", label: "Seller applications", href: "/admin/seller-applications" },
+          { key: "draftPosts", label: "Blog drafts", href: "/admin/blog" },
+          { key: "supportNeedsAttention", label: "Support requests", href: "/admin/support" },
+        ]}
+      />
+    );
+  }
+
   return (
     <AdminContext.Provider value={{ token, logout }}>
+      <div style={{ position: "fixed", top: "16px", right: "16px", zIndex: 60 }}>
+        <AdminBell />
+      </div>
       <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", position: "relative" }}>
 
         {/* Mobile overlay */}

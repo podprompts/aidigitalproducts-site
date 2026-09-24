@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signOutAction } from "@/app/vendor/actions";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function VendorHeader({ vendorName }: { vendorName: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,6 +48,15 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
           <a href="/vendor/history" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-faded)", textDecoration: "none" }}>
             History
           </a>
+          <NotificationBell
+            countUrl="/api/vendor/notifications/count"
+            links={[
+              { key: "productOutcomes", label: "Product updates", href: "/vendor/products" },
+              { key: "supportNeedsAttention", label: "Support requests", href: "/vendor/support" },
+              { key: "messagesAwaitingReply", label: "New messages", href: "/vendor/messages" },
+              { key: "reviewsAwaitingReply", label: "Reviews to answer", href: "/vendor/reviews" },
+            ]}
+          />
           <form action={signOutAction}>
             <button type="submit" className="btn btn-ghost btn-sm">
               Sign Out
@@ -56,6 +66,15 @@ export default function VendorHeader({ vendorName }: { vendorName: string }) {
 
         {/* Hamburger — reuses the same CSS class as the main site nav,
             which already only displays it at the mobile breakpoint. */}
+        <NotificationBell
+          countUrl="/api/vendor/notifications/count"
+          links={[
+            { key: "productOutcomes", label: "Product updates", href: "/vendor/products" },
+            { key: "supportNeedsAttention", label: "Support requests", href: "/vendor/support" },
+            { key: "messagesAwaitingReply", label: "New messages", href: "/vendor/messages" },
+            { key: "reviewsAwaitingReply", label: "Reviews to answer", href: "/vendor/reviews" },
+          ]}
+        />
         <button
           className="nav-hamburger"
           onClick={() => setMenuOpen(true)}
