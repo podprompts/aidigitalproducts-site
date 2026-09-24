@@ -348,7 +348,7 @@ export default function ProductForm({ initial = {}, initialImages = [] }: Props)
         // Preserve existing video_url unless a new file was picked or it was removed
         video_url:               removeVideo ? null : (form.video_url || null),
         // Preserve existing download_file_url unless a new file was picked or it was removed
-        download_file_url:       removeDownloadFile ? null : (initial.download_file_url || undefined),
+        download_url:            removeDownloadFile ? null : (initial.download_file_url || undefined),
       };
  
       const productRes = await fetch(
