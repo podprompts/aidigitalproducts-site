@@ -11,15 +11,19 @@ function ContactsContent() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
 
   useEffect(() => {
     fetch("/api/admin/contacts", { headers: adminHeaders(token) })
       .then((r) => r.json())
-      .then((d) => setContacts(d.contacts ?? []))
+      .then((d) => { setContacts(d.contacts ?? []); setPage(1); })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [token]);
 
+  const totalPages = Math.max(1, Math.ceil(contacts.length / PAGE_SIZE));
+  const pageContacts = contacts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   return (
     <div style={{ maxWidth: "800px", display: "flex", flexDirection: "column", gap: "8px" }}>
       <div style={{ fontSize: "12px", color: "var(--ink-mute)", marginBottom: "8px" }}>
@@ -29,7 +33,7 @@ function ContactsContent() {
         <p style={{ color: "var(--ink-faded)" }}>Loading…</p>
       ) : contacts.length === 0 ? (
         <p style={{ color: "var(--ink-mute)" }}>No messages yet.</p>
-      ) : contacts.map((c) => (
+      ) : pageContacts.map((c) => (
         <div key={c.id} style={{ border: "1px solid var(--line)", background: "var(--bg)" }}>
           <button
             onClick={() => setExpanded(expanded === c.id ? null : c.id)}
@@ -67,6 +71,29 @@ function ContactsContent() {
           )}
         </div>
       ))}
+      {!loading && contacts.length > PAGE_SIZE && (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "12px", marginTop: "16px" }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={page === 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: "13px", color: "var(--ink-faded)" }}>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
