@@ -122,6 +122,8 @@ export default function PriceAndBuySection({
         >
           <button
             type="button"
+            title="For your own use only — not for resale."
+            aria-label="Personal License: for your own use only, not for resale"
             onClick={() => { setLicenseType("personal"); setPlrAgreed(false); }}
             style={{
               flex: 1,
@@ -138,6 +140,8 @@ export default function PriceAndBuySection({
           </button>
           <button
             type="button"
+            title="Rebrand and resell as your own product."
+            aria-label="PLR License: rebrand and resell as your own product"
             onClick={() => { setLicenseType("plr"); setPlrAgreed(false); }}
             style={{
               flex: 1,
