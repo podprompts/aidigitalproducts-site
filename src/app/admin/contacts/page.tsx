@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import AdminShell from "../AdminShell";
 import { useAdmin, adminHeaders } from "../AdminContext";
 
-interface Contact { id: string; name: string; email: string; subject: string; message: string; created_at: string; }
+interface Contact { id: string; name: string; email: string; subject: string; message: string; created_at: string; admin_reply: string | null; replied_at: string | null; }
 
 function ContactsContent() {
   const { token } = useAdmin();
@@ -58,17 +58,79 @@ function ContactsContent() {
           {expanded === c.id && (
             <div style={{ padding: "0 20px 20px", borderTop: "1px solid var(--line-soft)" }}>
               <p style={{ fontSize: "14px", color: "var(--ink-faded)", lineHeight: 1.7, marginTop: "16px", whiteSpace: "pre-wrap" }}>{c.message}</p>
-              <a
-                href={`mailto:${c.email}?subject=Re: ${encodeURIComponent(c.subject)}`}
-                className="btn btn-ghost btn-sm"
-                style={{ display: "inline-block", marginTop: "16px" }}
-              >
-                Reply via Email
-              </a>
+<ContactReplyBox
+                contact={c}
+                token={token}
+                onSent={(updated) => setContacts((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))}
+              />
             </div>
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function ContactReplyBox({
+  contact,
+  token,
+  onSent,
+}: {
+  contact: Contact;
+  token: string;
+  onSent: (updated: Contact) => void;
+}) {
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
+  async function send() {
+    setSending(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/contacts/${contact.id}/reply`, {
+        method: "POST",
+        headers: adminHeaders(token),
+        body: JSON.stringify({ reply: text }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to send reply.");
+      onSent(data.contact);
+      setText("");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (contact.replied_at) {
+    return (
+      <div style={{ marginTop: "16px", padding: "12px 14px", background: "var(--bg-alt)", border: "1px solid var(--line)" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--ink-faded)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>
+          Your reply, sent {new Date(contact.replied_at).toLocaleString()}
+        </div>
+        <p style={{ fontSize: "13px", color: "var(--ink-faded)", lineHeight: 1.6, whiteSpace: "pre-wrap", margin: 0 }}>
+          {contact.admin_reply}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: "16px" }}>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={4}
+        maxLength={4000}
+        placeholder="Write a reply..."
+        style={{ width: "100%", padding: "10px 12px", fontSize: "13px", fontFamily: "inherit", border: "1px solid var(--ink-mute)", background: "var(--bg)", color: "var(--ink)", boxSizing: "border-box", resize: "vertical", marginBottom: "10px" }}
+      />
+      {error && <p style={{ fontSize: "13px", fontWeight: 600, color: "#e53e3e", marginBottom: "10px" }}>{error}</p>}
+      <button type="button" className="btn btn-primary btn-sm" disabled={sending || !text.trim()} onClick={send}>
+        {sending ? "Sending..." : "Send Reply"}
+      </button>
     </div>
   );
 }
